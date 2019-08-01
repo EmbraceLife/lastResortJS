@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to build a test for whether forEach passes each item of the array into callback functions for processing</title>
+  </head>
+  <body>
+    <!-- let's load the testing library -->
+    <script src="../tinytest.js"></script>
+    <!-- now we can start to write test. But first we need to testing skeleton -->
+    <script>
+    tests({
+      // this is the skeleton
+      // then we write the actual test as a property/method of the object
+      'forEach should make every item of array be processed by callback function': function(){
+        // inside this function block we start writing actual test
+        // for now, we assume our forEach function work perfectly
+
+        var addUp = 0;
+        forEach(/* we have array as first arg of course, as it is in original/official array.forEach method */[5,2,3], /* then second arg of forEach is callback function. we need to write our own callback function to do the things we need */ function(/* as we mentioned forEach will pass each item to callback, so first arg is currentValue */ currentValue, /* why not also index optionally*/ indexOptional, /* why not array optionally too */ arrayOptional){
+          /* now, how do we use callback to demonstrate forEach actually put every item to callback? and also demonstrate it in very simple way? think... we can make each item add up, it should do! */ addUp += currentValue; /* but currentValue will be auto-reassigned, so it won't do; also we need to pass the final outcome to the env outside forEach func. So, we need an external variable */
+        });
+        // by now, the logic is ok, but we still need to specify the content of array. So, given forEach working perfectly, the addUp should be 6
+        eq(addUp, 10); // should be true; let's check with debugger
+      }
+    })
+    
+    // again we have to write forEach function
+    function forEach(/* as it is in official forEach, we need array */ array, /* also we need callback */ callback /* this is all we need to put in for signiture of a function */){
+      // inside the code block, we need to design the logic of how forEach work
+      // first, we need to pass each item to callback, so we need a for loop
+      for (i = 0; i < array.length; i++){
+        callback(/* first, we need the currentValue */array[i], /* then we add index/position of the currentValue optionally */ i, /* finally array itself optionally */array); /* inside forEach, we don't care what is going on inside callback, it is user's business. forEach just passes into the three parameters to callback and make it run */
+        // let's it. forEach has done its work, let's run it with debugger
+        // if not 100% sure, let's make another example
+      }
+    }
+    </script>
+  </body>
+</html>

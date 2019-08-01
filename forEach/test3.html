@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to build a test for the third argument of callback function inside forEach function</title>
+  </head>
+  <body>
+    <!-- I have just loaded the testing library -->
+    <script src="../tinytest.js"></script>
+    <!-- now I am ready to write test -->
+
+    <script>
+    /* 
+    first of all, let's think about the third argument, array, inside callback function.
+    this array refers to or is the same to the array we pass into the forEach function.
+    To test on this third argument, what shall I do? Basically, I need to run a forEach function to get the arrayOptional (the third arg) of callback out and check whether it is equal to array I pass into forEach.
+    OK, let's write the test
+    */
+
+    tests({
+      // we write the actual test inside the property/method
+      'the third arrayOptional arg of callback should be equal to the array I pass to forEach': function(){
+
+        // here we write the test 
+        var arrayOutside;
+        var array = [7];/* also be aware that if we are comparing [7] and [7], they won't be equal as they are comparing addresses not reference. That's why I am using variables to compare, this way arrayOutside and array both refer to the same reference [7] */
+
+        forEach(/* the array we pass in */ array, 
+        
+        /* the callback function */ function(currentValue, indexOptional, arrayOptional){
+          // here we can access arrayOptional and it should be the same to array, so we need to move arrayOptional outside this forEach function. we can use a global variable (i.e., variable outside forEach) to do it
+          arrayOutside = arrayOptional;
+        }
+        );
+        // now this outside array shall be equal to array
+        eq(arrayOutside, array); /* now, we need to specify the array */
+
+        // let's check with debugger
+      }
+    })
+    // we need to define forEach function, and it is clear to define outside tests().
+    function forEach(/* array is a must */ array, /* so does callback */ callback){
+      /* how to pass items of array to callback, we use for-loop */
+      for (i = 0; i < array.length; i++){
+        callback(/* get the currentValue */ array[i], /* also need indexOptional */ i, /* now we need the arrayOptional, which is the same array passed into forEach */ array);
+      }
+    }/* now, let's check with debugger */
+    </script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+<!-- test 1 is to test callback function's first argument  -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to test whether forEach's callback function's first argument is the current value of the array or not</title>
+  </head>
+  <body>
+    <!-- step 1, I need to import the tinytest.js library -->
+    <!-- just pay attention to the relative path of the library -->
+    <script src="../tinytest.js"></script>
+    <!-- now, I can start to build a test for it -->
+    <script>
+    // every test start with running tests()
+    tests({
+      // every single test is a property or method
+      // write the first test here
+      'the callback function first argument should the current value of the array passed into forEach': function(){
+        // we write the actual test right here
+        // set up the firstItem
+        var firstItem;
+        forEach(/* we have an array, now make array a very simple array*/ [1,1,9], 
+        /* then callback function*/ function(currentValue){
+          // let's assign currentValue to firstItem
+          // if forEach works fine, currentValue should be 9, so does firstItem
+          // to make it a little more complex, we can make array [1,1,9]
+          // it should still be 9
+          firstItem = currentValue;
+        });
+        // we want to see the following equalization
+        eq(/* the currentValue or final value is 9 */9, firstItem);
+        // now let's see what debugger says
+
+      }
+    })
+
+    // of course, we have not yet build our forEach function yet, now, let's build it
+    function forEach(/* array is a must argument */array, /* callback is a must too */callback){
+      // every item in the array will go through the callback, so a for-loop is required
+      for (i = 0; i < array.length; i++){
+        // every item will be passed to callback
+        callback(array[i]); /* now let's what debugger would say */
+      }
+    }
+    // now it is defined, see what debugger says
+    // now the problem is that firstItem is not 9, of course, because our function can't do anything yet, let's write something
+
+    
+    
+    </script>
+  </body>
+</html>

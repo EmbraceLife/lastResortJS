@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to build a test for forEach's callback function second argument index</title>
+    <!-- first of all, we need to import testing library -->
+    <script src="../tinytest.js"></script>
+    <!-- Now we can start build a test -->
+  </head>
+  <body>
+    <script>
+    
+    tests({
+      // no! all the tests are done through method/property style
+      'the indexOptional argument of callback function should be the position of currentValue': function(){
+        // under this block we really start to write test 2
+        var indexFirst;
+        forEach(/* array is a must. Now let's make a simple array */ [8], 
+                /* callback is a must too */ function(currentValue, indexOptional){
+                  /* inside the callback, we need to verify the use of indexOption. If this function works fine, indexOptional should be 0*/ indexFirst = indexOptional;
+                }
+        );
+        // so the following equalization should be true
+        eq(indexFirst, 0);/* let's check with debugger */
+      }
+    });
+
+    function forEach(/* array is a must, we already know */array, /* callback function is a must too */callback){
+      // inside, we need to define how forEach work and how to interact with callback, how to pass arguments to callback
+      // from test 1 we know we must use for loop
+      for (i = 0; i < array.length; i++) {
+        
+        callback(/* we already know forEach pass every value of array to callback */array[i], /* also pass each value's position to callback optionally*/ i); /* now check with debugger */
+      }
+    }
+    </script>
+    <!-- of course, we need to write our forEach function first -->
+    
+  </body>
+</html>

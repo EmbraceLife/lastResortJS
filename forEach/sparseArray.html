@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>How to make forEach work on sparse array?</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+    <script>
+    // It is not invoked for index properties that have been deleted or are uninitialized (i.e. on sparse arrays).
+    /* so what exactly does it mean? first of all, I tried uninitialized array as [1,2,3,undefined,5], but undefined did invoked the official version of forEach. Then I googled sparse array, I got something like this [1,3, ,7], this time the missing value will not trigger callback to run. So for sparse array, forEach only makes callback to run 3 times not four times.
+    
+    I want my own version of forEach to have such feature too, because at the moment the forEach should still make callback to run 4 times on sparse array [1,3, ,7]. Now, let's double check on this
+    
+    let's copy the previous tests and code here first.
+    */
+    tests({
+      
+      "The most basic use case of `forEach(array, callback)` is for callback to run array.length times": function() {
+        var numCallbackRuns = 0;
+        forEach([1,2,3], function(){
+          numCallbackRuns++; 
+        });
+        eq(numCallbackRuns, 3); 
+      },
+    
+      "use case 2: `forEach(array, callback)` should make callback to take each item and run": function() {
+        var sumUpEachItem = 0;
+        forEach([1,2,3], function(currentValueFromArray){
+          sumUpEachItem += currentValueFromArray;
+        });
+        eq(sumUpEachItem, 6);
+      }, 
+
+      "use case 3: `forEach(array, callback)` should allow callback to take the currentValue's position as second arg": function(){
+        var finalIndexOfArray;
+        forEach([1,2,3], function(currentValue, index){
+          finalIndexOfArray = index;
+        });
+        eq(finalIndexOfArray, 2);
+      },
+
+      "use case 4: `forEach(array, callback)` should allow callback to take the array passed to forEach as its third arg": function(){
+        var arrayCallback; 
+        var arrayForEach = [1,2,3];
+        forEach(arrayForEach, function(currentValue, index, array){
+          arrayCallback = array;
+        });
+        eq(arrayCallback, arrayForEach);
+      }, 
+
+      "use case 5: 'forEach(array, callback, thisArg)` should allow callback to use an object(thisArg)'s properties and methods": function(){
+        var numberAdd;
+        forEach([9,1], function(){
+          numberAdd = this.number + 1;
+        }, {"number": 1});
+        eq(2, numberAdd);
+      }, 
+
+      "use case 6: `forEach(array, callback)` should work on sparse array by avoiding trigger callback to run on missing value": function() {
+        var numCallbackRuns = 0;
+        forEach([1,3,,7], function(){
+          numCallbackRuns++;
+        });
+        eq(numCallbackRuns, 3);
+      }, 
+
+      "use case 7: it should keep array the same to callback even inside callback changes the content of array passed in": function() {
+        
+
+        var arrayOri = [1,2,3];
+        forEach(arrayOri, function(el,index, arrayCallback){ 
+          arrayCallback.push(4); 
+          console.log(el);
+          console.log(arrayCallback); 
+        }); 
+        // first of all, let's see whether we can debug it. I can't open debugger tool even. So, let's start simple without error
+        // now variable names have changed, let's check with debugger
+        // previously I could not even use debugger properly for this error; now I have figured out a way. first, comment out the problematic line
+      }
+    });
+
+    function forEach(array, callback, thisArg) {
+      var callbackWithThis;
+      if (thisArg) {
+        callbackWithThis = callback.bind(thisArg);
+      } else {
+        callbackWithThis = callback;
+      }
+      for (i = 0; i < array.length; i++) {
+        if (!array[i]){
+          array.splice(i, 1);
+        }
+        /* before passing into callback func, we make a new copy here */
+        var arrayCb = array.slice(); // this should break the connection between these two arrays; let's check whether it will break previous 6 tests or not
+        callbackWithThis(array[i], i, arrayCb); 
+      }
+    } 
+    
+    
+    </script>
+  </body>
+</html>

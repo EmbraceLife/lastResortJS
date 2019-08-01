@@ -1,0 +1,120 @@
+<!-- Let's build forEach using test driven approach -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Build forEach with tests</title>
+  </head>
+  <body>
+    <!-- import libraries of test -->
+    <script src="../tinytest.js"></script>
+    <!-- let's write forEach function -->
+    <script></script>
+    <!-- let's write test -->
+    <script>
+    tests({
+      /* Why start with docs?
+      - for me at the moment, all tests shall be derived from docs
+      - essentially, the tests come from requirements designed by users+developers
+      - developers encode their requirements, codes into words (docs)
+      - so, it is crucial skill to decode the docs into tests or requirements */
+
+      /* Decode codes into tests requirements from the following sections
+      - read syntax, signiture
+      - read parameters and return value
+      - read description
+      - read Examples
+      - read polyfill
+      */
+
+      /* Decode tests from syntax (parameters and return value)
+      official version: 
+      arr.forEach(callback(currentValue [, index [, array]])[, thisArg]);
+
+      my version:
+      forEach(array, callback(currentValue [, index [, array]])[, thisArg]);
+
+      Why no strong need to build tests for array and callback?
+      - array and callback are the basic inputs by users
+      - forEach is not obligated to instruct users on what to pass in with errors
+
+      Why I should write tests for currentValue, index and array inside callback?
+      - although user can write specifically `callback(currentValue[], index[, array]])`
+      - but passing value into currentValue inside callback is done by codes inside forEach 
+      - therefore, we should have test to verify this!
+
+      test 1: the first argument of callback should be the current item value of the array passed to forEach
+      var currentValue;
+      forEach([1], function(item){
+        currentvalue = item;
+      })
+      eq(currentValue, 1);
+
+      test 2: the second optional argument of callback should be the current item index of the array
+      var currentIndex;
+      forEach([1], function(item, index){
+        currentIndex = index;
+      })
+      eq(currentIndex, 0);
+
+      test 3: the third optional argument of callback should be the array passed to forEach
+      var arrayTest;
+      var arrayOri = [1]
+      forEach(arrayOri, function(item, index, array){
+        arrayTest = array;
+      })
+      eq(arrayTest, arrayOri);
+
+      test last: the second (optional) argument this is the configurable object used by callback function. (However, this one is most complex, so we put it to the last)
+
+      test 4: it should apply the callback function to each item (in ascending order 0,1,2,3,... which is by default)
+      var numItemsApplyCallback = 0;
+      forEach([1,2,3], function(item, index, array){
+        numItemApplyCallback += item;
+      });
+      eq(numItemApplyCallback, 6);
+
+      test 5: it should run the callback array.length times 
+      var numCallbackRuns = 0;
+      forEach([1,2,3], function(item){
+        numCallbackRuns++;
+      });
+      eq(numCallbackRuns, 3);
+
+      test last: if `this` is used in callback function, it should refers to the object assigned in thisArg argument
+      var thisObj = {funcFromObj}
+
+      test on the sparse array 
+      https://wanago.io/2018/10/15/explaining-the-javascript-array-sparse-and-dense-arrays/
+      var arraySparse = [1, 3, , 7];
+      var numCallBackRuns = 0;
+      forEach(arraySparse, function(currentValue, index, array){
+        numCallBackRuns++;
+      })
+      eq(numCallBackRuns, 3);
+      */
+
+      /* 
+      Test 1: 
+      */
+      'The first argument of callback function should be the current value of the array': function(){
+        // let's write the test itself
+        // since we can only access the first item easily, let's just focus on the one item array
+        var firstValue;
+        forEach([1,1,9], function(currentValue){
+          firstValue = currentValue;
+        });
+        eq(firstValue, 9);
+      }
+
+    });
+
+    // let writhe forEach function here
+    function forEach(array, callback){
+      // to access each item of the array
+      for (i = 0; i < array.length; i++) {
+        callback(array[i]);
+      }
+    }
+    </script>
+  </body>
+</html>

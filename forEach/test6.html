@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to write a test for forEach's third and optional argument thisArg</title>
+  </head>
+  <body>
+    <!-- let's import the testing library first -->
+    <script src="../tinytest.js"></script>
+    <!-- now we are ready to start writing test -->
+    <script>
+    tests({
+      // test is stored in this object method
+      // when and why we need such thisArg arg?
+      // basically, when this is used inside callback func, and we have a specific object for 'this' to refer to, we define this object to be thisArg
+      // so, to build a simple test, is to make sure callback has a line of this.blabla, and outside callback and inside forEach we define thisArg to be an object
+      'this inside callback should refer to thisArg/object':function(){
+        var result = 0; // need to define this variable outside forEach
+
+        forEach(/* the first arg is array */[0], /* the second arg is callback, and we need to design it carefully */ function(/* first arg for callback is */currentValue, /* second and optional arg is */index, /* third and optional is */array){
+          // we don't have to make use any of the three args of callback
+          // because we want it to be as simple as possible
+          result = this.testContent + 1 /* I want to make a simple addition and pass the result outside forEach for verification */
+        }, /* now we used this inside callback, then we have to define this here in thisArg */ {'testContent':9}); /* so the 'this' inside callback refers to the object {'testContent':9} */
+
+        // if forEach and thisArg work fine, the result should be 10
+        eq(result, 10);
+        // before we check with debugger, be aware that we have not set array yet, although we have not really used array here. so let's make it simple.
+      },
+
+      // make another test for this concern
+      'everything should be fine if ignore optional args of callback': function(){
+        var result = 0;
+        forEach([0,1,2,3]/* should have no effect too */, function(/* no args for callback should be no problem. but why it is so, I have no theoretical explanation yet */){
+          result = this.number + 1;
+        }, {"number": 4});
+
+        eq(5, result); // let's check with debugger
+      },
+
+    });
+    
+    // let's define forEach function here
+    function forEach(/* first arg is always array */ array, /* second arg is callback */callback, /* now the third and optional arg */ thisArg){
+      // we are already very familiar with the basic codes of forEach
+      for (i = 0; i < array.length; i++){
+        // now we shall rewrite it in a conditional format
+        if (/* if thisArg object is available */thisArg) {
+          // then we must bind callback to this object
+          var callbackMethod = /* it returns a function */callback/* of course, we can't run callback func, we need to use the func itself. but then we have to run this callback method later */.bind(thisArg);
+          callbackMethod(array[i], i, array); // check with debugger again
+        } else { /* if no thisArg available, just normal callback */
+          callback(array[i], i, array);
+        } /* now let's check with debugger */
+        // Yeah!!! it worked!
+        // one more issue, given thisArg is optional, and we used a conditional statement here to consider, what about callback function with two more optional args? My first impression is we don't need to do anything about it
+        // now with thisArg, do we need do something else? 
+        // thinking...
+        // maybe add a fourth arg this = thisArg? let's try it. it does not work as it is
+        // where is the bottleneck? where is the missing piece?
+        // I don't know how to link thisArg of forEach and this inside callback
+        // I don't think it just works on its own like this. No, it doesn't
+        // now, after checked with Gordon's solution, I know how this all comes together
+        /* in the test, we used this.testContent inside callback function. Such a situation recalled my memory of a complex object in which we have not only properties but also methods, and we used this.proerptyName to access the object property and use it in a method of the object.
+        So, here this.testContent can be an object's property and the callback could be the same object's method, if so everything becomes familiar and the rule is also simple. 
+        Now, we already have the object and testContent is its property, so all we need to do is to turn callback to be this object's method. Also, we need to achieve it, we need to use bind, `callback.bind(thisArg)` like this.
+        */
+
+        
+      }
+    }
+    </script>
+  </body>
+</html>

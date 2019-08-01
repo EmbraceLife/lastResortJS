@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to test whether the callback function will run array.length times in forEach function</title>
+  </head>
+  <body>
+    <!-- first, let's load the testing library -->
+    <script src='../tinytest.js'></script>
+
+    <!-- now let's build the testing skeleton -->
+    <script>
+    tests({
+
+      'forEach should make its callback function run array.length times': function(){
+        // inside this block we shall write the actual test 
+        /* first of all, let's think of how to do it.
+        
+        by now, we already know there is a for-loop inside forEach function. So, we just need to run callback inside the loop
+        */
+        var numCallbackRuns = 0;
+        // so, let's try to run a forEach function
+        forEach(/* array is a must */ [9,8,7], /* then a callback function */ function(/* we don't have to write all the arguments here, but it is good habit to write them down to remind yourself what they are */ currentValue, indexOptional, arrayOptional){
+          // somehow we need to count how many times callback has run
+          // we need a counter, say numCallbackRuns, it needs to be outside variable
+          // now we can accumulate the running time
+          numCallbackRuns++;
+        })
+        // now, after this function executed, the numCallbackRuns should be the length of array; now we need to specify array
+        // so the numCallBackRuns should be 3
+        eq(numCallbackRuns, 3); // let's check with debugger
+        // we need to define/write our forEach function
+      }
+
+    })
+    
+    function forEach(/* array is a must arg */array, /* so does callback */ callback){
+      // each item will be passed to callback, so we need a for loop
+      for (i = 0; i < array.length; i++){
+        /* now, pass currentValue to callback */
+        callback(array[i], /* pass indexOptional */i, /* pass arrayOptional */ array); // ok, let's check with debugger
+      }
+    }
+    </script>
+  </body>
+</html>
