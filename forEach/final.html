@@ -43,7 +43,7 @@
         eq(arrayCallback, arrayForEach);
       }, 
 
-      "use case 5: 'forEach(array, callback, thisArg)` should allow callback to use an object(thisArg)'s properties and methods": function(){
+      "use case 5: `forEach(array, callback, thisArgOptional)` should allow callback to use `thisArgOptional` (an object)'s properties and methods": function(){
         var numberAdd;
         forEach([9,1], function(){
           numberAdd = this.number + 1;

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>case y</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+
+    <script>
+    tests({
+      "use case 7: the items of the array forEach passes to callback remain fixed, but callback can freely manipulate the arrayOptional": function() {
+
+        var arrayOri = [1,2,3];
+        forEach(arrayOri, function(el,index, arrayCallback){ 
+          arrayCallback.push(4); 
+          console.log(el);
+          console.log(arrayCallback); 
+        }); 
+      }
+    });
+
+    function forEach(array, callback, thisArg) {
+      var callbackWithThis;
+      if (thisArg) {
+        callbackWithThis = callback.bind(thisArg);
+      } else {
+        callbackWithThis = callback;
+      }
+
+      var arrayCb = array.slice(); 
+      for (i = 0; i < array.length; i++) {
+        if (!array[i]){
+          array.splice(i, 1);
+        }
+
+        callbackWithThis(array[i], i, arrayCb); 
+      }
+    } 
+
+    </script>
+  </body>
+</html>
