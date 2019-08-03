@@ -33,14 +33,12 @@
         eq(finalIndexOfArray, 2);
       },
 
-      "use case 4: `forEach(array, callback)` should allow callback to take the array passed to forEach as its third arg": function(){
-        var arrayCallback; 
-        var arrayForEach = [1,2,3];
-        forEach(arrayForEach, function(currentValue, index, array){
-          arrayCallback = array;
-        });
-        eq(arrayCallback, arrayForEach);
-      }, 
+      "use case 4: `forEach(array, callback)` should pass in the original array as the third argument in the callback.": function() {
+      var testArray = [1, 2, 3]
+      forEach(testArray, function(number, index, originalArray) {
+        eq(originalArray, testArray);
+      });
+      },
 
       "use case 5: `forEach(array, callback, thisArg)` should allow callback to use `thisArg` (an object)'s properties and methods": function(){
         var numberAdd;
@@ -50,7 +48,7 @@
         eq(2, numberAdd);
       }, 
 
-      "use case 6: `forEach(array, callback)` should work on sparse array by avoiding trigger callback to run on missing value": function() {
+      "use case 6: `forEach(array, callback)` should work on sparse array by ignoring missing values inside sparse array": function() {
         var numCallbackRuns = 0;
         forEach([1,3,,7], function(){
           numCallbackRuns++;
@@ -60,35 +58,86 @@
 
 
       "use case 7: the items of the array forEach passes to callback remain fixed, but callback can freely manipulate the arrayOptional ": function() {
-
         var arrayOri = [1,2,3];
+
         forEach(arrayOri, function(el,index, arrayCallback){ 
           arrayCallback.push(4); 
           console.log(el);
           console.log(arrayCallback); 
         }); 
-      }
+      }, 
+
+      "official forEach use case: array passed to forEach and array passed to callback refer to the same reference; but no matter how callback manipulates the array(essential one array, two variables) to be, the number of items and values passed to callback in the first place won't be changed.": function(){
+        var arrayCallback;
+        var arrayOut = [1,2,3];
+        arrayOut.forEach(function(currentValue, index, arrayOptional){ 
+          arrayOptional.push('new');
+          arrayCallback = arrayOptional;
+        });
+        eq(arrayCallback, arrayOut); 
+      },
+
+      "use case 8: array passed to forEach and array passed to callback refer to the same reference; but no matter how callback manipulates the array(essential one array, two variables) to be, the number of items and values passed to callback in the first place won't be changed.": function(){
+        var arrayCallback;
+        var arrayOut = [1,2,3];
+        forEach(arrayOut, function(currentValue, index, arrayOptional){ 
+          arrayOptional.push('new');
+          arrayCallback = arrayOptional;
+        });
+        eq(arrayCallback, arrayOut); 
+      },
+
+      "strange effect: `i` from for-loop in callback scope will pass value to `i` of for-loop in forEach scope": function(){
+        var sumArrayOut = 0; 
+        var sumArrayIn = 0; 
+        var arrayForEach = [1,2,3]; 
+        forEach(arrayForEach, function(currentValue, index, array){
+          sumArrayOut += currentValue; 
+          sumArrayIn = 0; 
+          for (i = 0; i < array.length; i++) { 
+            sumArrayIn += array[i]; 
+          }
+        });
+        eq(sumArrayIn, sumArrayOut*6);
+      }, 
+
+      "strange effect corrected: `i` in for-loop from forEach is separated from `idx` in for-loop from callback": function(){
+        var sumArrayOut = 0; 
+        var sumArrayIn = 0; 
+        var arrayForEach = [1,2,3]; 
+        forEach(arrayForEach, function(currentValue, index, array){
+          sumArrayOut += currentValue; 
+          sumArrayIn = 0; 
+          for (idx = 0; idx < array.length; idx++) {
+            sumArrayIn += array[idx];
+          }
+        });
+        eq(sumArrayIn, sumArrayOut);
+      }, 
     });
+
 
     function forEach(array, callback, thisArg) {
       var callbackWithThis;
+
       if (thisArg) {
         callbackWithThis = callback.bind(thisArg);
       } else {
         callbackWithThis = callback;
       }
 
-      var arrayCb = array.slice(); 
       for (i = 0; i < array.length; i++) {
-        if (!array[i]){
-          array.splice(i, 1);
-        }
+        if (!array[i]){ 
+          array.splice(i, 1); 
+        } 
+      }; 
 
-        callbackWithThis(array[i], i, arrayCb); 
+      arrayFirst = array.slice();
+      
+      for (i = 0; i < arrayFirst.length; i++) { 
+        callbackWithThis(arrayFirst[i], i, array); 
       }
     } 
-
-    
     
     </script>
   </body>

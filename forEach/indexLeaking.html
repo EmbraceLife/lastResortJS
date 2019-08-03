@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I want to refactor and simplify the index leaking issue I discovered during rewriting forEach</title>
+  </head>
+  <body>
+    <script>
+    // basically if the indexLeaking is real and I understand it properly, then I should be able to refactor it in simpler examples.
+
+    /* basically, I need an example with two loops, one inside another */
+    var array = [1,2,3];
+    for (var i = 0; i < array.length; i++){
+      /* block1: codes here should iterate 3 times */
+      console.log("block1: ", array[i]);
+      for (var idx = 0; idx < array.length; idx++){
+      // for (idx = 0; idx < array.length; idx++){
+        /* block2: codes here should iterate 3 times too; in total should be 3x3=9 times */
+        /* if my indexLeaking issue is what I thought it is, then block1 will run once, and block2 will only run 3 times */
+        console.log("block 2:", array[idx]);
+      }
+    }
+    /* let's check with debugger. I assume the array will pass into two loops here. Now, let's see how the index i has been passed from block2 to block1 in debugger. */
+
+    /* to correct this indexLeak, We just need to give block2 index a differnt variable name */
+
+    </script>
+  </body>
+</html>

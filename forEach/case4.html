@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Let's correct case 4 here</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+
+    <script>
+    tests({
+      // Now the difference between official forEach and my forEach is in official forEach, callback can change the array shared by forEach and callback, whereas in my forEach, callback can only change a copy of the array passed to forEach, the original array stays the same.
+
+      // but hold on, why can't I make my forEach behave exactly the same?
+      // to do it, I have to keep only one reference of array with two variables, rather than two variables and two references. 
+      // so this left me to make a copy for callback in the first time when callback receives an array from forEach
+
+      "official forEach use case: array passed to forEach and array passed to callback refer to the same reference; but no matter how callback manipulates the array(essential one array, two variables) to be, the number of items and values passed to callback in the first place won't be changed.": function(){
+        var arrayCallback;
+        var arrayOut = [1,2,3];
+        arrayOut.forEach(function(currentValue, index, arrayOptional){ //let's see whether it is really working. Yes, it worked
+          arrayOptional.push('new');
+          arrayCallback = arrayOptional;
+        });
+        eq(arrayCallback, arrayOut); // it should fail! but it didn't, surprising! how about we change arrayOptional inside callback
+      },
+
+      "my forEachOffi can do the same as the official forEach now.": function(){
+        var arrayCallback;
+        var arrayOut = [1,2,3];
+        forEachOffi(arrayOut, function(currentValue, index, arrayOptional){ //let's see whether it is really working. Yes, it worked
+          arrayOptional.push('new');
+          arrayCallback = arrayOptional;
+        });
+        eq(arrayCallback, arrayOut); // it should fail! but it didn't, surprising! how about we change arrayOptional inside callback
+      },
+
+      "use case 4 strange effect: `i` from for-loop in callback scope will pass value to `i` of for-loop in forEach scope": function(){
+        var sumArrayOut = 0; 
+        var sumArrayIn = 0; 
+        var arrayForEach = [1,2,3]; 
+        forEachOffi(arrayForEach, function(currentValue, index, array){
+          sumArrayOut += currentValue; 
+          sumArrayIn = 0; 
+          for (i = 0; i < array.length; i++) { /* i in for-loop from callback */
+            sumArrayIn += array[i]; 
+          }
+        });
+        eq(sumArrayIn, sumArrayOut*6); /* since i value passed from callback to forEach, sumArrayOut will end up as 1, that's why must be multiplied with 6 */
+      }, 
+
+      "use case 4: `forEach(array, callback)` should allow callback to take the array passed to forEach as its third arg": function(){
+        var sumArrayOut = 0; 
+        var sumArrayIn = 0; 
+        var arrayForEach = [1,2,3]; 
+        forEachOffi(arrayForEach, function(currentValue, index, array){
+          sumArrayOut += currentValue; 
+          sumArrayIn = 0; 
+          for (idx = 0; idx < array.length; idx++) {
+            sumArrayIn += array[idx]; /* after change i into idx, the index value won't be passed back to index variable of for-loop inside forEach. This way, idx stays inside for-loop of callback, i stays inside for-loop of forEach. */
+          }
+        });
+        eq(sumArrayIn/* is 6 */, sumArrayOut/* is 1, but why? it should added up 1 + 2 + 3 in 3 iterations */);
+      }, 
+
+    }) 
+
+    // this version of forEach keep array passed to forEach away from array passed to callback. However, I think we should all stay with the official version of forEach.
+    function forEach(array, callback, thisArg) {
+      var callbackWithThis;
+      if (thisArg) {
+        callbackWithThis = callback.bind(thisArg);
+      } else {
+        callbackWithThis = callback;
+      }
+
+      var arrayCb = array.slice(); 
+      for (i = 0; i < array.length; i++) { /* i in for-loop from forEach */
+        if (!array[i]){
+          array.splice(i, 1);
+        }
+
+        callbackWithThis(array[i], i, arrayCb); 
+      }
+    } 
+
+    // now, this is the forEach which most resemble official forEach. let's refactor this new version of forEach to forEach.html
+    function forEachOffi(array, callback, thisArg) {
+      var callbackWithThis;
+      if (thisArg) {
+        callbackWithThis = callback.bind(thisArg);
+      } else {
+        callbackWithThis = callback;
+      }
+
+      // var arrayCb = array.slice(); /* we can't make two references anymore */
+      /* but the number of iterations and values have to stay the same to the first version of the array before manipulation from callback.
+      
+      then maybe we can make a copy just for the first version?
+      Just like that, the array for forEacha and for callback is the same, and the first version of the array is a copy with different reference and won't be changed when callback manipulates the array.
+       */
+      arrayFirst = array.slice();
+      for (i = 0; i < arrayFirst.length; i++) { /* i in for-loop from forEach */
+        if (!arrayFirst[i]){
+          array.splice(i, 1);
+        }
+
+        callbackWithThis(arrayFirst[i], i, array); 
+      }
+    } 
+    </script>
+  </body>
+</html>

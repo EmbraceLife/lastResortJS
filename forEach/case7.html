@@ -27,12 +27,12 @@
         callbackWithThis = callback;
       }
 
-      var arrayCb = array.slice(); 
+      var arrayCb = array.slice(); // moved outside of for-loop resolved the prolem
       for (i = 0; i < array.length; i++) {
         if (!array[i]){
           array.splice(i, 1);
         }
-
+        // remove from here
         callbackWithThis(array[i], i, arrayCb); 
       }
     } 

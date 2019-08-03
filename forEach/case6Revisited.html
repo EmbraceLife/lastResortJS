@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Revisit case 6: let's fiex it</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+    <script>
+    tests({
+
+      "use case 6: `forEach(array, callback)` should work on sparse array by avoiding trigger callback to run on missing value": function() {
+        var numCallbackRuns = 0;
+        forEach([1,3,,7], function(){
+          numCallbackRuns++;
+        });
+        eq(numCallbackRuns, 3);
+      }
+    })
+
+          // let's do some code refactoring. but before that, let's see whether the other tests work or not after this change.
+    function forEach(array, callback, thisArg) {
+      var callbackWithThis;
+
+      if (thisArg) {
+        callbackWithThis = callback.bind(thisArg);
+      } else {
+        callbackWithThis = callback;
+      }
+
+      for (i = 0; i < array.length; i++) {
+        if (!array[i]){ 
+          array.splice(i, 1); 
+        } 
+      }; 
+
+      arrayFirst = array.slice();
+      
+      for (i = 0; i < arrayFirst.length; i++) { 
+        callbackWithThis(arrayFirst[i], i, array); 
+      }
+    } 
+
+    </script>
+  </body>
+</html>
