@@ -41,6 +41,34 @@
 
         })
       },
+
+      "thisArg ::: As we already know, thisArg is to provide the object to which `this` inside callback refers": function() {
+        var arrayTest = [8];
+        var newArray = arrayTest.filter(function(el){
+          
+          eq(0, this.number + el); 
+          
+          return this.number + el === 0;
+          
+        }, {"number": -8});
+
+        console.log("the new array should be [8], and actually is : ", newArray);
+      }, 
+
+      "sparseArrayFiltered ::: callback is invoked only for indexes of the array which have assigned values ::: it is not invoked for indexes which have been deleted or which have never been assigned values ::: filter will keep `undefined` and `null`": function(){
+        var sparseArray = [1,,undefined, null];
+        var newArray = sparseArray.filter(function(el){
+          return true; 
+        });
+
+        console.log("sparseArray.length is : ", sparseArray.length);
+        console.log("newArray.length should be 3, and actually is : ", newArray.length);
+        console.log("newArray should be [1,undefined,null], and is actually : ", newArray);
+        eq(3, newArray.length);
+      }, 
+
+
+
     })
     </script>
   </body>

@@ -16,7 +16,9 @@
       var lenConst = array.length;
 
       for (i = 0; i < lenConst; i++) {
-        if (array[i]) {
+
+        if (array.hasOwnProperty(i)) {
+          
           callback(array[i], i, array);
         }
         
@@ -122,16 +124,19 @@
       },
 
       
-      "sparseArrayFiltered(done) ::: forEach can ignore the deleted or uninitialized (or missing) values/elements in a sparse array, and is only invoked by non-sparse elements ::: missing values cover 3 situations, blank(really missing), undefined, and null  ::: see line 6.b and 6.c in pseudoSource": function(){
+      "sparseArrayFiltered(done) ::: forEach can ignore the deleted or uninitialized (or missing) values/elements in a sparse array, and is only invoked by non-sparse elements ::: However, missing values does not cover undefined, and null. elements as undefined and null will invoke callback  ::: see line 6.b and 6.c in pseudoSource": function(){
         var arraySparse = [1,,3,undefined, null];
         var numCallbackRuns = 0;
 
-        forEach(arraySparse, function(){
+        forEach(arraySparse, function(el){
+          
+          console.log("each element is : ", el);
+
           numCallbackRuns++;
         });
-
-        console.log("numCallbackRuns should be 2, is actually: ", numCallbackRuns);
-        eq(2, numCallbackRuns);
+        
+        console.log("numCallbackRuns should be 4, is actually: ", numCallbackRuns);
+        eq(4, numCallbackRuns);
       },
 
       

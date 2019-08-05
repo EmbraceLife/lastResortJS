@@ -87,14 +87,16 @@
         eq(returnedValue, undefined);
       },
 
-      "sparseArrayProcessed ::: forEach can ignore the deleted or uninitialized (or missing) values/elements in a sparse array, and is only invoked by non-sparse elements": function(){
-        var arraySparse = [1,,3];
+      "sparseArrayFiltered ::: forEach can ignore the deleted or uninitialized (or missing, but not include undefined and null) values/elements in a sparse array, and is only invoked by non-sparse elements": function(){
+        var arraySparse = [1,,3,undefined, null];
         var numCallbackRuns = 0;
 
-        arraySparse.forEach(function(){
+        arraySparse.forEach(function(el){
+          console.log("element in each iter is : ", el); 
           numCallbackRuns++;
         });
-        eq(2, numCallbackRuns);
+        console.log("there should be 4 runs, and actually is : ", numCallbackRuns);
+        eq(4, numCallbackRuns);
       },
 
       "iterationIndependentArrayPush ::: Elements which are appended to the array after the call to forEach() begins will not be visited by callback ::: Basically it says, if we add items to the array in callback, the new items won't invoke callback.": function() {
