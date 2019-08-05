@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I will read docs and write all use cases of fitler in this file</title>
+  </head>
+  <body>
+    <!-- let's import the testing library -->
+    <script src="../tinytest.js"></script>
+    <script>
+    tests({
+      
+      "filterElementsByCallback ::: filter() will create a new array, using all the elements which pass the test that provided by the callback/function inside filter, the elements fail the test are not included in the new array ::: This is the main use case for filter*/": function() {
+        
+        var arrayTest = [10];
+        var arrayResult = arrayTest.filter(function(el){
+          
+          return el > 5;
+        });
+
+        console.log("the new array should be [10], and is actually : ", arrayResult);
+
+        eq(1, arrayResult.length);
+      },
+    
+      "callbackAsTest ::: Basically, callback has 3 args, and return true or false! ::: callback is a test, and every element will be tested, callback returns true if the element passes, false otherwise ::: In terms of test for filter, we shall focus on what filter passes to callback here ::: whether callback returns true or false, shall not be a test for filter": function() {
+
+      },
+
+      "threeArgsCallback ::: filter passes 3 args to callback, element, index, and array ::: Let's check them all at once":function() {
+      var arrayTest = [6];
+      arrayTest.filter(function(element, index, array){
+          
+          console.log("the element should be 6 and is actually : ", element);
+          eq(6, element);
+
+          console.log("the index should be 0 and is actually : ", 0);
+          eq(0, index);
+
+          console.log("the array should be [6], and is actually : ", array);
+          eq(arrayTest, array);
+
+        })
+      },
+    })
+    </script>
+  </body>
+</html>
