@@ -4,10 +4,7 @@
     <title>I will read docs and write all use cases of fitler in this file</title>
   </head>
   <body>
-    <!-- Actually there is an easy way to compare and debug the two comparison here. I pasted the polyfill version into this file for testing official Array.prototype.filter. The polyfill version should pass all tests too. 
     
-    Let's check on it first. Now, let's run it. 
-    -->
     <script src="../tinytest.js"></script>
     <script>
       Array.prototype.filterPF = function(func, thisArg) {
@@ -21,8 +18,8 @@
       if (thisArg === undefined){
         while (++i !== len){
           if (i in this){ 
-            if (func(t[i], i, t)){/* so basically, I need to check whether t[i] here equals to */
-              res[c++] = t[i];/* t[i] here????? so we set a debugger here. line 24 */
+            if (func(t[i], i, t)){
+              res[c++] = t[i];
             }
           }
         }
