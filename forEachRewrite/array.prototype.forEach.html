@@ -99,17 +99,19 @@
         eq(4, numCallbackRuns);
       },
 
-      "iterationIndependentArrayPush ::: Elements which are appended to the array after the call to forEach() begins will not be visited by callback ::: Basically it says, if we add items to the array in callback, the new items won't invoke callback.": function() {
+      "arrayPushUnshiftIterationsFixed ::: During iterations the array can be pushed or unshifted ::: the total iterations is based on length of starting version of array, which is fixed ::: such iterations is not necessarily (missing values) equal to numCallbackRuns": function() {
         var arrayTest = [10];
         var numCallbackRuns = 0;
 
-        arrayTest.forEach(function(_, _, array){
-          array.push("new1");
+        arrayTest.forEach(function(el, _, array){
+          array.push("new");
+          array.unshift("old");
           console.log(array);
           numCallbackRuns++;
-          console.log(numCallbackRuns); 
+          console.log(el); 
         });
 
+        console.log("the numCallbackRuns should be 1 and is actually :", numCallbackRuns);
         eq(1, numCallbackRuns);
       }, 
 

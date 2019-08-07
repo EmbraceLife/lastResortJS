@@ -4,42 +4,76 @@
     <title>I will read docs and write all use cases of fitler in this file</title>
   </head>
   <body>
+    <!-- Actually there is an easy way to compare and debug the two comparison here. I pasted the polyfill version into this file for testing official Array.prototype.filter. The polyfill version should pass all tests too. 
     
+    Let's check on it first. Now, let's run it. 
+    -->
     <script src="../tinytest.js"></script>
-    
     <script>
+      Array.prototype.filterPF = function(func, thisArg) {
+      'use strict';
+      if ( ! ((typeof func === 'Function' || typeof func === 'function') && this) )
+          throw new TypeError();
+    
+      var len = this.length >>> 0,
+          res = new Array(len), 
+          t = this, c = 0, i = -1;
+      if (thisArg === undefined){
+        while (++i !== len){
+          if (i in this){ 
+            if (func(t[i], i, t)){/* so basically, I need to check whether t[i] here equals to */
+              res[c++] = t[i];/* t[i] here????? so we set a debugger here. line 24 */
+            }
+          }
+        }
+      }
+      else{
+        while (++i !== len){
+          
+          if (i in this){
+            if (func.call(thisArg, t[i], i, t)){
+              res[c++] = t[i];
+            }
+          }
+        }
+      }
+    
+      res.length = c; 
+      return res;
+    };
+
     tests({
       
-     
       "filterElementsByCallback(improved done) ::: filter() will create a new array, using all the elements which pass the test that is provided by the callback inside filter (the elements fail the test are not included in the new array) ::: core use case": function() {
         
         var arrayTest = [1,5,10];
-        var arrayResult = arrayTest.filter(function(el){
+        var arrayResult = arrayTest.filterPF(function(el){
           return el > 5;
         });
 
         console.log("the new array should be [10], and is actually : ", arrayResult);
         eq(10, arrayResult[0]);
+
         console.log("the length of the new array should be 1, and is actually : ", arrayResult.length);
         eq(1, arrayResult.length);
       }, 
-  
+    
       "callbackAsTest ::: Basically, callback has 3 args, and return true or false! ::: callback is a test, and every element will be tested, callback returns true if the element passes, false otherwise ::: In terms of test for filter, we shall focus on what filter passes to callback here ::: whether callback returns true or false, shall not be a test for filter": function() {
 
       },
 
       "threeArgsCallback(improved done) ::: filter passes 3 args to callback, element, index, and array ::: Let's check them all at once": function() {
       var arrayTest = [6];
-      arrayTest.filter(function(element, index, array){
+      arrayTest.filterPF(function(element, index, array){
           
-          console.log("the element should be 6 and is actually : ", element);
-          eq(6, element);
+        console.log("the element should be 6 and is actually : ", element);
+        eq(6, element);
 
-          console.log("the index should be 0 and is actually : ", 0);
-          eq(0, index);
+        console.log("the index should be 0 and is actually : ", 0);
+        eq(0, index);
 
-          console.log("the array should be [6], and is actually : ", array);
-          eq(arrayTest, array);
+        console.log("the array should be [6], and is actually : ", array);
+        eq(arrayTest, array);
 
         })
       },
@@ -47,7 +81,7 @@
 
       "thisArg(improved done) ::: As we already know, thisArg is to provide the object to which `this` inside callback will refer": function() {
         var arrayTest = [-8, 8];
-        var newArray = arrayTest.filter(function(el){
+        var newArray = arrayTest.filterPF(function(el){
           if (el > 0) {
             console.log("the sum should be 0 and is actually : ", this.number + el);
             eq(0, this.number + el);
@@ -62,7 +96,7 @@
 
       "sparseArrayMissingFiltered(improved done) ::: callback is invoked only for indexes of the array which have assigned values ::: it is not invoked for indexes which have been deleted or which have never been assigned values ::: filter will use `undefined` and `null` to invoke callback ::: Note: NaN ==== NaN is false": function(){
         var sparseArray = [1,,undefined, null, NaN];
-        var newArray = sparseArray.filter(function(el){
+        var newArray = sparseArray.filterPF(function(el){
           return true; 
         });
 
@@ -77,10 +111,10 @@
 
       }, 
 
-      "arrayMutableIterationsFixedAddedElementNoInvoke(Improved, done) ::: filter()'s callback can mutate the array during each iteration ::: but the starting length of the array (3 in the following example) is kept as the base (not necessarily equal to) of the number of callback runs": function(){
+      "arrayMutableIterationsFixedAddedElementNoInvoke(Improved, done) ::: filter()'s callback can mutate the array during each iteration ::: but the starting length of the array (3 in the following example) is kept as the base (not necessarily equal to) of the number of callback runs ::: However, this polyfill version is missing a line of code": function(){
         var numCallbackRuns = 0;
         var arrayTest = [1,2,3];
-        var arrayResult = arrayTest.filter(function(el, idx, arr){
+        var arrayResult = arrayTest.filterPF(function(el, idx, arr){
 
           if (idx === 0) {
             console.log("before mutation, arr is : ", arr);
@@ -102,7 +136,7 @@
           
           return true; 
         });
-        
+
         console.log("arrayTest after filter is : ", arrayTest);
 
         console.log("numCallbackRuns should be 3 (the starting length of arrayTest), and is actually : ", numCallbackRuns); 
@@ -112,10 +146,11 @@
         eq(1, arrayResult[0]);
       },
 
+
       "pushedElementsNotInvokeCallback(done, improved) ::: Elements which are appended to the array after the call to filter() begins will not be visited by callback ::: this is a variant use case from the test above. As the length is fixed, added elements get no change to be passed to callback ::: Why add this test - as a review from a specific usage": function(){
         var arrayTest = [1,2];
         var numCallbackRuns = 0;
-        var arrayResult = arrayTest.filter(function(el, idx, arr){
+        var arrayResult = arrayTest.filterPF(function(el, idx, arr){
           
           arr.push('new');
           console.log("at iteration ", idx, ", after push, the arr : ", arr);
@@ -138,7 +173,7 @@
       "unshiftedElementsNotInvokeCallback(done, improved) ::: if we unshift a few items to the array, the added elements will not be passed to callback neither ::: because given the fixed iteration number and index increments, the same existing element will be stored in the new array ": function() {
         var numCallbackRuns = 0;
         var arrayTest = [1,2];
-        var result = arrayTest.filter(function(el, idx, arr){
+        var result = arrayTest.filterPF(function(el, idx, arr){
           if (idx === 0 ){
             console.log("the starting arrayTest is : ", arr);
 
@@ -165,7 +200,7 @@
 
       "iterationsFixedExistingValuesMutable(done, improved) ::: if existing items edited or deleted, as long as it is done before they are passed to callback, the changed value will invoke the callback ::: see the second changed element in the following example ": function(){
         var arrayTest = [1,2];
-        var arrayResult = arrayTest.filter(function(el, idx, arr){
+        var arrayResult = arrayTest.filterPF(function(el, idx, arr){
           
           if (idx === 0) {
             arr[0] = 'old'; 
@@ -184,9 +219,10 @@
         eq(1, arrayResult[0]);
       },
 
+
       "pushedElementsInvokeCallbackIfShifted (done, improved) ::: if you add items to the end of an array, and delete items from the front, the pushed item will invoke callback, because the length of the array at the start was recorded and fixed, and index will continue to increment": function() {
         var arrayTest = [1,2];
-        var result = arrayTest.filter(function(el, idx, arr){
+        var result = arrayTest.filterPF(function(el, idx, arr){
 
           if (idx === 0) {
             arr.push('new');
