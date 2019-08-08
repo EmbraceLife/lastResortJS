@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Let's start writing tests based on features on the left</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+    <script>
+    
+    tests({
+      "feature 1 ::: 3Args ::: currentValue for current element which invokes callback; the index of the current element; and the array ": function() {
+        var arrayTest = [8];
+        arrayTest.map(function(el,idx,arr){
+          
+          console.log("the current element should be 8 and is actually : ", el);
+          eq(8, el);
+
+          console.log("the current index should be 0, and is actually : ", idx);
+          eq(0, idx);
+
+          console.log("the array should be [8], and is actually : ", arr);
+        });
+      }, 
+
+      "feature 2 ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
+        var arrayTest = [8];
+        var newArray = arrayTest.map(function(el){
+          
+          return el - 8; 
+        });
+
+        console.log("the newArray should be [0] and is actually : ", newArray);
+        eq(0, newArray[0]);
+      }, 
+
+      
+
+    })
+    
+    </script>
+  </body>
+</html>
