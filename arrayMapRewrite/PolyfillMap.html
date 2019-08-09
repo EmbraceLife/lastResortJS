@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Previously I have read the pseudo-code in specs and now let's read this correct version of Polyfill.</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+    <script>
+      /* !!!! Todo !!!! 
+      - write down today's rabbit hole !!!!!!!!! 
+      - Learn from Polyfill
+        - Object(this)
+        - var len = O.length >>> 0; :::  equal to pseudo-code ToUnit32(O.length)
+        - typeof callback !== 'function' ::: check whether callback is a function or not
+        - throw new TypeError(callback + ' is not a function'); ::: how to throw an error
+        - arguments.length > 1 ::: arguments contains all args
+        - A = new Array(len); ::: create a new empty array with length `len`
+        - if (k in O) {} ::: equal to O.hasOwnProperty(k) being true or not
+        - mappedValue = callback.call(T, kValue, k, O); ::: call === bind + run
+        - A[k] = mappedValue; ::: to see the source code behind it is illuminating
+      */
+      Array.prototype.mapPF = function(callback/*, thisArg, why not?*/) {/* create a method to Array */
+        
+        var T, A, k; /* get a group of variables, specified in specs. T refer to This or thisArg, A is the newArray to be returned and k is the index of array */
+
+        if (this == null) {/* if this (refer to Array) is null, meaning no array actually available. Let's throw a type error */
+          throw new TypeError('this is null or not defined');
+        }
+
+        var O = Object(this);/* assign the array to variable O (specified in the specs). The use of Object() is a new concept to me */
+
+        var len = O.length >>> 0;/* get the original array's length fixed and stored in `len` */
+
+        if (typeof callback !== 'function') {/* check whether callback is a function or not */
+          throw new TypeError(callback + ' is not a function');
+        }
+
+        // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+        if (arguments.length > 1) {/* arguments is very convenient to get args */
+          T = arguments[1];/* the unassigned variable is undefined */
+        }
+
+        // 6. Let A be a new array created as if by the expression new Array(len) 
+        //    where Array is the standard built-in constructor with that name and 
+        //    len is the value of len.
+        A = new Array(len);/* create a new array with length `len`. Let's see how it work */
+
+        // 7. Let k be 0
+        k = 0;
+
+        // 8. Repeat, while k < len
+        while (k < len) {
+
+          var kValue, mappedValue;
+
+          // a. Let Pk be ToString(k).
+          //   This is implicit for LHS operands of the in operator
+          // b. Let kPresent be the result of calling the HasProperty internal 
+          //    method of O with argument Pk.
+          //   This step can be combined with c
+          // c. If kPresent is true, then
+          if (k in O) {/* a, b, c above are done with this single line */
+
+            // i. Let kValue be the result of calling the Get internal 
+            //    method of O with argument Pk.
+            kValue = O[k];/* this line is crucial for filter, but not really necessary for map I think */
+
+            // ii. Let mappedValue be the result of calling the Call internal 
+            //     method of callback with T as the this value and argument 
+            //     list containing kValue, k, and O.
+            mappedValue = callback.call(T, kValue, k, O);/* now bind (in my code) is replace with call, and adding the 3 args for callback to directly run the callback*/
+
+            // iii. Call the DefineOwnProperty internal method of A with arguments
+            // Pk, Property Descriptor
+            // { Value: mappedValue,
+            //   Writable: true,
+            //   Enumerable: true,
+            //   Configurable: true },
+            // and false.
+
+            // In browsers that support Object.defineProperty, use the following:
+            // Object.defineProperty(A, k, {
+            //   value: mappedValue,
+            //   writable: true,
+            //   enumerable: true,
+            //   configurable: true
+            // });
+
+            // For best browser support, use the following:
+            A[k] = mappedValue;/* the code above is illuminating */
+          }
+          // d. Increase k by 1.
+          k++;/* for the while loop  */
+        }
+
+        // 9. return A
+        return A;
+        };
+    
+      /* let's test on our use cases */
+      tests({
+        "feature 1 ::: 3Args ::: currentValue for current element which invokes callback; the index of the current element; and the array ": function() {
+          var arrayTest = [8];
+          arrayTest.mapPF(function(el,idx,arr){
+            
+            console.log("the current element should be 8 and is actually : ", el);
+            eq(8, el);
+
+            console.log("the current index should be 0, and is actually : ", idx);
+            eq(0, idx);
+
+            console.log("the array should be [8], and is actually : ", arr);
+          });
+        }, 
+
+        "feature 2 ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
+          var arrayTest = [8];
+          var newArray = arrayTest.mapPF(function(el){
+            
+            return el - 8; 
+          });
+
+          console.log("the newArray should be [0] and is actually : ", newArray);
+          eq(0, newArray[0]);
+        }, 
+
+        "Feature 3 ::: thisArg ::: optional arg, either refers to an user given object or undefined": function(){
+          var arrayTest = [8];
+          
+          var newArray = arrayTest.mapPF(function(el){
+            console.log("this inside callback should be undefined (in Chrome it is window object), and actually is : ", this);
+            eq(window, this);
+          }); 
+          
+          var newArrayThis = arrayTest.mapPF(function(el){
+            console.log("this inside callback should be the object {number: -8}, and actually is : ", this);
+            eq(-8, this.number);
+          }, {"number": -8}); 
+          
+        },
+
+        "Feature 4 ::: numIterationsFixed ::: the range of the elements are fixed (the length of the array is recorded before the first call to callback)": function() {
+        var arrayTest = [1,2]; 
+        var numCallbackRuns = 0;
+        var arrayResult = arrayTest.mapPF(function(el, idx, arr){
+          arr.push("new");
+          numCallbackRuns++;
+        });
+        console.log("the array should be [1,2,'new', 'new'] and actually is : ", arrayTest);
+        eq(4, arrayTest.length);
+        console.log("the total number of iterations should be 2 and is actually : ", numCallbackRuns);
+        eq(2, numCallbackRuns);
+      },
+
+        "Feature 5 ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
+          var arrayTest = [1,2];
+          var newArray = arrayTest.mapPF(function(el, idx, arr){
+          
+            arr.push(3);  
+            console.log("the array at the end of each iteraiton is : ", arr);
+            
+            return el + 0; 
+          });
+          console.log("the length of newArray is 2 and is actually : ", newArray.length);
+
+          console.log("the first element of newArray should be 1 and is actually : ", newArray[0]);
+          eq(1, newArray[0]);
+
+          console.log("the second element of newArray should be 2 and is actually : ", newArray[1]);
+          eq(2, newArray[1]);
+        },
+      
+        "Feature 6 ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
+          var arrayTest = [1,2];
+          var newArray = arrayTest.mapPF(function(el, idx, arr){
+            if (idx === 0) {
+              console.log("before array mutation, the array should be [1,2] and actually is : ", arr);
+
+              arr[0] = 10;
+              arr[1] = 9;
+              
+              console.log("after changing the existing items' values, the array should be [10,9] and actuall is : ", arr);
+              
+              console.log("at iteration ", idx, ", the current element should be 1 and is actually : ", el);
+              eq(1, el);
+
+            } else {
+              console.log("at iteration ", idx, ", the current element should be 9 and is actually : ", el);
+              eq(9, el);
+            } 
+          });
+        }, 
+      
+        "Feature 7 done ::: existingElementDeletedNotInvoke ::: an element deleted after passing to map but before passing to callback, will not invoke callback": function() {
+        var arrayTest = [1,2];
+        var numCallbackRuns = 0;
+        var newArray = arrayTest.mapPF(function(el, idx, arr){
+          
+          if (idx === 0) {
+            console.log("Before splice the second item, arr should be [1,2] and actually is : ", arr);
+
+            arr.splice(1, 1); 
+          }
+
+          numCallbackRuns++; 
+          return el;
+        });
+        console.log("the numCallbackRuns should be 1 and is actually : ", numCallbackRuns);
+        eq(1, numCallbackRuns);
+
+        console.log("the newArray should [1], and is actually : ", newArray);
+      },
+      })  
+    </script>
+  </body>
+</html>

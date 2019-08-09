@@ -26,4 +26,21 @@ para5: edge
 
 <image src="./description.png">
 
+Now, let's walk through the pseudo code of map.
+
+1. assign the object or array to variable `O`
+2. assign the length of O to variable `len`
+3. if `callback` is not callable, throw a type error
+4. if object behind `thisArg` is available, assign it to `T`, otherwise, assign `undefined` to `T`
+5. create an empty error with a length of `len` based on array `O`
+6. assign 0 to `k` (as index of array)
+7. doing a while loop for `len` times
+  a. make `k` a string under `Pk`
+  b. if `O[Pk]` has a value (not missing), assign true to `kPresent`, otherwise false
+  c. if `kPresent` is true, 
+    i. assign `O[Pk]` to `kValue` (different from filter, this step seems not necessary)
+    ii. run callback and get result assigned to `mappedValue`
+    iii. add the `mappedValue` to `A`
+  d. increment k by 1
+8. return `A`
 <image src="./ps.png">

@@ -1,16 +1,38 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Let's start writing tests based on features on the left</title>
+    <title>Let's write up myMap by building it up case by case</title>
   </head>
   <body>
     <script src="../tinytest.js"></script>
     <script>
-    
+
+    function map(array, callback, thisArg){
+      var newArray = []; 
+
+      if (thisArg) {
+        callback = callback.bind(thisArg);
+      } else {
+        callback = callback.bind(undefined); 
+      }
+
+      var originalLength = array.length;
+
+      for (i = 0; i < originalLength; i++) {
+        if (array.hasOwnProperty(i)) {
+          var result = callback(array[i], i, array);
+          newArray.push(result); 
+        }
+      }
+      
+      return newArray; 
+    }
+
+
     tests({
-      "feature 1 ::: 3Args ::: currentValue for current element which invokes callback; the index of the current element; and the array ": function() {
+      "feature 1 done ::: 3Args ::: currentValue for current element which invokes callback; the index of the current element; and the array ": function() {
         var arrayTest = [8];
-        arrayTest.map(function(el,idx,arr){
+        map(arrayTest, function(el,idx,arr){
           
           console.log("the current element should be 8 and is actually : ", el);
           eq(8, el);
@@ -22,9 +44,10 @@
         });
       }, 
 
-      "feature 2 ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
+
+      "feature 2 done ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
         var arrayTest = [8];
-        var newArray = arrayTest.map(function(el){
+        var newArray = map(arrayTest, function(el){
           
           return el - 8; 
         });
@@ -33,42 +56,45 @@
         eq(0, newArray[0]);
       }, 
 
-      "Feature 3 ::: thisArg ::: optional arg, either refers to an user given object or undefined": function(){
+      
+      "Feature 3 done ::: thisArg ::: optional arg, either refers to an user given object or undefined": function(){
         var arrayTest = [8];
         
-        var newArray = arrayTest.map(function(el){
+        var newArray = map(arrayTest, function(el){
           console.log("this inside callback should be undefined (in Chrome it is window object), and actually is : ", this);
           eq(window, this);
         }); 
         
-        var newArrayThis = arrayTest.map(function(el){
+        var newArrayThis = map(arrayTest, function(el){
           console.log("this inside callback should be the object {number: -8}, and actually is : ", this);
           eq(-8, this.number);
         }, {"number": -8}); 
         
       },
 
-      "Feature 4 ::: numIterationsFixed ::: the range of the elements are fixed (the length of the array is recorded before the first call to callback)": function() {
+
+      "Feature 4 done ::: numIterationsFixed ::: the range of the elements are fixed (the length of the array is recorded before the first call to callback)": function() {
         var arrayTest = [1,2]; 
         var numCallbackRuns = 0;
-        var arrayResult = arrayTest.map(function(){
-          
+        var arrayResult = map(arrayTest, function(el, idx, arr){
+          arr.push("new");
           numCallbackRuns++;
         });
-
+        console.log("the array should be [1,2,'new', 'new'] and actually is : ", arrayTest);
+        eq(4, arrayTest.length);
         console.log("the total number of iterations should be 2 and is actually : ", numCallbackRuns);
         eq(2, numCallbackRuns);
       },
 
-      "Feature 5 ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
+      "Feature 5 done ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
         var arrayTest = [1,2];
-        var newArray = arrayTest.map(function(el, idx, arr){
+        var newArray = map(arrayTest, function(el, idx, arr){
         
           arr.push(3);  
           console.log("the array at the end of each iteraiton is : ", arr);
-          
           return el + 0; 
         });
+
         console.log("the length of newArray is 2 and is actually : ", newArray.length);
 
         console.log("the first element of newArray should be 1 and is actually : ", newArray[0]);
@@ -76,11 +102,13 @@
 
         console.log("the second element of newArray should be 2 and is actually : ", newArray[1]);
         eq(2, newArray[1]);
+
+
       },
     
-      "Feature 6 ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
+      "Feature 6 done ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
         var arrayTest = [1,2];
-        var newArray = arrayTest.map(function(el, idx, arr){
+        var newArray = map(arrayTest, function(el, idx, arr){
           if (idx === 0) {
             console.log("before array mutation, the array should be [1,2] and actually is : ", arr);
 
@@ -102,7 +130,7 @@
       "Feature 7 done ::: existingElementDeletedNotInvoke ::: an element deleted after passing to map but before passing to callback, will not invoke callback": function() {
         var arrayTest = [1,2];
         var numCallbackRuns = 0;
-        var newArray = arrayTest.map(function(el, idx, arr){
+        var newArray = map(arrayTest, function(el, idx, arr){
           
           if (idx === 0) {
             console.log("Before splice the second item, arr should be [1,2] and actually is : ", arr);
