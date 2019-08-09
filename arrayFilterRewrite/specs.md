@@ -29,3 +29,5 @@ I will try to explore it in this video by reading the pseudo code line by line.
 
 <image src="./ECMAS2020.1.png">
 https://tc39.es/ecma262/#sec-array.prototype.filter
+
+Note: in filter, the line `kValue = O[k]` is a must to ensure the newArray get the same value even when callback mutates the array
