@@ -31,6 +31,9 @@
               idxStart = i+1;
               break;
             }
+            if (i + 1 === array.length){/* Feature 12 ::: arrayFullOfMissingValues */
+              throw new TypeError(array + ": The array is an empty array and no initialValue available.")
+            }
           }
         }
 
@@ -46,7 +49,6 @@
 
       tests({
 
-        /* Let's reorganize the order of tests. Feature 0 is way to complex to put first. Feature 3 is the simplest, as we can do it in a few lines of code right at the beginning without even going into loops */
         "Feature 1 ::: callbackMustBeFunction ::: if not, throw a type error": function(){
           var arrayTest = [1,2];
           try {
@@ -265,6 +267,16 @@
           eq(1, numIter);
 
           console.log("the output should be 3 and is actually : ", output);
+        },
+
+        "Feature 12 ::: arrayFullOfMissingValues ::: array with length > 0 but all values are missing should be seen as empty array + No initialValue = type error trigger": function(){
+          var arrayTest = [,,,,];
+          try {
+            var output = reduce(arrayTest, function(){});
+          }
+          catch(error){
+            console.log(error);
+          }
         },
 
         })

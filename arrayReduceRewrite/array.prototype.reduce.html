@@ -8,35 +8,47 @@
     <script>
       tests({
 
-        "Feature hidden ::: missingValueFront ::: the missing front values should be ignored ": function(){
-          var arrayTest = [,,1,2];
-          var numIter = 0; 
-          var output = arrayTest.reduce(function(pre, el, idx, arr){
-            numIter++; 
-            return pre + el;
-          });
-          console.log("the numIter should be 1, and is actually : ", numIter);
-          eq(1, numIter);
-
-          console.log("the output should be 3 and is actually : ", output);
+        "Feature 1 ::: callbackMustBeFunction ::: if not, throw a type error": function(){
+          var arrayTest = [1,2];
+          try {
+            var output = arrayTest.reduce(3);
+          }
+          catch(error) {
+            console.log(error);
+          }
         },
 
-        "Hidden Feature 2 ::: missingValueMiddle ::: if middle values are missing, they are ignored too, numIter count as if there is no missing value": function(){
-          var arrayTest = [, 1, , 2,3];
-          var numIter = 0;
-          var output = arrayTest.reduce(function(pre, el, idx, arr){
-            numIter++;
-            return pre + el;
-          });
-          console.log("the numIter should be 2, and is actually : ", numIter);
-          eq(2, numIter);
 
-          console.log("the output should be 6, and is actually : ", output);
-          eq(6, output);
-
+        "Feature 2 ::: EmptyArrayNoInitialValue ::: an empty array without optional arg (initialValue) will trigger an type error": function(){
+          var arrayTest = []; 
+          try {
+            var output = arrayTest.reduce(function(){});
+            console.log("Failed !!!! No error captured !!!")
+          }
+          catch(error){
+            console.log("There should be a type error, and actually is : ", error);
+          } 
         },
 
-        "Feature 0 done ::: singleOutput ::: case 0: if no return in callback, reduce return undefined ::: case 1: if callback just return true, reduce return true ::: case 2: if normal, return a single value": function(){
+
+        "Feature 3 ::: 4ArgsCallback ::: callback can access four items from reduce ::: without optional initialValue, previousValue is the first value and currentValue is the second value.": function(){
+          var arrayTest = [1,2];
+          var output = arrayTest.reduce(function(pre, el, idx, arr){/* work on test 1. the function should be good for this test */
+            console.log("the previousValue should be 1 (because no optional initialValue provided) and is actually : ", pre);
+            eq(1, pre);
+
+            console.log("the currentValue should be 2 and is actually : ", el);
+            eq(2, el);
+
+            console.log("the index of current element is 1 (no optional initialValue provided) and is actually : ", idx);
+            eq(1, idx);
+
+            console.log("the array should be [1,2], and actually is : ", arr);
+            eq(2, arr.length);
+          });
+        },
+
+        "Feature 4 ::: singleOutput ::: case 0: if no return in callback, reduce return undefined ::: case 1: if callback just return true, reduce return true ::: case 2: if normal, return a single value ::: compare with forEach, filter, map": function(){
           var arrayTest = [1,2];
           var output1 = arrayTest.reduce(/* let's check with test 0 */function(){
           });
@@ -56,26 +68,10 @@
           eq(3, output3);
         },
 
-        "Feature 1 done ::: 4Args ::: callback can access four items from reduce ::: without optional initialValue, previousValue is the first value and currentValue is the second value.": function(){
+
+        "Feature 5 ::: initialValue ::: if initialValue provided, the previousValue will be the initialValue and currentValue be the first value; otherwise, first value and second value": function(){
           var arrayTest = [1,2];
-          var output = arrayTest.reduce(function(pre, el, idx, arr){/* work on test 1. the function should be good for this test */
-            console.log("the previousValue should be 1 (because no optional initialValue provided) and is actually : ", pre);
-            eq(1, pre);
-
-            console.log("the currentValue should be 2 and is actually : ", el);
-            eq(2, el);
-
-            console.log("the index of current element is 1 (no optional initialValue provided) and is actually : ", idx);
-            eq(1, idx);
-
-            console.log("the array should be [1,2], and actually is : ", arr);
-            eq(2, arr.length);
-          });
-        },
-
-        "Feature 2 done ::: optionalArg ::: if initialValue provided, the previousValue will be the initialValue and currentValue be the first element value": function(){
-          var arrayTest = [1,2];
-          var output = arrayTest.reduce(function(pre, el, idx){/* this one should work too */
+          var output = arrayTest.reduce(function(pre, el, idx){
             
             if (idx === 0) {
               console.log("the previousValue given initialValue provided should be 3, and is actually : ", pre);
@@ -91,18 +87,8 @@
           eq(6, output);
         },
 
-        "Feature 3 done ::: TypeError ::: an empty array without optional arg (initialValue) will trigger an type error": function(){
-          var arrayTest = []; 
-          try {
-            var output = arrayTest.reduce(function(){});
-            console.log("Failed !!!! No error captured !!!")
-          }
-          catch(error){
-            console.log("There should be a type error, and actually is : ", error);
-          } 
-        },
 
-        "Feature 4 done ::: totalIterations ::: if the new elements get added, but the total iterations stay the same": function(){
+        "Feature 6 ::: totalIterationsAsOriginalLength ::: if the new elements get added, but the total iterations stay the same to the length of original array": function(){
           var arrayTest1 = [1,2];
           var arrayTest2 = [1,2];
           var numIter1 = 0;
@@ -138,7 +124,7 @@
           eq(6, output2);
         },
 
-        "Feature 5 done ::: case 1: appended item won't invoke callback ::: case 2: but if the first element get deleted, the appended items can get to invoke callback.": function(){
+        "Feature 7 ::: totalIterationsAsOriginalLength ::: case 1: appended item won't invoke callback ::: case 2: but if the first element get deleted, the appended items can get to invoke callback.": function(){
           var arrayTest1 = [1,2];
           var numIter1 = 0;
           var output1 = arrayTest1.reduce(function(pre,el,idx,arr){/* my function should work on this one */
@@ -174,7 +160,7 @@
           eq(8, output2);
         },
 
-        "Feature 6 done ::: if next element's value changed now, in the next iteration the changed value will be passed to callback": function(){
+        "Feature 8 ::: totalIterationsAsOriginalLength ::: if next element's value changed now, in the next iteration the changed value will be passed to callback": function(){
           var arrayTest = [1,2,3];
           var numIter = 0;
           var output = arrayTest.reduce(function(pre, el, idx, arr){ /* it should work */
@@ -196,7 +182,7 @@
         },
 
 
-        "Feature 7 done ::: elements deleted by callback before being passed to callback will not be visited by callback.": function(){
+        "Feature 9 ::: totalIterationsAsOriginalLength ::: elements deleted by callback before being passed to callback will not be visited by callback.": function(){
           var arrayTest = [1,2,3];
           var numIter = 0;
           var output = arrayTest.reduce(function(pre, el, idx, arr){
@@ -212,6 +198,44 @@
           
           console.log("numIter should be 1, and actually is : ", numIter);
           eq(1, numIter);
+        },
+
+        "Feature 10 ::: currentMissingValue ::: if current value is  missing, then it won't invoke callback": function(){
+          var arrayTest = [, 1, , 2,3];
+          var numIter = 0;
+          var output = arrayTest.reduce(function(pre, el, idx, arr){
+            numIter++;
+            return pre + el;
+          });
+          console.log("the numIter should be 2, and is actually : ", numIter);
+          eq(2, numIter);
+
+          console.log("the output should be 6, and is actually : ", output);
+          eq(6, output);
+
+        },
+
+        "Feature 11 ::: preValueMissingBeforeCurrent ::: the missing front values should be ignored, pre starts with non-missing value ::: as two missing values added together is NaN": function(){
+          var arrayTest = [,,1,2];
+          var numIter = 0; 
+          var output = arrayTest.reduce(function(pre, el, idx, arr){
+            numIter++; 
+            return pre + el;
+          });
+          console.log("the numIter should be 1, and is actually : ", numIter);
+          eq(1, numIter);
+
+          console.log("the output should be 3 and is actually : ", output);
+        },
+
+        "Feature 12 ::: arrayFullOfMissingValues ::: array with length > 0 but all values are missing should be seen as empty array + No initialValue = type error trigger": function(){
+          var arrayTest = [,,,,];
+          try {
+            var output = arrayTest.reduce(function(){});
+          }
+          catch(error){
+            console.log(error);
+          }
         },
 
         })

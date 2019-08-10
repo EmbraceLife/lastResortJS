@@ -44,7 +44,7 @@
                 throw new TypeError( 'Reduce of empty array ' +
                   'with no initial value' );
               }
-              value = o[k++];
+              value = o[k++];/* is equivalent to value = O[k]; k++; */
             }
 
             // 8. Repeat, while k < len
@@ -72,37 +72,49 @@
     
       tests({
 
-        "Feature hidden ::: missingValueFront ::: what would happen if front elements are missing values": function(){
-          var arrayTest = [,,1,2];
-          var numIter = 0; /* it should be just 1 iteration, according to official reduce */
-          var output = arrayTest.reducePF(function(pre, el, idx, arr){
-            numIter++; 
-            return pre + el;
-          });
-          console.log("the numIter should be 1, and is actually : ", numIter);
-          eq(1, numIter);
-
-          console.log("the output should be 3 and is actually : ", output);
-        },
-
-        "Hidden Feature 2 ::: missingValueMiddle ::: if middle values are missing, they are ignored too, numIter count as if there is no missing value": function(){
-          var arrayTest = [, 1, , 2,3];
-          var numIter = 0;
-          var output = arrayTest.reducePF(function(pre, el, idx, arr){
-            numIter++;
-            return pre + el;
-          });
-          console.log("the numIter should be 2, and is actually : ", numIter);
-          eq(2, numIter);
-
-          console.log("the output should be 6, and is actually : ", output);
-          eq(6, output);
-
-        },
-
-        "Feature 0 OK ::: singleOutput ::: case 0: if no return in callback, reduce return undefined ::: case 1: if callback just return true, reduce return true ::: case 2: if normal, return a single value": function(){
+        "Feature 1 ::: callbackMustBeFunction ::: if not, throw a type error": function(){
           var arrayTest = [1,2];
-          var output1 = arrayTest.reducePF(function(){
+          try {
+            var output = arrayTest.reducePF(3);
+          }
+          catch(error) {
+            console.log(error);
+          }
+        },
+
+
+        "Feature 2 ::: EmptyArrayNoInitialValue ::: an empty array without optional arg (initialValue) will trigger an type error": function(){
+          var arrayTest = []; 
+          try {
+            var output = arrayTest.reducePF(function(){});
+            console.log("Failed !!!! No error captured !!!")
+          }
+          catch(error){
+            console.log("There should be a type error, and actually is : ", error);
+          } 
+        },
+
+
+        "Feature 3 ::: 4ArgsCallback ::: callback can access four items from reduce ::: without optional initialValue, previousValue is the first value and currentValue is the second value.": function(){
+          var arrayTest = [1,2];
+          var output = arrayTest.reducePF(function(pre, el, idx, arr){/* work on test 1. the function should be good for this test */
+            console.log("the previousValue should be 1 (because no optional initialValue provided) and is actually : ", pre);
+            eq(1, pre);
+
+            console.log("the currentValue should be 2 and is actually : ", el);
+            eq(2, el);
+
+            console.log("the index of current element is 1 (no optional initialValue provided) and is actually : ", idx);
+            eq(1, idx);
+
+            console.log("the array should be [1,2], and actually is : ", arr);
+            eq(2, arr.length);
+          });
+        },
+
+        "Feature 4 ::: singleOutput ::: case 0: if no return in callback, reduce return undefined ::: case 1: if callback just return true, reduce return true ::: case 2: if normal, return a single value ::: compare with forEach, filter, map": function(){
+          var arrayTest = [1,2];
+          var output1 = arrayTest.reducePF(/* let's check with test 0 */function(){
           });
           console.log("What should the output be? I expect undefined, and actually is : ", output1);
           eq(undefined, output1);
@@ -120,24 +132,8 @@
           eq(3, output3);
         },
 
-        "Feature 1 OK ::: 4Args ::: callback can access four items from reduce ::: without optional initialValue, previousValue is the first value and currentValue is the second value.": function(){
-          var arrayTest = [1,2];
-          var output = arrayTest.reducePF(function(pre, el, idx, arr){
-            console.log("the previousValue should be 1 (because no optional initialValue provided) and is actually : ", pre);
-            eq(1, pre);
 
-            console.log("the currentValue should be 2 and is actually : ", el);
-            eq(2, el);
-
-            console.log("the index of current element is 1 (no optional initialValue provided) and is actually : ", idx);
-            eq(1, idx);
-
-            console.log("the array should be [1,2], and actually is : ", arr);
-            eq(2, arr.length);
-          });
-        },
-
-        "Feature 2 ::: optionalArg ::: if initialValue provided, the previousValue will be the initialValue and currentValue be the first element value": function(){
+        "Feature 5 ::: initialValue ::: if initialValue provided, the previousValue will be the initialValue and currentValue be the first value; otherwise, first value and second value": function(){
           var arrayTest = [1,2];
           var output = arrayTest.reducePF(function(pre, el, idx){
             
@@ -155,70 +151,61 @@
           eq(6, output);
         },
 
-        "Feature 3 ::: TypeError ::: an empty array without optional arg (initialValue) will trigger an type error": function(){
-          var arrayTest = []; 
-          try {
-            var output = arrayTest.reducePF(function(){}); 
-          }
-          catch(error){
-            console.log("There should be a type error, and actually is : ", error);
-          } 
-        },
 
-        "Feature 4 ::: totalIterations ::: if the new elements get added, but the total iterations stay the same": function(){
+        "Feature 6 ::: totalIterationsAsOriginalLength ::: if the new elements get added, but the total iterations stay the same to the length of original array": function(){
           var arrayTest1 = [1,2];
           var arrayTest2 = [1,2];
           var numIter1 = 0;
           var numIter2 = 0;
           var output1 = arrayTest1.reducePF(function(pre,el,idx,arr){
-            arr.push('new'); /* only one new items (one iteration) in total added, as initialValue is not provided */
+            arr.push('new'); 
             numIter1++;
             return pre + el;
           });
 
-          console.log("the array is appended to be length 3 (because no initialValue provided, so only one 'new' is added), and is actually : ", arrayTest1.length);
+          console.log("case 1: the array is appended to be length 3 (because no initialValue provided, so only one 'new' is added), and is actually : ", arrayTest1.length);
           eq(3, arrayTest1.length);
 
-          console.log("there should be 1 callback runs or iterations, and actually is : ", numIter1);
+          console.log("case 1: there should be 1 callback runs or iterations, and actually is : ", numIter1);
           eq(1, numIter1);
 
-          console.log("the output1 should be 3, and is actually : ", output1);
+          console.log("case 1: the output1 should be 3, and is actually : ", output1);
           eq(3, output1);
 
           var output2 = arrayTest2.reducePF(function(pre,el,idx,arr){
-            arr.push('new'); /* only one new items (one iteration) in total added, as initialValue is not provided */
+            arr.push('new'); 
             numIter2++;
             return pre + el;
           }, 3);
 
-          console.log("the array is appended to be length 4 (because initialValue is provided, so two 'new' are added), and is actually : ", arrayTest2.length);
+          console.log("case 2: the array is appended to be length 4 (because initialValue is provided, so two 'new' are added), and is actually : ", arrayTest2.length);
           eq(4, arrayTest2.length);
 
-          console.log("there should be 2 callback runs or iterations, and actually is : ", numIter2);
+          console.log("case 2: there should be 2 callback runs or iterations, and actually is : ", numIter2);
           eq(2, numIter2);
 
-          console.log("the output1 should be 6, and is actually : ", output2);
+          console.log("case 2: the output1 should be 6, and is actually : ", output2);
           eq(6, output2);
         },
 
-        "Feature 5 ::: case 1: appended item won't invoke callback ::: case 2: but if the first element get deleted, the appended items can get to invoke callback.": function(){
+        "Feature 7 ::: totalIterationsAsOriginalLength ::: case 1: appended item won't invoke callback ::: case 2: but if the first element get deleted, the appended items can get to invoke callback.": function(){
           var arrayTest1 = [1,2];
           var numIter1 = 0;
-          var output1 = arrayTest1.reducePF(function(pre,el,idx,arr){
+          var output1 = arrayTest1.reducePF(function(pre,el,idx,arr){/* my function should work on this one */
             arr.push(7); 
-            console.log("the current value should never be 7 is true, and actually is : ", el !== 7);
+            console.log("case 1: the current value should never be 7 is true, and actually is : ", el !== 7);
             eq(2, el);
 
             numIter1++;
             return pre + el;
           });
-          console.log("the output should be 3, not 10, and is actually : ", output1);
+          console.log("case 1: the output should be 3, not 10, and is actually : ", output1);
           eq(3, output1);
 
 
           var arrayTest2 = [1,2];
           var numIter2 = 0;
-          var output2 = arrayTest2.reducePF(function(pre,el,idx,arr){
+          var output2 = arrayTest2.reducePF(function(pre,el,idx,arr){/* should work on case 2 as well */
             if (idx === 0) {
               arr.push(7); 
               arr.shift();
@@ -237,18 +224,21 @@
           eq(8, output2);
         },
 
-        "Feature 6 ::: if next element's value changed now, in the next iteration the changed value will be passed to callback": function(){
+        "Feature 8 ::: totalIterationsAsOriginalLength ::: if next element's value changed now, in the next iteration the changed value will be passed to callback": function(){
           var arrayTest = [1,2,3];
           var numIter = 0;
-          var output = arrayTest.reducePF(function(pre, el, idx, arr){
-            if (idx === 1/* without initialValue, the el starts with second value */) {
+          var output = arrayTest.reducePF(function(pre, el, idx, arr){ /* it should work */
+            if (idx === 1) {
               arr[0] = 0; 
               arr[1] = 0;
               arr[2] = 0;
+              console.log("at iteration ", idx, ", the el should be 2, and actually is : ", el);
+              console.log("at iteration ", idx, ", the arr after mutation is : ", arr);
+            } else {
+              console.log("at iteration ", idx, ", the el should be 0, and actually is : ", el)
             }
             numIter++;
-            console.log("arr after mutation is : ", arr);
-            console.log("el is : ", el);
+            
             return pre + el;
           });
           console.log("the numIter should be 2, and is actually : ", numIter);
@@ -256,12 +246,12 @@
         },
 
 
-        "Feature 7 ::: elements deleted by callback before being passed to callback will not be visited by callback.": function(){
+        "Feature 9 ::: totalIterationsAsOriginalLength ::: elements deleted by callback before being passed to callback will not be visited by callback.": function(){
           var arrayTest = [1,2,3];
           var numIter = 0;
           var output = arrayTest.reducePF(function(pre, el, idx, arr){
             if (idx === 1) {
-              arr.splice(2, 1);/* the last value deleted before visiting the callback */
+              arr.splice(2, 1);
               console.log("at iteration ", idx, "the currentValue is : ", el);
             } else {
               console.log("at iteration ", idx, "the currentValue is : ", el);
@@ -269,8 +259,47 @@
             numIter++;
             return pre + el;
           });
+          
           console.log("numIter should be 1, and actually is : ", numIter);
+          eq(1, numIter);
+        },
 
+        "Feature 10 ::: currentMissingValue ::: if current value is  missing, then it won't invoke callback": function(){
+          var arrayTest = [, 1, , 2,3];
+          var numIter = 0;
+          var output = arrayTest.reducePF(function(pre, el, idx, arr){
+            numIter++;
+            return pre + el;
+          });
+          console.log("the numIter should be 2, and is actually : ", numIter);
+          eq(2, numIter);
+
+          console.log("the output should be 6, and is actually : ", output);
+          eq(6, output);
+
+        },
+
+        "Feature 11 ::: preValueMissingBeforeCurrent ::: the missing front values should be ignored, pre starts with non-missing value ::: as two missing values added together is NaN": function(){
+          var arrayTest = [,,1,2];
+          var numIter = 0; 
+          var output = arrayTest.reducePF(function(pre, el, idx, arr){
+            numIter++; 
+            return pre + el;
+          });
+          console.log("the numIter should be 1, and is actually : ", numIter);
+          eq(1, numIter);
+
+          console.log("the output should be 3 and is actually : ", output);
+        },
+
+        "Feature 12 ::: arrayFullOfMissingValues ::: array with length > 0 but all values are missing should be seen as empty array + No initialValue = type error trigger": function(){
+          var arrayTest = [,,,,];
+          try {
+            var output = arrayTest.reducePF(function(){});
+          }
+          catch(error){
+            console.log(error);
+          }
         },
 
         })
