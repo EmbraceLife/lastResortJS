@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>from features to tests for official reduce</title>
+  </head>
+  <body>
+    <script src="../tinytest.js"></script>
+    <script>
+      tests({
+
+        "Feature hidden ::: missingValueFront ::: the missing front values should be ignored ": function(){
+          var arrayTest = [,,1,2];
+          var numIter = 0; 
+          var output = arrayTest.reduce(function(pre, el, idx, arr){
+            numIter++; 
+            return pre + el;
+          });
+          console.log("the numIter should be 1, and is actually : ", numIter);
+          eq(1, numIter);
+
+          console.log("the output should be 3 and is actually : ", output);
+        },
+
+        "Hidden Feature 2 ::: missingValueMiddle ::: if middle values are missing, they are ignored too, numIter count as if there is no missing value": function(){
+          var arrayTest = [, 1, , 2,3];
+          var numIter = 0;
+          var output = arrayTest.reduce(function(pre, el, idx, arr){
+            numIter++;
+            return pre + el;
+          });
+          console.log("the numIter should be 2, and is actually : ", numIter);
+          eq(2, numIter);
+
+          console.log("the output should be 6, and is actually : ", output);
+          eq(6, output);
+
+        },
+
+        "Feature 0 done ::: singleOutput ::: case 0: if no return in callback, reduce return undefined ::: case 1: if callback just return true, reduce return true ::: case 2: if normal, return a single value": function(){
+          var arrayTest = [1,2];
+          var output1 = arrayTest.reduce(/* let's check with test 0 */function(){
+          });
+          console.log("What should the output be? I expect undefined, and actually is : ", output1);
+          eq(undefined, output1);
+
+          var output2 = arrayTest.reduce(function(){
+            return true;
+          });
+          console.log("What should the output be? I expect return true in the end, and actually is : ", output2);
+          eq(true, output2);
+
+          var output3 = arrayTest.reduce(function(pre, el, idx, arr){
+            return pre + el;
+          });
+          console.log("What should the output be? I expect return 1+2=3 in the end, and actually is : ", output3);
+          eq(3, output3);
+        },
+
+        "Feature 1 done ::: 4Args ::: callback can access four items from reduce ::: without optional initialValue, previousValue is the first value and currentValue is the second value.": function(){
+          var arrayTest = [1,2];
+          var output = arrayTest.reduce(function(pre, el, idx, arr){/* work on test 1. the function should be good for this test */
+            console.log("the previousValue should be 1 (because no optional initialValue provided) and is actually : ", pre);
+            eq(1, pre);
+
+            console.log("the currentValue should be 2 and is actually : ", el);
+            eq(2, el);
+
+            console.log("the index of current element is 1 (no optional initialValue provided) and is actually : ", idx);
+            eq(1, idx);
+
+            console.log("the array should be [1,2], and actually is : ", arr);
+            eq(2, arr.length);
+          });
+        },
+
+        "Feature 2 done ::: optionalArg ::: if initialValue provided, the previousValue will be the initialValue and currentValue be the first element value": function(){
+          var arrayTest = [1,2];
+          var output = arrayTest.reduce(function(pre, el, idx){/* this one should work too */
+            
+            if (idx === 0) {
+              console.log("the previousValue given initialValue provided should be 3, and is actually : ", pre);
+              eq(3, pre);
+
+              console.log("the currentValue should be 1 given initialValue provided, is actually : ", el);
+              eq(1, el);
+            }
+            return pre + el;
+          }, 3);
+
+          console.log("the output should 6 and is actually : ", output);
+          eq(6, output);
+        },
+
+        "Feature 3 done ::: TypeError ::: an empty array without optional arg (initialValue) will trigger an type error": function(){
+          var arrayTest = []; 
+          try {
+            var output = arrayTest.reduce(function(){});
+            console.log("Failed !!!! No error captured !!!")
+          }
+          catch(error){
+            console.log("There should be a type error, and actually is : ", error);
+          } 
+        },
+
+        "Feature 4 done ::: totalIterations ::: if the new elements get added, but the total iterations stay the same": function(){
+          var arrayTest1 = [1,2];
+          var arrayTest2 = [1,2];
+          var numIter1 = 0;
+          var numIter2 = 0;
+          var output1 = arrayTest1.reduce(function(pre,el,idx,arr){
+            arr.push('new'); 
+            numIter1++;
+            return pre + el;
+          });
+
+          console.log("case 1: the array is appended to be length 3 (because no initialValue provided, so only one 'new' is added), and is actually : ", arrayTest1.length);
+          eq(3, arrayTest1.length);
+
+          console.log("case 1: there should be 1 callback runs or iterations, and actually is : ", numIter1);
+          eq(1, numIter1);
+
+          console.log("case 1: the output1 should be 3, and is actually : ", output1);
+          eq(3, output1);
+
+          var output2 = arrayTest2.reduce(function(pre,el,idx,arr){
+            arr.push('new'); 
+            numIter2++;
+            return pre + el;
+          }, 3);
+
+          console.log("case 2: the array is appended to be length 4 (because initialValue is provided, so two 'new' are added), and is actually : ", arrayTest2.length);
+          eq(4, arrayTest2.length);
+
+          console.log("case 2: there should be 2 callback runs or iterations, and actually is : ", numIter2);
+          eq(2, numIter2);
+
+          console.log("case 2: the output1 should be 6, and is actually : ", output2);
+          eq(6, output2);
+        },
+
+        "Feature 5 done ::: case 1: appended item won't invoke callback ::: case 2: but if the first element get deleted, the appended items can get to invoke callback.": function(){
+          var arrayTest1 = [1,2];
+          var numIter1 = 0;
+          var output1 = arrayTest1.reduce(function(pre,el,idx,arr){/* my function should work on this one */
+            arr.push(7); 
+            console.log("case 1: the current value should never be 7 is true, and actually is : ", el !== 7);
+            eq(2, el);
+
+            numIter1++;
+            return pre + el;
+          });
+          console.log("case 1: the output should be 3, not 10, and is actually : ", output1);
+          eq(3, output1);
+
+
+          var arrayTest2 = [1,2];
+          var numIter2 = 0;
+          var output2 = arrayTest2.reduce(function(pre,el,idx,arr){/* should work on case 2 as well */
+            if (idx === 0) {
+              arr.push(7); 
+              arr.shift();
+            } else {
+              console.log("case 2 ::: the current value should be 7, and actually is : ", el);
+              eq(7, el);
+            }
+
+            numIter2++;
+            return pre + el;
+          }, 0);
+
+          console.log("case 2 ::: The num of iterations should be 2, and is actually : ", numIter2);
+
+          console.log("case 2 ::: the output should be 8 (because value 2 is skipped due to shift() on the first element), and is actually : ", output2);
+          eq(8, output2);
+        },
+
+        "Feature 6 done ::: if next element's value changed now, in the next iteration the changed value will be passed to callback": function(){
+          var arrayTest = [1,2,3];
+          var numIter = 0;
+          var output = arrayTest.reduce(function(pre, el, idx, arr){ /* it should work */
+            if (idx === 1) {
+              arr[0] = 0; 
+              arr[1] = 0;
+              arr[2] = 0;
+              console.log("at iteration ", idx, ", the el should be 2, and actually is : ", el);
+              console.log("at iteration ", idx, ", the arr after mutation is : ", arr);
+            } else {
+              console.log("at iteration ", idx, ", the el should be 0, and actually is : ", el)
+            }
+            numIter++;
+            
+            return pre + el;
+          });
+          console.log("the numIter should be 2, and is actually : ", numIter);
+          console.log("the output should be 3, and is actually : ", output);
+        },
+
+
+        "Feature 7 done ::: elements deleted by callback before being passed to callback will not be visited by callback.": function(){
+          var arrayTest = [1,2,3];
+          var numIter = 0;
+          var output = arrayTest.reduce(function(pre, el, idx, arr){
+            if (idx === 1) {
+              arr.splice(2, 1);
+              console.log("at iteration ", idx, "the currentValue is : ", el);
+            } else {
+              console.log("at iteration ", idx, "the currentValue is : ", el);
+            }
+            numIter++;
+            return pre + el;
+          });
+          
+          console.log("numIter should be 1, and actually is : ", numIter);
+          eq(1, numIter);
+        },
+
+        })
+
+    
+    </script>
+  </body>
+</html>
