@@ -49,6 +49,10 @@
 
       tests({
 
+        "test on library bind": function(){
+          this.assertEquals(3, 3);
+        },
+
         "Feature 1 ::: callbackMustBeFunction ::: if not, throw a type error": function(){
           var arrayTest = [1,2];
           try {

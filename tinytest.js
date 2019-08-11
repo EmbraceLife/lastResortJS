@@ -37,6 +37,7 @@
  * -Joe Walnes
  * MIT License. See https://github.com/joewalnes/jstinytest/
  */
+
 var TinyTest = {
 
     run: function(tests) {
@@ -86,6 +87,6 @@ var TinyTest = {
 var fail               = TinyTest.fail.bind(TinyTest),
     assert             = TinyTest.assert.bind(TinyTest),
     assertEquals       = TinyTest.assertEquals.bind(TinyTest),
-    eq                 = TinyTest.assertEquals.bind(TinyTest), // alias for assertEquals
+    eq                 = TinyTest.assertEquals.bind(TinyTest), 
     assertStrictEquals = TinyTest.assertStrictEquals.bind(TinyTest),
     tests              = TinyTest.run.bind(TinyTest);
