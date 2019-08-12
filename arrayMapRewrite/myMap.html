@@ -4,7 +4,8 @@
     <title>Let's write up myMap by building it up case by case</title>
   </head>
   <body>
-    <script src="../tinytest.js"></script>
+    <!-- <script src="../tinytest.js"></script> -->
+    <script src="../smallTest/smallTest.js"></script>
     <script>
 
     function map(array, callback, thisArg){
@@ -31,6 +32,7 @@
 
     tests({
       "feature 1 done ::: 3Args ::: currentValue for current element which invokes callback; the index of the current element; and the array ": function() {
+        console.groupCollapsed("Feature 1 logs");
         var arrayTest = [8];
         map(arrayTest, function(el,idx,arr){
           
@@ -42,10 +44,14 @@
 
           console.log("the array should be [8], and is actually : ", arr);
         });
+
+        console.groupEnd();
       }, 
 
 
       "feature 2 done ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
+        console.groupCollapsed("Feature 2 logs");
+
         var arrayTest = [8];
         var newArray = map(arrayTest, function(el){
           
@@ -54,10 +60,14 @@
 
         console.log("the newArray should be [0] and is actually : ", newArray);
         eq(0, newArray[0]);
+
+        console.groupEnd();
       }, 
 
       
       "Feature 3 done ::: thisArg ::: optional arg, either refers to an user given object or undefined": function(){
+        console.groupCollapsed("Feature 3 logs");
+
         var arrayTest = [8];
         
         var newArray = map(arrayTest, function(el){
@@ -70,10 +80,13 @@
           eq(-8, this.number);
         }, {"number": -8}); 
         
+        console.groupEnd();
       },
 
 
       "Feature 4 done ::: numIterationsFixed ::: the range of the elements are fixed (the length of the array is recorded before the first call to callback)": function() {
+        console.groupCollapsed("Feature 4 logs");
+
         var arrayTest = [1,2]; 
         var numCallbackRuns = 0;
         var arrayResult = map(arrayTest, function(el, idx, arr){
@@ -84,9 +97,13 @@
         eq(4, arrayTest.length);
         console.log("the total number of iterations should be 2 and is actually : ", numCallbackRuns);
         eq(2, numCallbackRuns);
+
+        console.groupEnd();
       },
 
       "Feature 5 done ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
+        console.groupCollapsed("Feature 5 logs");
+
         var arrayTest = [1,2];
         var newArray = map(arrayTest, function(el, idx, arr){
         
@@ -103,10 +120,12 @@
         console.log("the second element of newArray should be 2 and is actually : ", newArray[1]);
         eq(2, newArray[1]);
 
-
+        console.groupEnd();
       },
     
       "Feature 6 done ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
+        console.groupCollapsed("Feature 6 logs");
+
         var arrayTest = [1,2];
         var newArray = map(arrayTest, function(el, idx, arr){
           if (idx === 0) {
@@ -125,9 +144,13 @@
             eq(9, el);
           } 
         });
+
+        console.groupEnd();
       }, 
     
       "Feature 7 done ::: existingElementDeletedNotInvoke ::: an element deleted after passing to map but before passing to callback, will not invoke callback": function() {
+        console.groupCollapsed("Feature 7 logs");
+
         var arrayTest = [1,2];
         var numCallbackRuns = 0;
         var newArray = map(arrayTest, function(el, idx, arr){
@@ -145,6 +168,8 @@
         eq(1, numCallbackRuns);
 
         console.log("the newArray should [1], and is actually : ", newArray);
+
+        console.groupEnd();
       },
     })
     
