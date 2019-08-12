@@ -9,20 +9,17 @@
     <script>
 
     function map(array, callback, thisArg){
-      var newArray = []; 
+      var newArray = []; /* feature 2 */
 
-      if (thisArg) {
-        callback = callback.bind(thisArg);
-      } else {
-        callback = callback.bind(undefined); 
-      }
+      var T = (thisArg) ? thisArg : undefined;/* feature 3 */
+      callback = callback.bind(T);
+      
+      var originalLength = array.length;/* feature 4 */
 
-      var originalLength = array.length;
-
-      for (i = 0; i < originalLength; i++) {
+      for (i = 0; i < originalLength; i++) {/* feature 4 */
         if (array.hasOwnProperty(i)) {
-          var result = callback(array[i], i, array);
-          newArray.push(result); 
+          var result = callback(array[i], i, array);/* feature 1, feature 5,6,7 */
+          newArray.push(result); /* feature 2 */
         }
       }
       
@@ -49,7 +46,7 @@
       }, 
 
 
-      "feature 2 done ::: returnNewArrayWithCallbackResult ::: map method  should return a new array": function(){
+      "feature 2 done ::: returnNewArrayWithCallbackResult ::: map method  should return a new array ::: each new element is output of callback(el)": function(){
         console.groupCollapsed("Feature 2 logs");
 
         var arrayTest = [8];
@@ -65,7 +62,7 @@
       }, 
 
       
-      "Feature 3 done ::: thisArg ::: optional arg, either refers to an user given object or undefined": function(){
+      "Feature 3 done ::: thisArg ::: optional arg, either refers to an user given object or undefined ::: if not provided, then thisArg is undefined": function(){
         console.groupCollapsed("Feature 3 logs");
 
         var arrayTest = [8];
@@ -101,7 +98,7 @@
         console.groupEnd();
       },
 
-      "Feature 5 done ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
+      "Feature 5 done ::: same array from map to callback ::: AppendedElementNotInvokeCallback ::: the appended elements won't get to invoke callback": function() {
         console.groupCollapsed("Feature 5 logs");
 
         var arrayTest = [1,2];
@@ -123,7 +120,7 @@
         console.groupEnd();
       },
     
-      "Feature 6 done ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
+      "Feature 6 done ::: same array from map to callback ::: existingChangedItemInvokeCallback ::: the existing and changed item will invoke callback ": function(){
         console.groupCollapsed("Feature 6 logs");
 
         var arrayTest = [1,2];
@@ -148,7 +145,7 @@
         console.groupEnd();
       }, 
     
-      "Feature 7 done ::: existingElementDeletedNotInvoke ::: an element deleted after passing to map but before passing to callback, will not invoke callback": function() {
+      "Feature 7 done ::: same array from map to callback ::: existingElementDeletedNotInvoke ::: an element deleted after passing to map but before passing to callback, will not invoke callback": function() {
         console.groupCollapsed("Feature 7 logs");
 
         var arrayTest = [1,2];
