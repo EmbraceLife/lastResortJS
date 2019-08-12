@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Use function to edit todo</title>
+  </head>
+  <body>
+    <script>
+      let todos = ['todo1', 'todo2', 'todo3'];
+
+      function displayTodos() {
+        console.log("todos: ", todos);
+      }
+
+      function addTodo(todoText) {
+        todos.push(todoText);
+        displayTodos();
+      }
+
+      function changeTodo(position, newValue) {
+        todos[position] = newValue;
+        displayTodos();
+      }
+
+      // user attention:
+        // 1. command
+        // 2. input 
+        // 3. a default input 1 inside the function
+      function deleteTodo(position) {
+        todos.splice(position, 1);
+        displayTodos();
+      }
+
+    </script>
+  </body>
+</html>

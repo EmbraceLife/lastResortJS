@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>functions inside functions</title>
+  </head>
+  <body>
+    <button>Any Button</button>
+    <button id="event">show event</button>
+    <script>
+
+      let logNumbers = function() {
+        for (i = 0; i < 10; i++) {
+          console.log(i);
+        }
+      }
+
+      function runWithDebugger(func) {
+        debugger;
+        func();
+      }  
+
+      let wakeup = function() {
+
+        setTimeout(function(){
+
+        console.log("5 seconds past first, then run logNumbers()");
+        logNumbers();
+
+        }, 5000);
+      }
+
+      let students = ['Daniel', 'Amy', 'Julie'];
+
+      // there is a parameter in the function
+      function logName(student){
+        console.log(student);
+      }
+
+      // run students.forEach(logName)
+
+      function myForEach(myArray, myFunc) {
+        for (i = 0; i < myArray.length; i++) {
+
+          // there must be a parameter inside the myFunc
+          myFunc(myArray[i]);
+        }
+      }
+
+      // run myForEach(students, logName)
+
+
+      let anyButton = document.querySelector('button');
+      
+      anyButton.addEventListener('click', function(){
+        console.log("I am controlling this button")
+      })
+
+      let eventButton = document.getElementById('event');
+
+      eventButton.addEventListener('click', function(event) {
+        console.log(event);
+      })
+    </script>
+  </body>
+</html>

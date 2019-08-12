@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>How to create `todos` as empty array of objects</title>
+  </head>
+  <body>
+
+    <h1>TodoList</h1>
+
+    <div>
+      <button onclick="handlers.displayTodos()">displayTodos</button>
+      <button onclick="handlers.toggleAll()">toggleAll</button>
+    </div>
+    
+    <div>
+      <input id="addTodoTextInput" type="text">
+      <button onclick="handlers.addTodo()">Add Todo</button>
+    </div>
+
+    <div>
+      <input type="number" id="changeTodoPositionInput">
+      <input type="text" id="changeTodoTextInput">
+      <button onclick="handlers.changeTodo()">change Todo</button>
+    </div>
+
+    <!-- add input tag and a button -->
+    <div>
+      <input type="text" id="deleteTodoPositionInput">
+      <button onclick="handlers.deleteTodo()">delete todo</button>
+    </div>
+
+    <script>
+      
+      let todoList = {
+
+        todos: [],
+
+        displayTodos: function() {
+
+          if (this.todos.length === 0 ) {
+
+            console.log("Notice: the todos array is empty.");
+
+          } else {
+            
+            for (i = 0; i < this.todos.length; i++) {
+
+              if (this.todos[i].completed === false) {
+                console.log("( )", this.todos[i].todoText);
+              } else {
+                console.log("(x)", this.todos[i].todoText);
+              }
+            }
+          }
+
+        }, 
+
+        addTodo: function(todoText) {
+          
+          this.todos.push({
+            todoText: todoText,
+            completed: false
+          }); 
+
+          this.displayTodos(); 
+        },
+
+        changeTodo: function(position, todoText) {
+          this.todos[position].todoText = todoText;
+          this.displayTodos();
+        },
+
+        deleteTodo: function(position) {
+          this.todos.splice(position, 1); 
+          this.displayTodos();
+        },
+
+        toggleCompleted: function(position) {
+          let todo = this.todos[position];
+          todo.completed = !todo.completed; 
+          this.displayTodos();
+        },
+
+        toggleAll: function() {
+
+          let numCompleted = 0; 
+          
+          for (i = 0; i < this.todos.length; i++) {
+            if (this.todos[i].completed === true) {
+              numCompleted++;
+            }
+          }
+
+          if (numCompleted === this.todos.length) {
+            for (i = 0; i < this.todos.length; i++) {
+              this.todos[i].completed = false;
+            }
+          } else { 
+            for (i = 0; i < this.todos.length; i++) {
+              this.todos[i].completed = true;
+            }
+          }
+
+          this.displayTodos();
+        }
+      };
+
+
+      let handlers = {
+
+        displayTodos: function() {
+          todoList.displayTodos();
+        },
+
+        toggleAll: function() {
+          todoList.toggleAll();
+        },
+
+        addTodo: function() {
+          let todoTextInput = document.getElementById("addTodoTextInput");
+          todoList.addTodo(addTodoTextInput.value);
+          todoTextInput.value = "";
+        },
+
+        changeTodo: function() {
+          let changeTodoTextInput = document.getElementById("changeTodoTextInput");
+          let positionInput = document.getElementById("changeTodoPositionInput");
+          
+          todoList.changeTodo(positionInput.valueAsNumber, changeTodoTextInput.value);
+
+          changeTodoTextInput.value = "";
+          positionInput.value = "";
+        }, 
+
+        // add deleteTodo button, number input and bind method
+        deleteTodo: function() {
+          let deleteTodoPositionInput = document.getElementById("deleteTodoPositionInput");
+          todoList.deleteTodo(deleteTodoPositionInput.valueAsNumber);
+
+          // number input, use value to make it empty
+          deleteTodoPositionInput.value = "null";
+        }
+
+      };
+
+    </script>
+  </body>
+</html>

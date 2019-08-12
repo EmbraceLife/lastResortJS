@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Create object to store todos</title>
+  </head>
+  <body>
+    <script>
+      // let todos = ['todo1', 'todo2', 'todo3'];
+      
+      let todoList = {
+
+        todos: ['todo1', 'todo2', 'todo3'],
+
+        displayTodos: function() {
+          console.log(this.todos); 
+        }, 
+
+        addTodo: function(todoText) {
+          this.todos.push(todoText); 
+          this.displayTodos(); 
+        },
+
+        changeTodo: function(position, todoText) {
+          this.todos[position] = todoText;
+          this.displayTodos();
+        },
+
+        deleteTodo: function(position) {
+          
+          this.todos.splice(position, 1); // 1 means to remove just one item
+
+          this.displayTodos();
+        }
+      }
+      
+
+    </script>
+  </body>
+</html>

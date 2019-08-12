@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>functions inside functions</title>
+  </head>
+  <body>
+    
+    <script>
+
+      let logNumbers = function() {
+        for (i = 0; i < 10; i++) {
+          console.log(i);
+        }
+      }
+
+      function runWithDebugger(func) {
+        debugger;
+        func();
+      }  
+
+      let wakeup = function() {
+
+        setTimeout(function(){
+
+        console.log("5 seconds past first, then run logNumbers()");
+        logNumbers();
+
+        }, 5000);
+      }
+
+    </script>
+  </body>
+</html>

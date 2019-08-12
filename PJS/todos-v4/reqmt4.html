@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>How to create `todos` as empty array of objects</title>
+  </head>
+  <body>
+    <script>
+      
+      let todoList = {
+
+        todos: [],
+
+        displayTodos: function() {
+          console.log(this.todos); 
+        }, 
+
+        addTodo: function(todoText) {
+          
+          this.todos.push({
+            todoText: todoText,
+            completed: false
+          }); 
+
+          this.displayTodos(); 
+        },
+
+        changeTodo: function(position, todoText) {
+          this.todos[position].todoText = todoText;
+          this.displayTodos();
+        },
+
+        deleteTodo: function(position) {
+          this.todos.splice(position, 1); 
+          this.displayTodos();
+        },
+
+        // in the real world toggle function is often present
+        toggleCompleted: function(position) {
+
+          // ! is the key to toggle
+          let todo = this.todos[position];
+          // object reference is great here!
+          todo.completed = !todo.completed; 
+
+          this.displayTodos();
+        }
+      }
+
+    </script>
+  </body>
+</html>

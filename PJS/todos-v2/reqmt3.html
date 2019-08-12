@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Use function to edit todo</title>
+  </head>
+  <body>
+    <script>
+      let todos = ['todo1', 'todo2', 'todo3'];
+
+      function displayTodos() {
+        console.log("todos: ", todos);
+      }
+
+      function addTodo(todoText) {
+        todos.push(todoText);
+        displayTodos();
+      }
+
+      // to change any todo, user needs to worry:
+      // 1. which todo
+      // 2. what value to change
+      function changeTodo(position, valueChanged) {
+        todos[position] = valueChanged;
+        // to display new todos
+        displayTodos();
+      }
+    </script>
+  </body>
+</html>

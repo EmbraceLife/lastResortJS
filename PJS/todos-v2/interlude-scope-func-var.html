@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Use function to edit todo</title>
+  </head>
+  <body>
+    <script>
+      let todos = ['todo1', 'todo2', 'todo3'];
+
+      function displayTodos() {
+        // outside variable can be accessed inside a function
+        console.log("todos: ", todos);
+      }
+
+      function addTodo(todoText) {
+        // parameter or argument `todoText` can be accessed inside its function
+        todos.push(todoText);
+        displayTodos();
+      }
+
+      function changeTodo(position, valueChanged) {
+        todos[position] = valueChanged;
+
+        // outside function can be accessed inside another function
+        displayTodos();
+      }
+
+      function funcVarScope() {
+        let newTodo = 'var defined in func';
+
+        // newTodo is accessible inside func
+        console.log("newTodo: ", newTodo);
+      }
+
+      funcVarScope();
+      // newTodo can't be accessible outside func
+      console.log(newTodo);
+
+    </script>
+  </body>
+</html>

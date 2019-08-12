@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Create object to store todos</title>
+  </head>
+  <body>
+    <script>
+      let todos = ['todo1', 'todo2', 'todo3'];
+      
+      let todoList = {
+
+        todos: ['todo1', 'todo2', 'todo3'],
+
+        displayTodos: function() {
+          console.log(this.todos); 
+        }, 
+
+        addTodo: function(todoText) {
+          this.todos.push(todoText); 
+          this.displayTodos(); 
+        },
+
+        // two parameters are required
+        changeTodo: function(position, todoText) {
+
+          // never forget this
+          this.todos[position] = todoText;
+
+          this.displayTodos();
+        }
+      }
+      
+
+    </script>
+  </body>
+</html>

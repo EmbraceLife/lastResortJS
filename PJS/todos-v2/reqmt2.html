@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Use addTodos() to wrap codes for adding todos</title>
+  </head>
+  <body>
+    <script>
+      let todos = ['todo1', 'todo2', 'todo3'];
+
+      function displayTodos() {
+        console.log("todos: ", todos);
+      }
+
+      // wrap codes inside `addTodo`
+      // user attention: command, input
+      function addTodo(todoText) {
+          todos.push(todoText);
+          // borrow another function to display todos
+          displayTodos();
+      }
+    </script>
+  </body>
+</html>

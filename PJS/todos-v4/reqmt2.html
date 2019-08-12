@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>How to create `todos` as empty array of objects</title>
+  </head>
+  <body>
+    <script>
+      
+      let todoList = {
+
+        todos: [],
+
+        displayTodos: function() {
+          console.log(this.todos); 
+        }, 
+
+        // add new todo object onto `todos`
+        addTodo: function(todoText) {
+          
+          // no long push a string, but an object
+          this.todos.push({
+
+            // proprety1: string
+            todoText: todoText,
+            // property2: boolean
+            completed: false
+          }); 
+
+          this.displayTodos(); 
+        },
+
+        changeTodo: function(position, todoText) {
+          this.todos[position] = todoText;
+          this.displayTodos();
+        },
+
+        deleteTodo: function(position) {
+          
+          this.todos.splice(position, 1); // 1 means to remove just one item
+
+          this.displayTodos();
+        }
+      }
+
+    </script>
+  </body>
+</html>

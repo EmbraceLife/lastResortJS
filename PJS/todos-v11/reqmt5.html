@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Create delete buttons</title>
+  </head>
+  <body>
+
+    <h1>TodoList</h1>
+
+    <div>
+      <button onclick="handlers.toggleAll()">toggleAll</button>
+    </div>
+    
+    <div>
+      <input id="addTodoTextInput" type="text">
+      <button onclick="handlers.addTodo()">Add Todo</button>
+    </div>
+
+    <div>
+      <input type="number" id="changeTodoPositionInput">
+      <input type="text" id="changeTodoTextInput">
+      <button onclick="handlers.changeTodo()">change Todo</button>
+    </div>
+
+    <div>
+      <input type="number" id="toggleCompletedPositionInput">
+      <button onclick="handlers.toggleCompleted()">toggle completed</button>
+    </div>
+
+    <!-- add a new block of tags -->
+    <div>
+      <!-- add a new ul tag -->
+      <ul>
+        <!-- let's insert li tags from script -->
+      </ul>
+    </div>
+    <script>
+      
+      let todoList = {
+
+        todos: [],
+
+        addTodo: function(todoText) {
+          
+          this.todos.push({
+            todoText: todoText,
+            completed: false
+          }); 
+
+        },
+
+        changeTodo: function(position, todoText) {
+          this.todos[position].todoText = todoText;
+        },
+
+        deleteTodo: function(position) {
+          this.todos.splice(position, 1); 
+        },
+
+        toggleCompleted: function(position) {
+          let todo = this.todos[position];
+          todo.completed = !todo.completed; 
+        },
+
+        toggleAll: function() {
+
+          let numCompleted = 0; 
+          
+          
+          this.todos.forEach(function(todo) {
+
+            if (todo.completed === true) {
+              numCompleted++;
+            }
+          });
+
+          this.todos.forEach(function(todo){
+           
+            if (numCompleted === this.todos.length) { 
+              todo.completed = false;
+            } else {
+              todo.completed = true;
+            }
+
+          }, this) 
+        }
+      };
+
+
+      let handlers = {
+
+        toggleAll: function() {
+          todoList.toggleAll();
+
+          view.displayTodos();
+        },
+
+        addTodo: function() {
+          let todoTextInput = document.getElementById("addTodoTextInput");
+          todoList.addTodo(addTodoTextInput.value);
+          todoTextInput.value = "";
+
+          view.displayTodos();
+        },
+
+        changeTodo: function() {
+          let changeTodoTextInput = document.getElementById("changeTodoTextInput");
+          let positionInput = document.getElementById("changeTodoPositionInput");
+          
+          todoList.changeTodo(positionInput.valueAsNumber, changeTodoTextInput.value);
+
+          changeTodoTextInput.value = "";
+          positionInput.value = "";
+
+          view.displayTodos();
+        }, 
+
+        deleteTodo: function(position) {
+
+          todoList.deleteTodo(position);
+
+          view.displayTodos();
+        },
+
+        toggleCompleted: function() {
+          let toggleCompletedPositionInput = document.getElementById("toggleCompletedPositionInput");
+          todoList.toggleCompleted(toggleCompletedPositionInput.valueAsNumber);
+          toggleCompletedPositionInput.value = "";
+
+          view.displayTodos();
+        }
+      };
+
+
+      let view = {
+
+        displayTodos: function() {
+          let todoUl = document.querySelector('ul');
+          todoUl.innerHTML = "";
+
+          // let's replace this for-loop with forEach
+
+          // for (i = 0; i < todoList.todos.length; i++) {
+          todoList.todos.forEach(function(todo, position){
+
+            // keep it the same
+            let todoLi = document.createElement('li');
+
+            // keep
+            let todoTextWithCompletion = "";
+
+            // no longer needed
+            // let todo = todoList.todos[i];
+
+            // keep
+            if (todo.completed === false) {
+              todoTextWithCompletion = "( ) " + todo.todoText;
+            } else {
+              todoTextWithCompletion = "(x) " + todo.todoText;
+            }
+
+            // keep
+            todoLi.textContent = todoTextWithCompletion;
+
+            // use forEach parameter idx, here position
+            todoLi.id = position;
+
+            // use forEach parameter this
+            todoLi.appendChild(this.createDeleteButton());
+
+            todoUl.appendChild(todoLi);
+            
+          }, this)
+        },
+
+        createDeleteButton: function() {
+
+          let deleteButton;
+
+          deleteButton = document.createElement('button');
+
+          deleteButton.textContent = 'Delete';
+
+          deleteButton.className = 'deleteButton';
+
+          return deleteButton;
+        }, 
+
+        setUpEventListeners: function() {
+          let todosUl = document.querySelector('ul');
+      
+          todosUl.addEventListener('click', function(event) {
+
+            let elementClicked = event.target;
+
+            if (elementClicked.className === "deleteButton") {
+
+              let position = elementClicked.parentNode.id;
+
+              handlers.deleteTodo(position);
+            }
+          })
+        }
+      }
+
+      view.setUpEventListeners();
+
+      
+
+
+    </script>
+  </body>
+</html>
