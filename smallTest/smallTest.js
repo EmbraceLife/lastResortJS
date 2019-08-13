@@ -31,13 +31,12 @@ now, we need to go beyond basic description of what a library does to how to des
 6. if encountered an error: 
     6.1 such an error will be caught and to be logged later
     6.2 failures++;
-7. if failures === 0, then 
+7. if no error, then 
     7.1 log the test description with green color;
-    7.2 put all logs into a Collapsible list underneath the log above
 8. else, 
     8.1 log the test description with red color
     8.2 put errors into a collasible list underneath the log above
-8. create h1 element
+8. after all the tests are done, create h1 element to show summary
     - 8.1 update its content with the num of successes and failures
 9. if failures === 0
     - 9.1 make window.body color green, else red

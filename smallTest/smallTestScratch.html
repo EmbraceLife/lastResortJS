@@ -4,22 +4,15 @@
     <title>write up smallTest using smallTest</title>
   </head>
   <body>
-    <script src="smallTest.js"></script>
+    <!-- <script src="smallTest.js"></script> -->
+    <script src="smallTestScratch.js"></script>
     <script>
 
-      /* In theory I should be able to build smallTest using smallTest */
-
-      function testScratch(tsts){
-        if (typeof tsts !== "object") {
-          throw new TypeError(tsts + " should be an object with methods.");
-        }
-      }
-
-      tests({
+      testScratch({
         "Feature 1 : objectArg": function(){
           console.groupCollapsed("catch the error");
           try {
-            testScratch(1);
+            testScratch({});
           }
           catch(e){
             console.error(e);
