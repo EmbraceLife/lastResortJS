@@ -80,4 +80,4 @@ if (!Array.prototype.find) {
 
 https://tc39.es/ecma262/#sec-array.prototype.find
 
-<image src="../../../mona.jpg">
+<image src="../../../mona.jpg"></image>

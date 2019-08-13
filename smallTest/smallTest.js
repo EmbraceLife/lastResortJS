@@ -57,6 +57,7 @@ now, we need to go beyond basic description of what a library does to how to des
     - put step 8 and step 9 under `renderUpdate`
 
 */
+
 var TinyTest = {
 
   run: function(tests) {
