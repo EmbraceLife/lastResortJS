@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Writing tests for Array.prototype.find</title>
+  </head>
+  <body>
+    <script src='../../smallTest/smallTest.js'></script>
+    <!-- <script src='../../tinytest.js'></script> -->
+    <script>
+      tests({
+
+        "Feature 1 ::: return a single value of the element which satisfy the test provided by callback, otherwise return undefined": function(){
+          console.groupCollapsed("When all elements can pass the test");
+          var arrayTest = [1,2];
+          var output = arrayTest.find(function(){
+            console.log("Let's allow all elements to pass the test");
+            return true;
+          });
+          console.log("the first element to pass the test has value 1, so output should be 1, and is actually : ", output);
+          eq(1, output);
+          console.groupEnd();
+        },
+
+        "Feature 2 ::: if no elements pass the test, it returns undefined": function(){
+          console.groupCollapsed("When no elements can pass the test");
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.find(function(){
+            numIters++;
+            return false;
+          });
+          console.log("the output should be undefined and is actually : ", output);
+          eq(undefined, output);
+          console.log("numIters should be 2 and is actually : ", numIters);
+          console.groupEnd();
+        },
+
+
+      })
+
+
+
+
+
+
+    </script>
+  </body>
+</html>
