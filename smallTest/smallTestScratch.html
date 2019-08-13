@@ -10,15 +10,17 @@
 
       testScratch({
         "Feature 1 : objectArg": function(){
-          console.groupCollapsed("catch the error");
-          try {
-            testScratch({});
-          }
-          catch(e){
-            console.error(e);
-          }
-          console.groupEnd();
+          throw new Error("just fail it");
         }, 
+
+        "Feature 2 : a simple success": function(){
+          var a = 10;
+        },
+
+        // "Cause 2 headings": function(){
+        //   testScratch({});
+        // },
+
       })
 
     </script>

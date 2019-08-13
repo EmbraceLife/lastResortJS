@@ -1,3 +1,5 @@
+/* Why I still got two headings? Because I wrote testScratch to testScratch, I think this is the source of problem. When I removed testScracth as the example. Everything works*/
+
 function testScratch(tsts){
   if (typeof tsts !== "object") {
     throw new TypeError(tsts + " should be an object with methods.");
@@ -9,7 +11,7 @@ function testScratch(tsts){
   for (var tsDesc in tsts) {
     var tsMethod = tsts[tsDesc];
     try {
-      tsMethod();
+      tsMethod();/* no need this yet */
       successes++;
       console.log("%c" + tsDesc, "color: green");
     }
@@ -21,11 +23,23 @@ function testScratch(tsts){
     }
   }
 
-  var display = document.createElement('h1');
-  display.innerText = successes + " successes, " + failures + " failures."
+  setTimeout(function(){
+    // if (window.document && document.body) {
+    renderPage(successes, failures);
+    // }
+  }, 0);
 
-  document.body.appendChild(display);
-
-  document.body.style.backgroundColor = (failures === 0) ? "green" : "red";
-  /* let's test our lib so far */
+  function renderPage(s, f) {
+    var display = document.createElement('h1');
+  
+    display.innerText = s + " successes, " + f + " failures."
+  
+    document.body.appendChild(display);
+  
+    document.body.style.backgroundColor = (f === 0) ? "green" : "red";
+  /* let's test our lib so far. Now in order to put codes of DOM after JS codes run, we use setTimeOut to delay it */
+  }
 }
+
+
+
