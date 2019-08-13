@@ -8,7 +8,7 @@
     <script src="smallTestScratch.js"></script>
     <script>
 
-      testScratch({
+smallTestScratch.tests({
         "Feature 1 : objectArg": function(){
           throw new Error("just fail it");
         }, 
@@ -17,20 +17,17 @@
           var a = 10;
         },
 
-        // "Cause 2 headings": function(){
-        //   testScratch({});
-        // },
-
         "try out fail": function(){
-          fail("just try out fail function");
+          this.fail("just try out fail function");
+          // smallTestScratch.fail("just try out fail function");
         },
 
         "try out eq to succeed": function(){
-          eq(1,1);
+          this.eq(1,1); // because of tsMethod.apply(this)
         }, 
 
         "try out eq to fail": function(){
-          eq(1,2);
+          this.eq(1,2);
         }
 
       })

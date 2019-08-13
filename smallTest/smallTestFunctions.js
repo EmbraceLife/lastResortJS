@@ -1,8 +1,4 @@
-/* Let's make the functions into an object so that it is more like a lib*/
-
-var smallTestScratch = {};
-
-smallTestScratch.tests = function(tsts){
+function testScratch(tsts){
   if (typeof tsts !== "object") {
     throw new TypeError(tsts + " should be an object with methods.");
   }
@@ -13,8 +9,7 @@ smallTestScratch.tests = function(tsts){
   for (var tsDesc in tsts) {
     var tsMethod = tsts[tsDesc];
     try {
-      // tsMethod.apply(this);/* bind this (smallTestScratch) to tsMethod so that this inside tsMethod will refer to smallTestScratch*/
-      tsMethod.apply(smallTestScratch); // or `this`, they are the same here.
+      tsMethod();
       successes++;
       console.log("%c" + tsDesc, "color: green");
     }
@@ -44,12 +39,11 @@ smallTestScratch.tests = function(tsts){
   }
 }
 
-smallTestScratch.fail = function(){
-  /* just throw an error for nothing */
+function fail(){
   throw new Error("fail(): is to fail for nothing");
 }
 
-smallTestScratch.eq = function(expected, actual){
+function eq(expected, actual){
   if (expected !== actual) {
     throw new Error("we expect " + expected + ", but got " + actual);
   }
