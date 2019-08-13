@@ -56,4 +56,8 @@ smallTestScratch.eq = function(expected, actual){
 }
 
 
-
+/* What if I feel smallTestScratch.fail is too long, I want to make them shorter to use */
+/* make them global */
+var fail = smallTestScratch.fail;
+var tests = smallTestScratch.tests; /* There seems to be no need for binding here. */
+var eq = smallTestScratch.eq;

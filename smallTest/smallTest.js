@@ -105,6 +105,7 @@ var TinyTest = {
 
 };
 
-var fail = TinyTest.fail.bind(TinyTest);
-var eq = TinyTest.assertStrictEquals.bind(TinyTest);
-var tests = TinyTest.run.bind(TinyTest);
+/* Everything works the same after comment out hte later part */
+var fail = TinyTest.fail//.bind(TinyTest);
+var eq = TinyTest.assertStrictEquals//.bind(TinyTest);
+var tests = TinyTest.run//.bind(TinyTest);
