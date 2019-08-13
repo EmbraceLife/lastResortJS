@@ -41,5 +41,16 @@ function testScratch(tsts){
   }
 }
 
+function fail(){
+  /* just throw an error for nothing */
+  throw new Error("fail(): is to fail for nothing");
+}
+
+function eq(expected, actual){
+  if (expected !== actual) {
+    throw new Error("we expect " + expected + ", but got " + actual);
+  }
+}
+
 
 
