@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>simpleTest library in functions</title>
+  </head>
+  <body>
+    
+    <script>
+    
+    setTimeout(function(){
+      console.log("I am a setTimeout");/* run last */
+    }, 0);
+
+
+    if (window.document && document.body) {
+      document.body.style.backgroundColor = (failures === 0)? "green" : "red";
+    } else {
+      console.log("the Dom is not ready");
+    }
+    
+    var failures = 0;/* run second */
+    
+     
+    </script>
+  </body>
+</html>

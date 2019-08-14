@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>simpleTest library in functions</title>
+  </head>
+  <body>
+    
+    <script>
+    function simpleTest(tsts){
+      if (typeof tsts !== "object") {
+        throw new TypeError(tsts + " should be an object with methods.");
+      }
+
+      var successes = 0;
+      var failures = 0; 
+
+      for (var tsDesc in tsts) {
+        var tsMethod = tsts[tsDesc];
+        try {
+          tsMethod();
+          successes++;
+          console.log("%c" + tsDesc, "color: green");
+        }
+        catch(e){
+          failures++;
+          console.groupCollapsed("%c"+tsDesc, "color: red");
+          console.error(e);
+          console.groupEnd();
+        }
+      }
+
+      /* Learning point 1: Ideally, without the setTimeout block, DOM codes will run before JS codes; with setTimeout block, we can put DOM codes execution to the end */
+      setTimeout(function(){
+        if (window.document && document.body) {/* Learning Points 2: make sure only when window.document and window.document.body both are available, then we start to do renderPage */
+          renderPage(successes, failures);
+        }
+      }, 0);/* Learning Point 3: however, as I experimented it now, there seems to be no difference if no such setTimeout block, as DOM codes do run after JS codes ahead of them. The moral is we have to use debugger to verify the codes. */
+
+
+
+      function renderPage(successes, failures) {
+        var display = document.createElement('h1');
+      
+        display.innerText = successes + " successes, " + failures + " failures."
+      
+        document.body.appendChild(display);
+      
+        document.body.style.backgroundColor = (failures === 0) ? "green" : "red";
+      }
+    }
+
+    function fail(){
+      throw new Error("fail(): is to fail for nothing");
+    }
+
+    function eq(expected, actual){
+      if (expected !== actual) {
+        throw new Error("we expect " + expected + ", but got " + actual);
+      }
+    }   
+    </script>
+    <script>
+
+      simpleTest({
+        "Feature 1 : objectArg": function(){
+          throw new Error("just fail it");
+        }, 
+
+        "Feature 2 : a simple success": function(){
+          var a = 10;
+        },
+
+        "try out fail": function(){
+          fail("just try out fail function");
+        },
+
+        "try out eq to succeed": function(){
+          eq(1,1); // because of tsMethod.apply(this)
+        }, 
+
+        "try out eq to fail": function(){
+          eq(1,2);
+        }
+
+      })
+
+    </script>
+  </body>
+</html>
