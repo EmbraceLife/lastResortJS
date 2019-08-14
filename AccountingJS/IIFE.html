@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IIFE: keep most variables and functions away from global window but a selected few</title>
+  </head>
+  <body>
+    <script>
+      /* https://youtu.be/Kmfoe-B_xCM */
+
+      (function(root, undefined){
+        var variableWithinFunc = "a variable inside a func";
+        var objectInFunc = {
+          prop1: "prop 1",
+          prop2: "prop 2",
+        };
+        root.prop2 = objectInFunc.prop2;
+
+      })(window) //make sure: `var root = window;`  
+
+      variableWithinFunc; // not defined
+      objectInFunc.prop1; // not defined
+      prop2; // "prop 2"
+    </script>
+  </body>
+</html>

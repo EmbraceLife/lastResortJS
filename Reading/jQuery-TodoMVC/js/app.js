@@ -231,7 +231,7 @@ jQuery(function ($) {
 					this.filter = filter;
 					this.render();
 				// } // experiment shows that without .bind(this), `this` above refers to window, not App object
-				}.bind(this) // so, App is equivalent to this here, why not use App explicitly? Is it due to convention? or actual difference exist?
+				}.bind(this) // so, App is equivalent to this here, why not use App explicitly? Is it due to convention? or actual difference exist? I think it is more explicit to just use App to replace this
 			}).init('/all'); // all, completed, active, any one of them is fine
 		},
 		/* 

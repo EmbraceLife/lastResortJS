@@ -57,7 +57,8 @@
 		},
 		bindEvents: function () {
 			// $('#new-todo').on('keyup', this.create.bind(this));
-			document.getElementById('new-todo').addEventListener('keyup', this.create.bind(this));
+			document.getElementById('new-todo').addEventListener('keyup', this.create.bind(this)); /* have to bind(this), but can't tell it in theory, have to do it with trial and error */
+
 			// $('#toggle-all').on('change', this.toggleAll.bind(this));
 			document.getElementById('toggle-all').addEventListener('change', this.toggleAll.bind(this));
 			// $('#footer').on('click', '#clear-completed', this.destroyCompleted.bind(this));
