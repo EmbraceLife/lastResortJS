@@ -8,6 +8,33 @@
     <!-- <script src='../../tinytest.js'></script> -->
     <script>
       tests({
+
+        "Added Feature 4 ::: deleted items are still visited does not make sense here.": function(){
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.find(function(el, idx, arr){
+            if (idx === 0) {
+              delete arr[1];
+            }
+            numIters++;
+            return el > 1;
+          });
+          console.groupCollapsed("Added Feature 4 logs");
+          console.log("output should be undefined, and is actually : ", output);
+          console.log("numIters should be 2, and is actually : ", numIters);
+          console.groupEnd();
+        },
+
+        "Added Feature 3 ::: if empty array, return undefined": function(){
+          var arrayTest = [];
+          var output = arrayTest.find(function(){
+            return true;
+          });
+        console.groupCollapsed("Added Feature 3 logs");
+        console.log("output should be undefined, and is actually : ", output);
+        console.groupEnd();
+        },
+
         "Added Feature 2 ::: find won't filter out missing values in sparse array": function(){
           var arrayTest = [1,,,2];
           var numIters = 0;

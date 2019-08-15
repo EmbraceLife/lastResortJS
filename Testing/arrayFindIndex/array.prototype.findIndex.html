@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Array.prototype.findIndex</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <script>
+      // Docs https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex
+
+      /* Summary
+      return ::: index of the first elment that satisfies the provided testing function
+      return ::: -1, if no element passed the test or array.length is 0
+
+      syntax ::: arr.findIndex(callback(el, idxOptional, arrOptional), thisArgOptional)
+
+      sparse array ::: findIndex does not filter missing values
+
+      thisArg ::: object or undefined
+
+      As findIndex is extremely similar to find, so let's just edit find and make it findIndex
+      */
+      tests({
+
+        "Added Feature 4 done ::: deleted items are still visited does not make sense here.": function(){
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.findIndex(function(el, idx, arr){
+            if (idx === 0) {
+              delete arr[1];
+            }
+            numIters++;
+            return el > 1;
+          });
+          console.groupCollapsed("Added Feature 4 logs");
+          console.log("output should be -1, and is actually : ", output);
+          eq(-1, output);
+          console.log("numIters should be 2, and is actually : ", numIters);
+          eq(2, numIters);
+          console.groupEnd();
+        },
+
+        "Added Feature 3 done ::: if empty array, return undefined": function(){
+          var arrayTest = [];
+          var output = arrayTest.findIndex(function(){
+            return true;
+          });
+        console.groupCollapsed("Added Feature 3 logs");
+        console.log("output should be -1, and is actually : ", output);
+        eq(-1, output);
+        console.groupEnd();
+        },
+
+        "Added Feature 2 done ::: find won't filter out missing values in sparse array": function(){
+          var arrayTest = [1,,,2];
+          var numIters = 0;
+          var output = arrayTest.findIndex(function(el){
+            numIters++;
+            return el === 2;
+          });
+          console.groupCollapsed("Added Feature 2 logs");
+          console.log("numIters should be 4, and is actually : ", numIters);
+          eq(4, numIters);
+          console.groupEnd();
+        },
+
+        "Added Feature 1 done ::: callback must be a function": function(){
+          var arrayTest = [1,2];
+          try {
+            var output = arrayTest.findIndex(3);
+          }
+          catch(e){
+            console.groupCollapsed("Added Feature 1 logs");
+            console.log(e)
+            console.groupEnd();
+          }
+        },
+
+
+        "Feature 1 done ::: return a single value (index) of the element which satisfy the test provided by callback, otherwise return -1": function(){
+          console.groupCollapsed("Feature 1 logs");
+          var arrayTest = [1,2];
+          var output = arrayTest.findIndex(function(){
+            console.log("Let's allow all elements to pass the test");
+            return true;
+          });
+          console.log("the first element to pass the test has value 1, so output index should be 0, and is actually : ", output);
+          eq(0, output);
+          console.groupEnd();
+        },
+
+        "Feature 2 done ::: if no elements pass the test, it returns -1": function(){
+          console.groupCollapsed("Feature 2 logs");
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.findIndex(function(){
+            numIters++;
+            return false;
+          });
+          console.log("the output should be -1 and is actually : ", output);
+          eq(-1, output);
+          console.log("numIters should be 2 and is actually : ", numIters);
+          console.groupEnd();
+        },
+
+        "Feature 3 done ::: callback shall return a bool, but does not enforce it.": function(){
+          var arrayTest = [1,2];
+          var output = arrayTest.findIndex(function(){
+
+          });
+          console.groupCollapsed("Feature 3 logs")
+          console.log("output should be -1, and is actually : ", output);
+          eq(-1, output);
+          console.groupEnd();
+        },
+
+        "Feature 4 done ::: `find` passes current element, current idx, and the array to callback": function(){
+          console.groupCollapsed("Feature 4 logs")
+          var arrayTest = [1,2];
+          var output = arrayTest.findIndex(function(el, idx, arr){
+            if (idx === 0) {
+              console.log("at iteration ", idx, " el should be 1 and is actually ", el);
+              eq(1, el);
+              console.log("at iteration ", idx, " arr should be [1,2], and is actually ", arr);
+              eq(2, arr[1]);
+              return el > 3;
+            }
+          });
+          console.log("output should be -1, and is actually : ", output);
+          eq(-1, output);
+          console.groupEnd();
+        },
+
+        "Feature 5 done ::: `find` will stop iteration once the first item that passed the test found": function(){
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.findIndex(function(el){
+            numIters++;
+            return el > 0;
+          });
+          console.groupCollapsed("Feature 5 logs");
+          console.log("output should be 0, and is actually : ", output);
+          eq(0, output);
+          console.log("numIters should be 1 and is actually : ", numIters);
+          eq(1, numIters);
+          console.groupEnd();
+        },
+
+        "Feature 6 done ::: thisArg ::: if `thisArg` is provided, `this` inside callback refers to the provided object": function(){
+          console.groupCollapsed("Feature 6 logs");
+          var arrTest = [1,2];
+          var output = arrTest.findIndex(function(el){
+            console.log("this.number should be 1, and is actually : ", this.number);
+            eq(1, this.number);
+            return el > this.number;
+          }, {number: 1});
+          console.log("the output should be 1 and is actually : ", output);
+          eq(1, output);
+          console.groupEnd();
+        },
+
+        "Feature 7 passed done ::: thisArg ::: if `thisArg` isn't provided, `this` inside callback refers to undefined": function(){
+          console.groupCollapsed("Feature 7 logs");
+          var arrTest = [1,2];
+          var output = arrTest.findIndex(function(el){
+            console.log("this should be undefined, and is actually window: ", this);
+            eq(window, this);
+            return el > this;
+          });
+          console.log("the output should be -1 and is actually : ", output);
+          eq(-1, output);
+          console.groupEnd();
+        },
+
+        "Feature 8 done ::: the original length of array is used as the number of iterations to invoke callback ::: Adding elements won't increase the number of iterations, so added elements won't invoke callback": function(){
+          console.groupCollapsed("Feature 8 logs");
+          var arrayTest = [1,2];
+          var numIters = 0;
+          var output = arrayTest.findIndex(function(el,idx, arr){
+            arr.push(3);
+            numIters++;
+            return el > 2;
+          });
+          console.log("the output should be -1 and is actually : ", output);
+          eq(-1, output);
+          console.log("the total length of arrayTest is 4, and actually is : ", arrayTest.length)
+          eq(4, arrayTest.length);
+          console.log("numIters should be 2, and is actually : ", numIters);
+          eq(2, numIters);
+          console.groupEnd();
+        },
+
+
+        "Feature 9 done ::: same underpinning reason ::: change existing unvisited elements will invoke callback": function(){
+          console.groupCollapsed("Feature 9 logs");
+          var arrayTest = [1,2];
+          var output = arrayTest.findIndex(function(el,idx, arr){
+            arr[1] = 3;
+            return el > 2;
+          });
+          console.log("the output should be 1 and is actually : ", output);
+          eq(1, output);
+          console.groupEnd();
+        },
+
+        "Feature 10 done ::: same underpinning reason ::: shift the array will skip an element to invoke": function(){
+          console.groupCollapsed("Feature 10 logs");
+          var arrayTest = [1,2];
+          var output = arrayTest.findIndex(function(el,idx, arr){
+            arr.shift();
+            return el > 1;
+          });
+          console.log("the output should be -1 and is actually : ", output);
+          eq(-1, output);
+          console.groupEnd();
+        },
+
+        })
+
+
+
+
+
+
+    
+    </script>
+  </body>
+</html>

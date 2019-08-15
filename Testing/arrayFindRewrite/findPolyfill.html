@@ -58,6 +58,14 @@
 
 
       tests({
+        "Added Feature 3 ::: if empty array, return undefined": function(){
+          var arrayTest = [];
+          var output = arrayTest.findPF(function(){
+            return true;
+          });
+        console.log("output should be undefined, and is actually : ", output);
+        },
+
         "Added Feature 2 ::: find won't filter out missing values in sparse array": function(){
           var arrayTest = [1,,,2];
           var numIters = 0;

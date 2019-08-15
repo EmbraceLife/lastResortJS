@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Library System</title>
+  </head>
+  <body>
+    <script>
+
+
+    debugger;
+
+
+    (function enclosingFunc(){
+      var libraryStorage = {};
+
+      function librarySystem(libraryName, callback){
+        if (arguments.length > 1){
+          libraryStorage[libraryName] = callback(); 
+        } else { 
+          return libraryStorage[libraryName]; 
+        }
+      }
+
+      window.librarySystem = librarySystem; 
+    })();  
+
+    (function enclosingSandwichLibrary(){
+      var breads = {
+        wheat: "healthy",
+        white: "unhealthy",
+      }
+
+      var fillings = {
+        turkey: "boring",
+        cheeze: "vege",
+      }
+
+      var sandwichLibrary = {
+        breads: breads,
+        fillings: fillings,
+      }
+
+      if (typeof librarySystem !== undefined) {
+        librarySystem("sandwichLibrary", function(){
+          return sandwichLibrary
+        });/* now, sandwichLibrary is saved in enclosingFunc closure's LibraryStorage */
+      } else {
+        window.sandwichLibrary = sandwichLibrary; /* lib saved in global */
+      }
+
+    })();
+    
+    var lib = librarySystem("sandwichLibrary");
+      
+    /* go to accounting.js, the module definition, see how a library is imported in a real case */
+    </script>
+  </body>
+</html>
