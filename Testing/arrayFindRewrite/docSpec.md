@@ -29,7 +29,7 @@ Note ::: "Elements that are deleted are still visited." is confusing.
 
 
 ```Javascript
-// https://tc39.github.io/ecma262/#sec-array.prototype.find
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find#Polyfill
 if (!Array.prototype.find) {
   Object.defineProperty(Array.prototype, 'find', {
     value: function(predicate) {
@@ -79,5 +79,3 @@ if (!Array.prototype.find) {
 ```
 
 https://tc39.es/ecma262/#sec-array.prototype.find
-
-<image src="../../../mona.jpg"></image>

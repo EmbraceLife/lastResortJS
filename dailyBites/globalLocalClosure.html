@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Global, Local, Closure, Function</title>
+  </head>
+  <body>
+    <script>
+      var name = "Dan"; // on global
+
+      function sayName(){ // on global
+        console.log(name);
+      }
+
+      (function enclosingFunction1(){ // executing functions won't saved in global
+        var name = "Daniel";
+        function sayName1(){
+          console.log(name);
+        }
+        window.sayName1 = sayName1;
+      })();
+      
+      (function enclosingFunction2(){
+        var name = "L";
+        function sayName2(){
+          console.log(name);
+        }
+        window.sayName2 = sayName2;
+      })();
+
+      sayName1(); // executing functions won't saved in global
+      sayName2();
+    </script>
+  </body>
+</html>

@@ -57,7 +57,7 @@ now, we need to go beyond basic description of what a library does to how to des
 
 */
 
-var TinyTest = {
+var SimpleTest = {
 
   run: function(tests) {
       var failures = 0;
@@ -106,6 +106,6 @@ var TinyTest = {
 };
 
 /* Everything works the same after comment out hte later part */
-var fail = TinyTest.fail//.bind(TinyTest);
-var eq = TinyTest.assertStrictEquals//.bind(TinyTest);
-var tests = TinyTest.run//.bind(TinyTest);
+var fail = SimpleTest.fail//.bind(TinyTest);
+var eq = SimpleTest.assertStrictEquals//.bind(TinyTest);
+var tests = SimpleTest.run//.bind(TinyTest);
