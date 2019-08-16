@@ -60,15 +60,20 @@
             return sandwichLibrary
           });
         } else {
+
+          /* The reason why put noConflict block here, is because librarySystem can assign the new lib under a new variable, so the old name won't be a problem. */
+          var old_lib = window.sandwichLibrary;/* save the existing (old) lib into a new variable */
+
+          sandwichLibrary.noConflict = function() { /* a new method */
+          window.sandwichLibrary = old_lib;/* save old_lib into the global lib */
+          return sandwichLibrary; /* return lib the object for a new lib */
+          }
+
+
           window.sandwichLibrary = sandwichLibrary; /* if librarySystem is not available, we directly deliver the lib into the global */
         }
 
-        var old_lib = window.sandwichLibrary;/* save the existing (old) lib into a new variable */
-
-        sandwichLibrary.noConflict = function() { /* a new method */
-          window.sandwichLibrary = old_lib;/* save old_lib into the global lib */
-          return sandwichLibrary; /* return lib the object for a new lib */
-        }
+        
 
       })();
       
