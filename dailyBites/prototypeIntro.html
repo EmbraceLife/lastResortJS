@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>How to create prototype and individual objects?</title>
+  </head>
+  <body>
+    <script>
+      debugger;
+      var dogProto = { 
+        fetch: function(){/* this is the prototype ability which every dog should inherit */
+          console.log("go, get it, man!");
+        }
+      }
+
+      var dogA = Object.create(dogProto); /* create an individual dog based on the prototype dogProto */
+      dogA.name = "laifu";
+      dogA.fetch();
+
+      Object.getPrototypeOf(dogA) === dogProto;
+
+      var objA = {};
+      var objAProto = Object.getPrototypeOf(objA);
+      var dogProtoProto = Object.getPrototypeOf(dogProto);
+      objAProto === dogProtoProto;
+      Object.getPrototypeOf(objAProto);
+      
+    </script>
+  </body>
+</html>
