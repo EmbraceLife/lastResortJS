@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reflect on IIFE, LibrarySystem, noConflict</title>
+  </head>
+  <body>
+    <script>
+      /* Why build library inside IIFE?
+        1. hide all variables for building the library away from the global, but stored in the closure scope;
+
+        2. only deliver the library object or selected object to the global;
+
+        3. when the library is utilized in the global, all variables of the closure scope are available for the library to use 
+
+        4. of course, we can first define the library inside a function, and then run the function which does the same as IIFE; the only difference is that this approach has to save the function inside the global too (which takes memory from the global).
+      */
+      (function creatingLibrary(){
+        // create the environment
+        // create the library
+        // only deliver the library object to the global
+        window.lib = lib;
+      })()  
+      
+      lib.method1() // when utilizing lib like this, the variables inside creatingLibrary are made available automatically.
+
+      /* Why do we need librarySystem?
+
+      1. the approach to build library still needs to sacrifice one global variable for one library, so if we need to load 100 libraries, we have to create 100 global variables. This makes naming conflict very easy to happen.
+
+      2. How can we save all libraries into a single global variable instead?
+
+      3. the immediate answer : 
+        3.1 create 100 ()()
+        3.2 inside each ()(), we write `window.libraries.lib1 = lib`
+        3.3 so, we save 100 libraries inside `window.libraries`
+      
+      4. the problem of this solution is that althought they are under a single global variable, they take the same memory as 100 global variable approach. No matter when you are going to use any of them, you have to save all of them on the global scope.
+
+      5. librarySystem approach
+      
+      5.1 save all 100 libraries inside the closure scope, organized under a single object `LibraryStorage` with 100 different names
+      
+      5.2 these 100 libraries take no memory space from the global
+      
+      5.3 we can only load the specific libraries from the LibraryStorage object into the global, whenever we need to. So, we only use as much memory as the specific libraries we need to use at the moment.
+      
+      5.4 the way to do it is to create use an independent IIFE to create the LibraryStorage object and librarySystem function. 
+        1. LibraryStorage is an object to store all libraries;
+        2. librarySystem is a function to store and return libraries
+        3. then deliver librarySystem to the global for library creation IIFE to use it to store library into the LibraryStorage
+      */
+
+      /* Why we need noConflict?
+      
+      1. before we create/load library into the global as `lib`, the `lib` may already exist;
+
+      2. after we load the library, the `lib` is overwritten by the new loaded library;
+
+      3. what if we want to keep both the old lib and the new lib?
+        3.1 inside ()() library creation, we save the existing lib into a variable `var old_lib = window.lib`
+        3.2 create a new method `noConflict` onto the new `lib` inside ()()
+        3.3 when the lib is loaded into the global, the old lib is overwritten first, 
+        
+        3.4 but then we run lib.noConflict(): 
+          1. it can restore the old lib under the name `lib`;
+          2. it return the new lib, so that it can assigned to a new variable
+      
+      */
+      
+    </script>
+  </body>
+</html>
