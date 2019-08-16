@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Library System</title>
+  </head>
+  <body>
+    <script>
+      debugger;
+      window.sandwichLibrary = "Library with books about sandwiches";       /* 
+      the problem: 
+
+      no matter with or without librarySystem, the `sandwichLibrary` is overwritten from the string to the object defined below. 
+
+      How can we keep both the old sandwichLibrary and the new one?
+      
+      `noConflict` defined as a method in the library (IIFE) can assign the string under window.sandwichLibrary and assign sandwichLibrary the object into another variable in the global. 
+
+      1. save the old/existing sandwichLibrary (the string) into another variable 'old_lib': `var old_lib = window.sandwichLibrary;`
+      2. when noConflict is called: 
+        2.1 assign 'old_lib' to window.sandwichLibrary
+        2.2 return sandwichLibrary the object
+        noConflict: function(){
+          window.sandwichLibrary = old_lib;
+          return sandwichLibrary;
+        }
+      */ 
+
+      (function enclosingFunc(){
+        var libraryStorage = {};
+
+        function librarySystem(libraryName, callback){
+          if (arguments.length > 1){
+            libraryStorage[libraryName] = callback(); 
+          } else { 
+            return libraryStorage[libraryName]; 
+          }
+        }
+
+        window.librarySystem = librarySystem; 
+      })();  
+
+      (function enclosingSandwichLibrary(){
+        var breads = {
+          wheat: "healthy",
+          white: "unhealthy",
+        }
+
+        var fillings = {
+          turkey: "boring",
+          cheeze: "vege",
+        }
+
+        var sandwichLibrary = {
+          breads: breads,
+          fillings: fillings,
+        }
+
+        if (typeof librarySystem !== undefined) {/* if librarySystem function is available, we save the lib into LibraryStorage */
+          librarySystem("sandwichLibrary", function(){
+            return sandwichLibrary
+          });
+        } else {
+          window.sandwichLibrary = sandwichLibrary; /* if librarySystem is not available, we directly deliver the lib into the global */
+        }
+
+        var old_lib = window.sandwichLibrary;/* save the existing (old) lib into a new variable */
+
+        sandwichLibrary.noConflict = function() { /* a new method */
+          window.sandwichLibrary = old_lib;/* save old_lib into the global lib */
+          return sandwichLibrary; /* return lib the object for a new lib */
+        }
+
+      })();
+      
+      var sandwichLibrary = librarySystem("sandwichLibrary");
+      var new_lib = sandwichLibrary.noConflict();
+      var another = new_lib.noConflict();/* run noConflict again won't do any damage */
+        
+      /* go to accounting.js, the module definition, see how noConflict is defined. 
+      
+      In fact they work exactly the same, and it is not necessary for accounting to remove noConflict after it ran the first time. 
+
+      underscore.js has the most simple version of noConflict like what we write here.
+      https://underscorejs.org/docs/underscore.html
+      */
+    </script>
+  </body>
+</html>
