@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>everyPF</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <script>
+      // https://tc39.es/ecma262/#sec-array.prototype.every
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
+    if (!Array.prototype.everyPF) {
+      Array.prototype.everyPF = function(callbackfn, thisArg) {
+        'use strict';
+        var T, k;
+
+        if (this == null) {
+          throw new TypeError('this is null or not defined');
+        }
+
+        // 1. Let O be the result of calling ToObject passing the this 
+        //    value as the argument.
+        var O = Object(this);
+
+        // 2. Let lenValue be the result of calling the Get internal method
+        //    of O with the argument "length".
+        // 3. Let len be ToUint32(lenValue).
+        var len = O.length >>> 0;
+
+        // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+        if (typeof callbackfn !== 'function') {
+          throw new TypeError();
+        }
+
+        // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+        if (arguments.length > 1) {
+          T = thisArg;
+        }
+
+        // 6. Let k be 0.
+        k = 0;
+
+        // 7. Repeat, while k < len
+        while (k < len) {
+
+          var kValue;
+
+          // a. Let Pk be ToString(k).
+          //   This is implicit for LHS operands of the in operator
+          // b. Let kPresent be the result of calling the HasProperty internal 
+          //    method of O with argument Pk.
+          //   This step can be combined with c
+          // c. If kPresent is true, then
+          if (k in O) {
+
+            // i. Let kValue be the result of calling the Get internal method
+            //    of O with argument Pk.
+            kValue = O[k];
+
+            // ii. Let testResult be the result of calling the Call internal method
+            //     of callbackfn with T as the this value and argument list 
+            //     containing kValue, k, and O.
+            var testResult = callbackfn.call(T, kValue, k, O);
+
+            // iii. If ToBoolean(testResult) is false, return false.
+            if (!testResult) {
+              return false;
+            }
+          }
+          k++;
+        }
+        return true;
+      };
+    }
+
+
+    tests({
+      "Feature 1 ::: return true if all elements pass the test provided by the callback": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.everyPF(function(el){
+          return el >= 0;
+        });
+        
+        console.groupCollapsed('Feature 1 : return true if all passes');
+        console.log("pass should be true, and is actually : ", pass);
+        eq(true, pass);
+        console.groupEnd();
+      },
+
+      "Feature 1 ::: return false if one element fails the test provided by the callback": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.everyPF(function(el){
+          return el > 1;
+        });
+        
+        console.groupCollapsed('Feature 1 : return false if one fails');
+        console.log("pass should be false, and is actually : ", pass);
+        eq(false, pass);
+        console.groupEnd();
+      },
+
+      "Feature 2 ::: `every` ensures its first arg `callback` as a function ": function(){
+        var arrayTest = [1,2];
+        
+        console.groupCollapsed('Feature 2 logs: catch error');
+        try {
+          var pass = arrayTest.everyPF(3);
+        }
+        catch(e){
+          console.log(e.stack);
+        }
+        console.groupEnd();
+      },
+
+      "Feature 3 ::: callback has 3 args el, idx, arr provided by `every`": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.everyPF(function(el, idx, arr){
+          console.groupCollapsed('Feature 3 logs');
+          if (idx === 0) {
+            console.log("el should be 1, and is actually : ", el);
+            eq(1, el);
+            console.log("arr should be [1,2] and is actually : ", arr);
+            eq(2, arr[1]);
+          }
+          console.groupEnd();
+        });
+      },
+
+      "Feature 4 ::: thisArg refers to the object provided ": function(){
+        console.groupCollapsed('Feature 4 logs');
+        var arrayTest = [1,2];
+        var pass = arrayTest.everyPF(function(){
+          
+          console.log("this.number should be 3, and is actually : ", this.number);
+          eq(3, this.number);
+          
+        }, {number: 3});
+        console.groupEnd();
+      },
+
+      "Feature 5 ::: thisArg refers undefined if not provided (but in practical undefined is replaced with window in chrome)": function(){
+        console.groupCollapsed('Feature 5 logs');
+        var arrayTest = [1,2];
+        var pass = arrayTest.everyPF(function(){
+          
+          console.log("this should be window, and is actually : ", this);
+          eq(window, this);
+          
+        });
+        console.groupEnd();
+      },
+
+      "Feature 6 ::: every immediately return false when discovered the first element that failed the test": function(){
+        var arrayTest = [1,2];
+        var numIters = 0;
+        var pass = arrayTest.everyPF(function(el){
+          numIters++;
+          return el > 2;
+        });
+        console.groupCollapsed('Feature 6 logs');
+        console.log("numIters should be 1 and actually is : ", numIters);
+        eq(1, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 7 ::: elements with missing values won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.everyPF(function(el){
+          numIters++;
+          return el > 0
+        });
+        console.groupCollapsed('Feature 7 logs');
+        console.log("numIters should be 3 and actually is : ", numIters);
+        eq(3, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 8 ::: elements deleted won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.everyPF(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr.splice(3, 1);
+          }
+          return el > 0
+        });
+        console.groupCollapsed('Feature 8 logs');
+        console.log("numIters should be 2 and actually is : ", numIters);
+        eq(2, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 9 ::: elements added won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.everyPF(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr.push(4);
+          }
+          return el > 0
+        });
+        console.groupCollapsed('Feature 9 logs');
+        console.log("numIters should be 3 and actually is : ", numIters);
+        eq(3, numIters);
+        console.log("but the array is extended, the final element shoudl be 4, and is actually : ", arrayTest[5]);
+        console.groupEnd();
+      },
+
+      "Feature 10 ::: elements changed will invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.everyPF(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr[3] = 0;
+          } else {
+            console.log("0")
+          }
+          
+          return el > 0
+        });
+        console.groupCollapsed('Feature 10 logs');
+        console.log("numIters should be 2 and actually is : ", numIters);
+        eq(2, numIters);
+        console.log("but the array is extended, the final element shoudl be 0, and is actually : ", arrayTest[3]);
+        eq(0, arrayTest[3]);
+        console.groupEnd();
+      },
+      
+      "Feature 11 ::: every will return true for empty array ": function(){
+        var arrayTest = [];
+        var pass = arrayTest.everyPF(function(){
+
+        });
+        console.groupCollapsed('Feature 11 logs');
+        console.log("pass should be true, and is actually : ", pass);
+        eq(true, pass);
+        console.groupEnd();
+      },
+    })
+    </script>
+  </body>
+</html>

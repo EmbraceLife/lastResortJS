@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Build tests for Array.prototype.every</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <script>
+    tests({
+      "Feature 1 ::: return true if all elements pass the test provided by the callback": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.every(function(el){
+          return el >= 0;
+        });
+        
+        console.groupCollapsed('Feature 1 : return true if all passes');
+        console.log("pass should be true, and is actually : ", pass);
+        eq(true, pass);
+        console.groupEnd();
+      },
+
+      "Feature 1 ::: return false if one element fails the test provided by the callback": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.every(function(el){
+          return el > 1;
+        });
+        
+        console.groupCollapsed('Feature 1 : return false if one fails');
+        console.log("pass should be false, and is actually : ", pass);
+        eq(false, pass);
+        console.groupEnd();
+      },
+
+      "Feature 2 ::: `every` ensures its first arg `callback` as a function ": function(){
+        var arrayTest = [1,2];
+        
+        console.groupCollapsed('Feature 2 logs: catch error');
+        try {
+          var pass = arrayTest.every(3);
+        }
+        catch(e){
+          console.log(e.stack);
+        }
+        console.groupEnd();
+      },
+
+      "Feature 3 ::: callback has 3 args el, idx, arr provided by `every`": function(){
+        var arrayTest = [1,2];
+        var pass = arrayTest.every(function(el, idx, arr){
+          console.groupCollapsed('Feature 3 logs');
+          if (idx === 0) {
+            console.log("el should be 1, and is actually : ", el);
+            eq(1, el);
+            console.log("arr should be [1,2] and is actually : ", arr);
+            eq(2, arr[1]);
+          }
+          console.groupEnd();
+        });
+      },
+
+      "Feature 4 ::: thisArg refers to the object provided ": function(){
+        console.groupCollapsed('Feature 4 logs');
+        var arrayTest = [1,2];
+        var pass = arrayTest.every(function(){
+          
+          console.log("this.number should be 3, and is actually : ", this.number);
+          eq(3, this.number);
+          
+        }, {number: 3});
+        console.groupEnd();
+      },
+
+      "Feature 5 ::: thisArg refers undefined if not provided (but in practical undefined is replaced with window in chrome)": function(){
+        console.groupCollapsed('Feature 5 logs');
+        var arrayTest = [1,2];
+        var pass = arrayTest.every(function(){
+          
+          console.log("this should be window, and is actually : ", this);
+          eq(window, this);
+          
+        });
+        console.groupEnd();
+      },
+
+      "Feature 6 ::: every immediately return false when discovered the first element that failed the test": function(){
+        var arrayTest = [1,2];
+        var numIters = 0;
+        var pass = arrayTest.every(function(el){
+          numIters++;
+          return el > 2;
+        });
+        console.groupCollapsed('Feature 6 logs');
+        console.log("numIters should be 1 and actually is : ", numIters);
+        eq(1, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 7 ::: elements with missing values won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.every(function(el){
+          numIters++;
+          return el > 0
+        });
+        console.groupCollapsed('Feature 7 logs');
+        console.log("numIters should be 3 and actually is : ", numIters);
+        eq(3, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 8 ::: elements deleted won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.every(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr.splice(3, 1);
+          }
+          return el > 0
+        });
+        console.groupCollapsed('Feature 8 logs');
+        console.log("numIters should be 2 and actually is : ", numIters);
+        eq(2, numIters);
+        console.groupEnd();
+      },
+
+      "Feature 9 ::: elements added won't invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.every(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr.push(4);
+          }
+          return el > 0
+        });
+        console.groupCollapsed('Feature 9 logs');
+        console.log("numIters should be 3 and actually is : ", numIters);
+        eq(3, numIters);
+        console.log("but the array is extended, the final element shoudl be 4, and is actually : ", arrayTest[5]);
+        console.groupEnd();
+      },
+
+      "Feature 10 ::: elements changed will invoke callback": function(){
+        var arrayTest = [,,1,2,3];
+        var numIters = 0;
+        var pass = arrayTest.every(function(el, idx, arr){
+          numIters++;
+          if (idx === 2) {
+            arr[3] = 0;
+          } else {
+            console.log("0")
+          }
+          
+          return el > 0
+        });
+        console.groupCollapsed('Feature 10 logs');
+        console.log("numIters should be 2 and actually is : ", numIters);
+        eq(2, numIters);
+        console.log("but the array is extended, the final element shoudl be 0, and is actually : ", arrayTest[3]);
+        eq(0, arrayTest[3]);
+        console.groupEnd();
+      },
+      
+      "Feature 11 ::: every will return true for empty array ": function(){
+        var arrayTest = [];
+        var pass = arrayTest.every(function(){
+
+        });
+        console.groupCollapsed('Feature 11 logs');
+        console.log("pass should be true, and is actually : ", pass);
+        eq(true, pass);
+        console.groupEnd();
+      },
+    })
+    </script>
+  </body>
+</html>
