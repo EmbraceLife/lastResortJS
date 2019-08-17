@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Constructor vs prototype</title>
+  </head>
+  <body>
+    <script>
+    
+      debugger;
+
+      function Dog(){} // an empty function will return undefined
+
+      var dog = Dog(); // executes Dog() returns undefined assigned to dog
+
+      var dogA = new Dog(); // an object is created under the prototype Dog
+      /* 
+      because of new, Dog() added two hidden lines inside ::: 
+        1. add `var hiddenObj = {};` to be the first line
+        2. add `return hiddenObj` to be the last line
+      */
+
+      var dogProto = {}; // create the prototype dog
+
+      var dogB = Object.create(dogProto); // dogB object is created under the prototype dogProto
+      
+    </script>
+  </body>
+</html>
