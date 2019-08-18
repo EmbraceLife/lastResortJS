@@ -5,79 +5,200 @@
   </head>
   <body>
     <script src="../../simpleTest.js"></script>
+    <!-- copyWithinPF -->
+    <script>
+    /* Let's read pseudo codes in specs
+    Function copyWithin(array, target, start, end) {
+      1. var O = Object(array);
+      2. var len = O.length;
+      3. var relativeTarget = Number(target);
+      4. if (relativeTarget < 0) {
+        var to = Math.max(len+relativeTarget, 0);
+      } else {
+        var to = Math.min(relativeTarget, len); [Obviously if-else block is more efficient than mine]
+      }
+      5. var relativeStart = Number(start);
+      6. if (relativeStart < 0) {
+        var from = Math.max(len+relativeStart, 0); 
+      } else {
+        var from = Math.min(relativeStart, len);
+      }
+      7. if (end === undefined) {
+        var relativeEnd = len;
+      } else {
+        var relativeEnd = Number(end);
+      }
+      8. if (relativeEnd < 0) {
+        var final = Math.max(len+relativeEnd, 0) [this use of 0 here may not be as efficient as mine]
+      } else {
+        var final = Math.min(relativeEnd, len) [Obviously if-else block is more efficient than mine]
+      }
+      // I don't understand the code below!!!
+      9. var count = Math.min(final-from, len-to); [handling trim, I think]
+      10. if (from < to && to < from + count) {
+        var direction = -1; 
+        from = from + count - 1;
+        to = to + count - 1;
+      } 11. else {
+        var direction = 1;
+      }
+      12. while (count > 0) {
+        a. var fromKey = String(from);
+        b. var toKey = String(to);
+        c. var fromPresent = O.hasOwnProperty(fromKey);
+        d. if (fromPresent) {
+          i. var fromVal = O[fromKey];
+          ii. O[toKey] = fromVal;
+        } e. else {
+          i. assert fromPresent === false;
+          ii. DeletePropertyOrThrow(O, toKey);
+        f. from = from + direction;
+        g. to = to + direction;
+        h. count = count - 1;
+      13. return O
+        }
+      }
+    }
+
+    By reading the pseudo code against polyfill, I am certain that polyfill mirrors the pseudo-code.
+     */
+     if (!Array.prototype.copyWithinPF) {
+      Object.defineProperty(Array.prototype, 'copyWithinPF', {
+        value: function(target, start/*, end*/) {
+        if (this == null) {
+          throw new TypeError('this is null or not defined');
+        }
+
+        var O = Object(this);
+
+        var len = O.length >>> 0; // why this way? rather than simply O.length?
+
+        var relativeTarget = target >> 0; // why this way, rather than Number(target)?
+
+        /* handle all possible values of target ==> to */
+        var to = relativeTarget < 0 ?
+          Math.max(len + relativeTarget, 0) :
+          Math.min(relativeTarget, len);
+
+        
+        /* handles all possible values of start ==> from  */
+        var relativeStart = start >> 0;
+        var from = relativeStart < 0 ?
+          Math.max(len + relativeStart, 0) :
+          Math.min(relativeStart, len); // this is much shorter
+
+        /* handles all possible values of end ==> final */
+        var end = arguments[2];
+        var relativeEnd = end === undefined ? len : end >> 0;
+        var final = relativeEnd < 0 ?
+          Math.max(len + relativeEnd, 0) :
+          Math.min(relativeEnd, len);
+
+        /* I don't quite understand part of the following code from line 99 to 108. I need to debug through them to understand their usage and eventually meaning. */
+        
+        /* Get the smaller distance between start and end vs between target and length ::: count is actually the number of elements to be copied and pasted ? */
+        var count = Math.min(final - from, len - to);
+
+        var direction = 1;
+
+        /* if target is between start and start + count in the sequence, not outside the sequence*/
+        if (from < to && to < (from + count)) {
+          direction = -1;/* change direction but which way? */
+          from += count - 1;/* but why this? */
+          to += count - 1;
+        }
+
+        while (count > 0) {/* count is the number of elements to be copied and pasted? */
+          if (from in O) {/* if from is not missing */
+            O[to] = O[from];/* take value at from and paste to idx to */
+          } else {
+            delete O[to];/* if value at from is missing, delete the value at idx to, to make it empty */
+          }
+
+          from += direction; /* let start index move on */
+          to += direction;/* let end index move on */
+          count--;/* one element less */
+        }
+
+        // Step 19.
+        return O;
+      },
+      configurable: true,
+      writable: true
+      });
+    }
+
+    </script>
+    <!-- my copyWithin -->
     <script>
       /* Now, let's write up the copyWithin function one test by another */
-    function copyWithin(array, target, start, end){
-      /* what if target < 0, the converted target will be length + target; otherwise, just target */
-      function handleNeg(arg){
-        if (arg < 0 && arg > -array.length){
-          return array.length + arg;
-        } /* else if (arg <= -array.length) {
-          return 0; 
-        } */
-        return arg;
-      }
-      target = handleNeg(target);
-      // if (target < 0) {
-      //   target = array.length + target;
-      // } 
+      function copyWithin(array, target, start, end){
       
-      if (target >= array.length || target <= -array.length) {/* feature 14 */
+      /* Target Preparation */
+      target = handleNeg(target);/* feature 4.1 */
+      if (target >= array.length || target <= -array.length) {/* feature 4.2 and 5.1, also feature 14 */
         return array;
       }
 
-      if (start >= array.length || start <= -array.length) {
+
+      /* Start Preparation */
+      if (start >= array.length || start <= -array.length) {/* feature 5.2 */
         return array;
       }
-      // if (start < 0) {/* handle negative start */
-      //   start = array.length + start;
-      // }
-      start = handleNeg(start);
+      start = handleNeg(start);/* feature 8 */
+      start = (start) ? start : 0;/* feature 9 startOmit */
 
-      start = (start) ? start : 0/* when start is omitted, it is default to 0 */
-      
-      /* we need to handle negative end  */
-      // if (end < 0) {/* handle negative start */
-      //   end = array.length + end;
-      // }
-      end = handleNeg(end);
 
-      if (end >= array.length) {
+      /* End Preparation */
+      end = handleNeg(end);/* feature 11 */
+      if (end >= array.length) {/* feature 5.3 */
         end = array.length;
-      } else if (end <= -array.length){
+      } else if (end <= -array.length){/* feature 5.4 */
         return array;
       }
+      end = (end) ? end : array.length; /* feature 12 */
 
-      end = (end) ? end : array.length/* when end is omitted, make it full length */
+
+      /* Copy Section: 
+      copiedArray with elements from startIdx to endIdx */
       var copiedArray = [];/* create the copiedArray */
-      for (i = start; i < end; i++) {/* feature 10 */
+      for (i = start; i < end; i++) {/* feature 10 ::: copy from idx start to end-1*/
         // copiedArray[i] = array[i]; /* if i start 1, i = 0 will assumed to be empty */
         copiedArray.push(array[i]); 
       }
 
-      if (target > start) {/* make the copied array trimmed  */
+      /* Copy Section: 
+      trim the copiedArray if target > start
+       */
+      if (target > start) {/* feature 6 trim copiedArray  */
         copiedArray.splice(start-target, target-start);
-      }/* make sure to use a simple array first */
+      }
 
-      /* we need paste the copiedArray element to arrayTest starting from target */
+      /* Paste Section :
+      paste the copiedArray elements to arrayTest starting from target */
       for (i = 0; i < copiedArray.length; i++){
-        // if (copiedArray.hasOwnProperty(i)){
-
         array[target + i] = copiedArray[i];
-        if (copiedArray[i] === undefined) {/* fearture 15 */
-          delete array[target + i];
-        }
-        // }
-      }/* now let's see whether the previous tests succeed or not */
 
-      // array[target] = array[start];/* this only work on two elements or one element array for now for copying one element onto another. */
+        /* sparse array's missing values have become undefined when copied into copiedArray */
+        if (copiedArray[i] === undefined) {/* fearture 15 */
+          delete array[target + i];/* turn undefined into emptyness */
+        }
+      }
       return array;
+
+      /* Utils Section */
+      function handleNeg(arg){/* handle args: -array.length <= negArg < 0 */
+        if (arg < 0 && arg > -array.length){
+          return array.length + arg;
+        } 
+        return arg; /* arg >= 0 or arg < -array.length */
+      }
     }
 
-    /* 
-    First of all, we do some some obvious refactor on the copyWithin function
-
-    Now I would like to clean up feature descriptions and try some extreme cases on each feature. */
+    </script>
+    <!-- my tests -->
+    <script>
+    
     tests({
 
       "Feature 1 (clean) ::: fixedLength ::: arrayTest should have the equal length with modified array ::: arrayTest.length === modified.length": function(){
@@ -127,7 +248,7 @@
         console.groupEnd();
       },
 
-      "Feature 4 (clean) ::: negativeTarget>LengthNeg::: If negative, target will be counted from the end ::: targetCvt = length + targetNeg ": function(){
+      "Feature 4.1 (clean) ::: negativeTarget>LengthNeg::: If negative, target will be counted from the end ::: targetCvt = length + targetNeg ": function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var start = 0;
@@ -135,7 +256,7 @@
         var convertedTarget = arrayTest1.length + negativeTarget;
         var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);
         var modifiedCvt = copyWithin(arrayTest2, convertedTarget, start);
-        console.groupCollapsed('Feature 4 logs');
+        console.groupCollapsed('Feature 4.1 logs');
         
         console.log("the modifiedNeg is : ", modifiedNeg,);
         console.log("the modifiedCvt is : ", modifiedCvt);
@@ -143,7 +264,7 @@
         console.groupEnd();
       },
 
-      "Feature 4 (clean) ::: targetBeyondLengthNeg ::: if so, do nothing":function(){
+      "Feature 4.2 (clean) ::: targetBeyondLengthNeg ::: if so, do nothing":function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var start = 0;
@@ -153,7 +274,7 @@
         // var modifiedCvt = arrayTest2.copyWithin(convertedTarget, start);
         var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);/* if |negTarget| >= 4, then do nothing */
         var modifiedCvt = copyWithin(arrayTest2, convertedTarget, start);
-        console.groupCollapsed('Feature 4 (Extreme) logs');
+        console.groupCollapsed('Feature 4.2 logs');
         
         console.log("the modifiedNeg is : ", modifiedNeg,);
         console.log("the modifiedCvt is : ", modifiedCvt);
@@ -173,49 +294,49 @@
         console.groupEnd();
       },
 
-      "Feature 5 (clean) ::: targetBeyondLengthPos ::: If target is at or greater than arr.length, nothing will be copied, just return array": function(){
+      "Feature 5.1 (clean) ::: targetBeyondLengthPos ::: If target is at or greater than arr.length, nothing will be copied, just return array": function(){
         var arrayTest = [1,2,3,4];
         var target = 6; /* experiment with 4,5,6 */
         var modified = copyWithin(arrayTest, target);
-        console.groupCollapsed('Feature 5 logs');
+        console.groupCollapsed('Feature 5.1 logs');
         console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
         eq(arrayTest, modified);
         console.groupEnd();
       },
 
-      "Feature 5 (clean) ::: startBeyondLength(Pos/Neg) ::: start >= length || start <= -length ===> do nothing":function(){
+      "Feature 5.2 (clean) ::: startBeyondLength(Pos/Neg) ::: start >= length || start <= -length ===> do nothing":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
-        var start = 7; /* experiment with 4,5,6 or -4,-5,-6 all do nothing*/
+        var start = -7; /* experiment with 4,5,6 or -4,-5,-6 all do nothing*/
         // var modified = arrayTest.copyWithin(target, start);
         var modified = copyWithin(arrayTest, target, start);
-        console.groupCollapsed('Feature 5 extend to start logs');
+        console.groupCollapsed('Feature 5.2 start logs');
         console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
         eq(arrayTest, modified);
         console.groupEnd();
       },
 
-      "Feature 5 (clean) ::: endBeyongLengthPos ::: end >= length ===> end can't exceed length":function(){
+      "Feature 5.3 (clean) ::: endBeyongLengthPos ::: end >= length ===> end can't exceed length":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
         var start = 1; 
         var end = 4; /* experiment with 4,5,6 ===> end can't exceed length;*/
         // var modified = arrayTest.copyWithin(target, start, end);
         var modified = copyWithin(arrayTest, target, start, end);
-        console.groupCollapsed('Feature 5 extend to end logs');
+        console.groupCollapsed('Feature 5.3 end logs');
         console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
         eq(arrayTest, modified);
         console.groupEnd();
       },
 
-      "Feature 5 (clean) ::: endBeyondNegLength ::: end <= -length ===> do nothing":function(){
+      "Feature 5.4 (clean) ::: endBeyondNegLength ::: end <= -length ===> do nothing":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
         var start = 1; 
         var end = -8; /* or experiment with -4,-5,-6, do nothing*/
         // var modified = arrayTest.copyWithin(target, start, end);
         var modified = copyWithin(arrayTest, target, start, end);
-        console.groupCollapsed('Feature 5 extend to end logs');
+        console.groupCollapsed('Feature 5.4 end logs');
         console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
         eq(arrayTest, modified);
         console.groupEnd();

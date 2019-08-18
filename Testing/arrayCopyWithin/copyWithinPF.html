@@ -6,65 +6,117 @@
   <body>
     <script src="../../simpleTest.js"></script>
     <script>
-      /* I have copied the Polyfill code from MDN docs and changed a little on the name here. Then I have pasted the tests in the same file to test on copyWithinPF.  */
+    /* Let's read pseudo codes in specs
+    Function copyWithin(array, target, start, end) {
+      1. var O = Object(array);
+      2. var len = O.length;
+      3. var relativeTarget = Number(target);
+      4. if (relativeTarget < 0) {
+        var to = Math.max(len+relativeTarget, 0);
+      } else {
+        var to = Math.min(relativeTarget, len); [Obviously if-else block is more efficient than mine]
+      }
+      5. var relativeStart = Number(start);
+      6. if (relativeStart < 0) {
+        var from = Math.max(len+relativeStart, 0); 
+      } else {
+        var from = Math.min(relativeStart, len);
+      }
+      7. if (end === undefined) {
+        var relativeEnd = len;
+      } else {
+        var relativeEnd = Number(end);
+      }
+      8. if (relativeEnd < 0) {
+        var final = Math.max(len+relativeEnd, 0) [this use of 0 here may not be as efficient as mine]
+      } else {
+        var final = Math.min(relativeEnd, len) [Obviously if-else block is more efficient than mine]
+      }
+      // I don't understand the code below!!!
+      9. var count = Math.min(final-from, len-to); [handling trim, I think]
+      10. if (from < to && to < from + count) {
+        var direction = -1; 
+        from = from + count - 1;
+        to = to + count - 1;
+      } 11. else {
+        var direction = 1;
+      }
+      12. while (count > 0) {
+        a. var fromKey = String(from);
+        b. var toKey = String(to);
+        c. var fromPresent = O.hasOwnProperty(fromKey);
+        d. if (fromPresent) {
+          i. var fromVal = O[fromKey];
+          ii. O[toKey] = fromVal;
+        } e. else {
+          i. assert fromPresent === false;
+          ii. DeletePropertyOrThrow(O, toKey);
+        f. from = from + direction;
+        g. to = to + direction;
+        h. count = count - 1;
+      13. return O
+        }
+      }
+    }
+
+    By reading the pseudo code against polyfill, I am certain that polyfill mirrors the pseudo-code.
+     */
     if (!Array.prototype.copyWithinPF) {
       Object.defineProperty(Array.prototype, 'copyWithinPF', {
         value: function(target, start/*, end*/) {
-        // Steps 1-2.
         if (this == null) {
           throw new TypeError('this is null or not defined');
         }
 
         var O = Object(this);
 
-        // Steps 3-5.
-        var len = O.length >>> 0;
+        var len = O.length >>> 0; // why this way? rather than simply O.length?
 
-        // Steps 6-8.
-        var relativeTarget = target >> 0;
+        var relativeTarget = target >> 0; // why this way, rather than Number(target)?
 
+        /* handle all possible values of target ==> to */
         var to = relativeTarget < 0 ?
           Math.max(len + relativeTarget, 0) :
           Math.min(relativeTarget, len);
 
-        // Steps 9-11.
+        
+        /* handles all possible values of start ==> from  */
         var relativeStart = start >> 0;
-
         var from = relativeStart < 0 ?
           Math.max(len + relativeStart, 0) :
-          Math.min(relativeStart, len);
+          Math.min(relativeStart, len); // this is much shorter
 
-        // Steps 12-14.
+        /* handles all possible values of end ==> final */
         var end = arguments[2];
         var relativeEnd = end === undefined ? len : end >> 0;
-
         var final = relativeEnd < 0 ?
           Math.max(len + relativeEnd, 0) :
           Math.min(relativeEnd, len);
 
-        // Step 15.
+        /* I don't quite understand part of the following code from line 99 to 108. I need to debug through them to understand their usage and eventually meaning. */
+        
+        /* Get the smaller distance between start and end vs between target and length ::: count is actually the number of elements to be copied and pasted ? */
         var count = Math.min(final - from, len - to);
 
-        // Steps 16-17.
         var direction = 1;
 
+        /* if target is between start and start + count in the sequence, not outside the sequence*/
         if (from < to && to < (from + count)) {
-          direction = -1;
-          from += count - 1;
+          direction = -1;/* change direction but which way? */
+          from += count - 1;/* but why this? */
           to += count - 1;
         }
 
-        // Step 18.
-        while (count > 0) {
-          if (from in O) {
-            O[to] = O[from];
+        while (count > 0) {/* count is the number of elements to be copied and pasted? */
+          if (from in O) {/* if from is not missing */
+            O[to] = O[from];/* take value at from and paste to idx to */
           } else {
-            delete O[to];
+            delete O[to];/* if value at from is missing, delete the value at idx to, to make it empty */
           }
 
-          from += direction;
-          to += direction;
-          count--;
+          from += direction; /* let start index move on */
+          to += direction;/* let end index move on */
+          count--;/* one element less */
         }
 
         // Step 19.
