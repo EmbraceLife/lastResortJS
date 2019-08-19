@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rewrite copyWithin</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <!-- copyWithinPF -->
+    <script>
+    /* Let's read pseudo codes in specs
+    Function copyWithin(array, target, start, end) {
+      1. var O = Object(array);
+      2. var len = O.length;
+      3. var relativeTarget = Number(target);
+      4. if (relativeTarget < 0) {
+        var to = Math.max(len+relativeTarget, 0);
+      } else {
+        var to = Math.min(relativeTarget, len); [Obviously if-else block is more efficient than mine]
+      }
+      5. var relativeStart = Number(start);
+      6. if (relativeStart < 0) {
+        var from = Math.max(len+relativeStart, 0); 
+      } else {
+        var from = Math.min(relativeStart, len);
+      }
+      7. if (end === undefined) {
+        var relativeEnd = len;
+      } else {
+        var relativeEnd = Number(end);
+      }
+      8. if (relativeEnd < 0) {
+        var final = Math.max(len+relativeEnd, 0) [this use of 0 here may not be as efficient as mine]
+      } else {
+        var final = Math.min(relativeEnd, len) [Obviously if-else block is more efficient than mine]
+      }
+      // I don't understand the code below!!!
+      9. var count = Math.min(final-from, len-to); [handling trim, I think]
+      10. if (from < to && to < from + count) {
+        var direction = -1; 
+        from = from + count - 1;
+        to = to + count - 1;
+      } 11. else {
+        var direction = 1;
+      }
+      12. while (count > 0) {
+        a. var fromKey = String(from);
+        b. var toKey = String(to);
+        c. var fromPresent = O.hasOwnProperty(fromKey);
+        d. if (fromPresent) {
+          i. var fromVal = O[fromKey];
+          ii. O[toKey] = fromVal;
+        } e. else {
+          i. assert fromPresent === false;
+          ii. DeletePropertyOrThrow(O, toKey);
+        f. from = from + direction;
+        g. to = to + direction;
+        h. count = count - 1;
+      13. return O
+        }
+      }
+    }
+
+    By reading the pseudo code against polyfill, I am certain that polyfill mirrors the pseudo-code.
+     */
+     if (!Array.prototype.copyWithinPF) {
+      Object.defineProperty(Array.prototype, 'copyWithinPF', {
+        value: function(target, start/*, end*/) {
+        if (this == null) {
+          throw new TypeError('this is null or not defined');
+        }
+
+        // debugger; /* test on this */
+        var O = Object(this);
+
+        var len = O.length >>> 0; // why this way? rather than simply O.length?
+
+        /* New Pattern ::: using >> to set undefined to be 0 */
+        var relativeTarget = target >> 0; // >> : make sure target is 0 if undefined
+
+        /* handle all possible values of target ==> to */
+
+        /* ::: The New Pattern - Math.max/min + ternary operator = multiple conditions value assignment:::
+
+        if ::: relativeTarget < 0, 
+        then ::: set variable `to` to be either be 0 or `len + relativeTarget` whichever is larger; 
+          ==> if `relativeTarget` < 0, 
+          ==> it can further split into two situations 
+          ==> 1) if `-len < relativeTarget < 0` ::: then `to` = len + relativeTarget (greater than 0)
+          ==> 2) if `relativeTarget < -len` ::: then `to` = 0
+          ==> Math.max(len+relativeTarget, 0) absorbs 1) and 2) together
+        else (if relativeTarget >= 0 ) ::: set variable `to` to be either `relativeTarget` itself or `len` whichever is smaller; 
+          ==> if `relativeTarget` >= 0, 
+          ==> it can be further splitted into two situations
+          ==> 1) 0 < relativeTarget <= len, ::: then set `to` = `relativeTarget`
+          ==> 2) relativeTarget > len ::: then set `to` = `len`
+          ==> Math.min(relativeTarget, len) absorbs 1) and 2) together
+        */
+        var to = relativeTarget < 0 ? 
+          Math.max(len + relativeTarget, 0) :
+          Math.min(relativeTarget, len);
+
+        
+        /* handles all possible values of start ==> from  */
+        var relativeStart = start >> 0;/* if start is undefined, relativeStart will be 0 */
+        var from = relativeStart < 0 ?
+          Math.max(len + relativeStart, 0) :
+          Math.min(relativeStart, len); // this is much shorter
+
+        /* handles all possible values of end ==> final */
+        var end = arguments[2];
+        var relativeEnd = end === undefined ? len : end >> 0;
+        var final = relativeEnd < 0 ?
+          Math.max(len + relativeEnd, 0) :
+          Math.min(relativeEnd, len);
+
+
+        /* New Pattern  */
+        /* count is actually the number of elements to be copied and pasted. 
+        
+        final - from ::: equivalent to (end - start) ::: the number of elements to copy
+
+        len - to ::: equivalent to len - target ::: the maximum number of places to be pasted onto
+
+        between copied and pasted numbers, only the smaller one really count!
+         */
+        var count = Math.min(final - from, len - to);
+
+        var direction = 1;
+
+        /* if target is between start and start + count in the sequence, the copied part and pasted part overlaps, so we must use  copy-paste from right to left, to avoid collision */
+        if (from < to && to < (from + count)) {/* move on from right to left */
+          direction = -1;
+          from += count - 1;
+          to += count - 1;
+        } /* otherwise, target is on the left of start;
+            or target > length */
+
+        while (count > 0) {/* count is the number of elements to be copied and pasted? */
+          if (from in O) {/* if from is not missing */
+            O[to] = O[from];/* take value at from and paste to idx to */
+          } else {
+            delete O[to];/* if value at from is missing, delete the value at idx to, to make it empty */
+          }
+
+          from += direction; /* move on to the next idx to be copied as start */
+          to += direction;/* move on to the next idx to be pasted as target */
+          count--;/* one element less */
+        }
+
+        return O;
+      },
+      configurable: true,
+      writable: true
+      });
+    }
+
+    </script>
+    <!-- my copyWithin -->
+    <script>
+      /* Now, let's write up the copyWithin function one test by another */
+      function copyWithin(array, target, start, end){
+      
+      /* Target Preparation */
+      target = handleNeg(target);/* feature 4.1 */
+      if (target >= array.length || target <= -array.length) {/* feature 4.2 and 5.1, also feature 14 */
+        return array;
+      }
+
+
+      /* Start Preparation */
+      if (start >= array.length || start <= -array.length) {/* feature 5.2 */
+        return array;
+      }
+      start = handleNeg(start);/* feature 8 */
+      start = (start) ? start : 0;/* feature 9 startOmit */
+
+
+      /* End Preparation */
+      end = handleNeg(end);/* feature 11 */
+      if (end >= array.length) {/* feature 5.3 */
+        end = array.length;
+      } else if (end <= -array.length){/* feature 5.4 */
+        return array;
+      }
+      end = (end) ? end : array.length; /* feature 12 */
+
+
+      /* Copy Section: 
+      copiedArray with elements from startIdx to endIdx */
+      var copiedArray = [];/* create the copiedArray */
+      for (i = start; i < end; i++) {/* feature 10 ::: copy from idx start to end-1*/
+        // copiedArray[i] = array[i]; /* if i start 1, i = 0 will assumed to be empty */
+        copiedArray.push(array[i]); 
+      }
+
+      /* Copy Section: 
+      trim the copiedArray if target > start
+       */
+      if (target > start) {/* feature 6 trim copiedArray  */
+        copiedArray.splice(start-target, target-start);
+      }
+
+      /* Paste Section :
+      paste the copiedArray elements to arrayTest starting from target */
+      for (i = 0; i < copiedArray.length; i++){
+        array[target + i] = copiedArray[i];
+
+        /* sparse array's missing values have become undefined when copied into copiedArray */
+        if (copiedArray[i] === undefined) {/* fearture 15 */
+          delete array[target + i];/* turn undefined into emptyness */
+        }
+      }
+      return array;
+
+      /* Utils Section */
+      function handleNeg(arg){/* handle args: -array.length <= negArg < 0 */
+        if (arg < 0 && arg > -array.length){
+          return array.length + arg;
+        } 
+        return arg; /* arg >= 0 or arg < -array.length */
+      }
+    }
+
+    </script>
+    <!-- my tests -->
+    <script>
+    
+    tests({
+
+      "Feature 1 (clean) ::: fixedLength ::: arrayTest should have the equal length with modified array ::: arrayTest.length === modified.length": function(){
+        var arrayTest = [1,2,3,4];
+        var modified = copyWithin(arrayTest, 0, 1, 2);
+        // var modified = arrayTest.copyWithinPF(0, 1, 2);
+        console.groupCollapsed('Feature 1 logs');
+        console.log("The length of arrayTest is : ", arrayTest.length, "the length of modified is : ", modified.length, "They should be equal.");
+        eq(arrayTest.length, modified.length);
+        console.groupEnd();
+      }, 
+
+      "Feature 2 (clean) ::: arrayMutable ::: arrayTest is mutable by copyWithin ::: arrayTestBeforeCopywithin[target] !== arrayTestAfterCopywithin[target]": function() {
+        var arrayTest = [1,2];/* make it simpler */
+        var target = 0;
+        var start = 1;
+        var originalTarget = arrayTest[target];
+        var modified = copyWithin(arrayTest, target, start);
+        console.groupCollapsed('Feature 2 logs');
+        
+        console.log("The original target before running copyWithin is : ", originalTarget, ", after is : ", modified[target], ". we expect that they aren't equal");
+        eq(false, originalTarget === modified[target]);
+
+        console.groupEnd();
+      },
+
+
+      "Feature 3 (clean) ::: targetReplacedByStart ::: original arrayTest[target] is replaced by original arrayTest[start] ::: newArray[start] === arrayTest[target]": function(){
+        var arrayTest = [1,2,3,4];/* to make it more complex, use [1,2,3,4], instead of [1,2] The result should be the same without change*/
+        var target = 0;
+        var start = 1;/* an edge case that start > array.length, here my function can't handle */
+        var originalStart = arrayTest[start];
+        var modified = copyWithin(arrayTest, target, start);
+
+        console.groupCollapsed('Feature 3 logs');
+        console.log("modified[target]: ", modified[target], " should be equal to the original arrayTest[start]: ", originalStart, " and actually it is : ", modified[target] === originalStart);
+        eq(modified[target], originalStart);
+        
+        console.groupEnd();
+      },
+
+      "Assistance 1 ::: arrayTest[negativeValue] is undefined": function(){
+        var arrayTest = [1,2,3,4];
+        var output = arrayTest[-1];
+        console.groupCollapsed('Additional 1 logs');
+        console.log("arrayTest[-1] should return undefined, and is actually : ", output);
+        eq(undefined, output);
+        console.groupEnd();
+      },
+
+      "Feature 4.1 (clean) ::: negativeTarget>LengthNeg::: If negative, target will be counted from the end ::: targetCvt = length + targetNeg ": function(){
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var start = 0;
+        var negativeTarget = -1;/* experiment different values -1, -2, -3 */ 
+        var convertedTarget = arrayTest1.length + negativeTarget;
+        var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);
+        var modifiedCvt = copyWithin(arrayTest2, convertedTarget, start);
+        console.groupCollapsed('Feature 4.1 logs');
+        
+        console.log("the modifiedNeg is : ", modifiedNeg,);
+        console.log("the modifiedCvt is : ", modifiedCvt);
+        console.log("They are expected to have the same elements");
+        console.groupEnd();
+      },
+
+      "Feature 4.2 (clean) ::: targetBeyondLengthNeg ::: if so, do nothing":function(){
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var start = 0;
+        var negativeTarget = -8;/* experiment different values -1, -2, -3, -4, -5 (error)  */ 
+        var convertedTarget = (-negativeTarget >= arrayTest1.length)? 0 : arrayTest1.length + negativeTarget;
+        // var modifiedNeg = arrayTest1.copyWithin(negativeTarget, start);/* if |negTarget| >= 4, then do nothing */
+        // var modifiedCvt = arrayTest2.copyWithin(convertedTarget, start);
+        var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);/* if |negTarget| >= 4, then do nothing */
+        var modifiedCvt = copyWithin(arrayTest2, convertedTarget, start);
+        console.groupCollapsed('Feature 4.2 logs');
+        
+        console.log("the modifiedNeg is : ", modifiedNeg,);
+        console.log("the modifiedCvt is : ", modifiedCvt);
+        console.log("They are expected to have the same elements");
+        console.groupEnd();
+      },
+
+      "Feature added (clean) ::: sameReference ::: the return array is the same reference array but mutated": function(){
+        var arrayTest = [1,2,3,4];/* make it simple [1,2] or complex [1,2,3,4] */
+        var target = 0; /* at or greater than the length 4 */
+        var start = 2; /* experiment with 1,2,3 */
+        // var original = arrayTest;/* this line is not necessary now */
+        var modified = copyWithin(arrayTest, target, start);
+        console.groupCollapsed('Additional 2 logs');
+        console.log("arrayTest and modified array share the same reference: ", arrayTest === modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
+
+      "Feature 5.1 (clean) ::: targetBeyondLengthPos ::: If target is at or greater than arr.length, nothing will be copied, just return array": function(){
+        var arrayTest = [1,2,3,4];
+        var target = 6; /* experiment with 4,5,6 */
+        // var modified = copyWithin(arrayTest, target);
+        var modified = arrayTest.copyWithinPF(target);
+        console.groupCollapsed('Feature 5.1 logs');
+        console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
+
+      "Feature 5.2 (clean) ::: startBeyondLength(Pos/Neg) ::: start >= length || start <= -length ===> do nothing":function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0; 
+        var start = -7; /* experiment with 4,5,6 or -4,-5,-6 all do nothing*/
+        // var modified = arrayTest.copyWithin(target, start);
+        var modified = copyWithin(arrayTest, target, start);
+        console.groupCollapsed('Feature 5.2 start logs');
+        console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
+
+      "Feature 5.3 (clean) ::: endBeyongLengthPos ::: end >= length ===> end can't exceed length":function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0; 
+        var start = 1; 
+        var end = 4; /* experiment with 4,5,6 ===> end can't exceed length;*/
+        // var modified = arrayTest.copyWithin(target, start, end);
+        var modified = copyWithin(arrayTest, target, start, end);
+        console.groupCollapsed('Feature 5.3 end logs');
+        console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
+
+      "Feature 5.4 (clean) ::: endBeyondNegLength ::: end <= -length ===> do nothing":function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0; 
+        var start = 1; 
+        var end = -8; /* or experiment with -4,-5,-6, do nothing*/
+        // var modified = arrayTest.copyWithin(target, start, end);
+        var modified = copyWithin(arrayTest, target, start, end);
+        console.groupCollapsed('Feature 5.4 end logs');
+        console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
+
+      "Assistance 2 ::: splice(-2, 2) to remove the last two element": function(){
+        var arrayTest = [1,2,3,4];
+        arrayTest.splice(-3,2)
+        console.groupCollapsed('Additional 3 logs');
+        console.log("arrayTest.splice(-3,2) should return [1,4], and actually returns ", arrayTest)
+        eq(4, arrayTest[1]);
+        console.groupEnd();
+        
+      },
+
+      "Feature 6 (clean) ::: Target>StartCopiedTrim ::: If target is positioned after start, the copied sequence will be trimmed to fit arr.length ::: copiedPart.splice(start-target, target-start)": function(){
+        var arrayTest = [1,2,3,4];/* make array larger, [1,2,3,4] */
+        var target = 2;/* experiment 1,2,3 */
+        var start = 1;/* experiment 0,1,2 */
+        // var modifedArray = copyWithin(arrayTest, target, start);
+        var modifedArray = arrayTest.copyWithinPF(target, start);
+        console.groupCollapsed('Feature 6 logs');
+        console.log("the modified array should be [1,2,2,3], and is actually : ", modifedArray);
+        eq(2, modifedArray[1]);
+        console.groupEnd();
+      },
+
+      "Feature 7 (clean)::: copyFromStart ::: Zero-based index at which to start copying elements from ::: originalStart === modifiedArray[target] ": function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0;
+        var start = 3;/* experiment 0,1,2,3 */
+        var originalStart = arrayTest[start];
+        var modifiedArray = copyWithin(arrayTest, target, start);
+        console.groupCollapsed('Feature 7 logs');
+        console.log("arrayTestOriginal[start] === modifiedArray[target], true or false? : ", originalStart === modifiedArray[target]);
+        eq(originalStart, modifiedArray[target]);
+        console.groupEnd();
+      },
+
+      "Feature 8 (clean) ::: negStart>LengthNeg ::: If negative, start will be counted from the end ::: negStart ==> startCvt = length + negStart": function(){
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var negStart = -3;/* experiment -1, -2, -3 */
+        var startCvt = arrayTest1.length + negStart;
+        var modified1 = copyWithin(arrayTest1, 0, negStart);
+        var modified2 = copyWithin(arrayTest2, 0, startCvt);
+        console.groupCollapsed('Feature 8 logs');
+        console.log("modified1[0] and modified2[0] should be equal ", modified1[0] === modified2[0]);
+        eq(modified1[0], modified2[0]);
+        console.groupEnd();
+      },
+
+      "Feature 9 (clean) ::: startOmitted ::: If start is omitted, copyWithin will copy from index 0 ::: arrayTest.copyWithin(target, 0) should be equivalent to arrayTest.copyWithin(target); ": function(){
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var target = -20; /* can be any number */
+        var start = 0;
+        var modified1 = copyWithin(arrayTest1, target, start);
+        var modified2 = copyWithin(arrayTest2, target);
+        console.groupCollapsed('Feature 9 logs');
+        console.log("modified1 : ", modified1, " and modified2 :", modified2, " should be equal ");
+        eq(modified1[0], modified2[0]);
+        console.groupEnd();
+      },
+      
+
+      "Feature 10 (clean)::: stopCopyBeforeEnd<=Length ::: Zero-based index at which to end copying elements from": function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0;
+        var start = 2;
+        var end = 4;/* copied elements at index 2, index 3 */
+        var modified = copyWithin(arrayTest, target, start, end);
+        console.groupCollapsed('Feature 10 logs');
+        console.log("modified array's first element should be 3, and is actually : ", modified[0]);
+        eq(3, modified[0]);
+        console.log("modified array's second element should be 4, and is actually : ", modified[1]);
+        eq(4, modified[1]);
+        console.groupEnd();
+        /* I just forgot to record the experimental part: what I did is to change values for start and end. I tried 1, 2 for start, tried 3, 4 for end. The finished version used start = 2, end = 4, and tested on modified[0], modified[1] */
+      },
+
+      "Feature 11 (clean)::: negEnd ::: If negative, end will be counted from the end. ::: arrayTest.copyWithin(0, 0, -1) should be equal to arrayTest.copyWithin(0, 0, arrayTest.length-1) ": function(){
+
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var target = 0;
+        var start = 20;/* 1,2,3,20 */
+        var negEnd = -1;
+        var modified1 = copyWithin(arrayTest1, target, start, negEnd);
+        var modified2 = arrayTest2.copyWithin(target, start, negEnd);
+        console.groupCollapsed('Feature 11 logs');
+        console.log("modified1 : ", modified1, " and modified2 : ", modified2, " should be equal ");
+        console.groupEnd();
+      },
+
+      "Feature 12 (clean)::: endOmit ::: If end is omitted, copyWithin will copy until the last index (default to arr.length)": function(){
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var target = 1;
+        var start = 0;
+        // var endOmit = arrayTest1.length;
+        var modified1 = copyWithin(arrayTest1, target, start);
+        // var modified2 = copyWithin(arrayTest2, target, start, endOmit);
+        var modified2 = arrayTest2.copyWithin(target, start);
+        console.groupCollapsed('Feature 12 logs');
+        console.log("modified1 : ", modified1, " and modified2 :", modified2, " should be equal ");
+        console.groupEnd();
+      },
+      /* tests on end are finished */
+
+      "Feature 13 (clean) ::: overlap ::: pasted sequence will have the copied values even when the copy and paste region overlap ::: target = 0; start = 1; end = 3; the copied sequence [idx1, idx2], the pasted equence [idx0, idx1], they overlap at idx1. the original idx1 will be replaced by original idx2, and current idx2 is still the same to original idx2.": function(){
+        var arrayTest = [1,2,3,4];
+        var target = 0;
+        var start = 1;
+        var end = 3;
+        var modified = copyWithin(arrayTest, target, start, end);
+        /* based on our analysis above, inside modified array, the idx1 should be 3, and idx2 should be 3 too */
+        console.groupCollapsed('Feature 13 logs');
+        console.log("modified[1] should be 3, and is actually ", modified[1], "modified[2] should be 3, and is actually : ", modified[2]);
+        eq(3, modified[1]);
+        eq(3, modified[2]);
+        console.groupEnd();
+      },
+
+      "Feature 14 (clean) ::: emptyArray ::: it returns empty array": function(){
+        var arrayTest = [];
+        // var modified = arrayTest.copyWithin(20);
+        var modified = copyWithin(arrayTest, 20);/* why it already works? */
+        console.groupCollapsed('Feature 14 logs');
+        console.log("empty array run copyWithin should return empty array, and actually returns : ", modified);
+        console.groupEnd();
+      },
+
+      "Feature 15 (clean)::: sparseArray ::: leave missing alone": function(){
+        console.groupCollapsed('Feature 15 logs');
+        var arrayTest = [1,,,4];
+        console.log("original array: ", arrayTest);
+        // var modified = arrayTest.copyWithin(0, 1);
+        var modified = copyWithin(arrayTest, 0, 1);
+        console.log("the modified array should be [,,4,4], and is actually, ", modified);
+        console.groupEnd();
+      },
+
+
+      "Tests Done ::: The copyWithin function is intentionally generic, it does not require that its this value be an Array object (I don't think we can write a feature/test on this, as we can't access this from outside like what we did with callback in forEach) ::: The copyWithin method is a mutable method. It does not alter the length of this, but it will change its content and create new properties, if necessary (the array is mutable, we have tested before explicitly on Feature 2). I have also quickly checked on the Polyfill to make sure it does not used any other array methods to implement copyWithin.": function(){
+
+      },
+      })
+    
+    </script>
+  </body>
+</html>

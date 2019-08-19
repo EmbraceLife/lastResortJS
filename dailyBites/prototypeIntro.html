@@ -16,13 +16,13 @@
       dogA.name = "laifu";
       dogA.fetch();
 
-      Object.getPrototypeOf(dogA) === dogProto;
+      Object.getPrototypeOf(dogA) === dogProto;/* true */
 
-      var objA = {};
-      var objAProto = Object.getPrototypeOf(objA);
-      var dogProtoProto = Object.getPrototypeOf(dogProto);
-      objAProto === dogProtoProto;
-      Object.getPrototypeOf(objAProto);
+      var objA = {};/* {_proto_: Object} */
+      var objAProto = Object.getPrototypeOf(objA);/* Object */
+      var dogProtoProto = Object.getPrototypeOf(dogProto);/* Object */
+      objAProto === dogProtoProto;/* true */
+      Object.getPrototypeOf(objAProto);/* null */
       
     </script>
   </body>
