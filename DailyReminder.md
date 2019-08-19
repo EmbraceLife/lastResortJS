@@ -61,16 +61,29 @@ I can't get the firefox debugger properly started running at the moment, therefo
 
 ## Test and Rewrite Procedures
 
-1. read docs and specs ⭐️ extremely slowly and carefully 
-    - to get out as many use cases as possible  
-2. each use case (or test) should be as tiny, explicit, ation-specific as possible
-    - each use case focuses on a single, specific utility or action (not two or more combined)
+1. read docs and specs ⭐️ extremely slowly and carefully to get out as many use cases as possible :zap: :zap: :zap:
+    - copy the sentence you are reading from docs into description
+    - describe the use case you read from the sentence
+    - write an code example with the native method to demo the use case
+    - add `debugger` into the demo example to experiment
+Note: if you are the ones highly suspect the validity of docs (also specs doesn't say much e.g., `copyWithin`), you should thoroughly experiment the options of array and arguments ::: 
+    - experiment array : try array from simple to more complex
+        - simple case : `[0]`, `[1,2]`, `[1,2,3,4]`
+        - edge case : `[]`
+    - experiment `target` (first arg in `copyWithin`): 
+        - keep other optional args empty (`undefined`)
+        - try in order `0`, `1`, `2`, ... 
+        - try leave `target` empty or `undefined` (edge case)
+    - experiment `start` ... in the similar style
+2. each use case (or test) should be as tiny, explicit, action-specific as possible
+    - each use case focuses on a single, specific utility or action 
+        - (i.e., one specific situation of inputs lead to one specific situation of output, always just set out to test one specific situation)
     - improve on the description iteratively
     - reorganize the order of tests from simple to complex
 3. write your test as tiny, simple, easy as possible
     - only write codes to test what you set out to test in the description above
     - start with the simplest array, e.g., [0] or [1,2]
-4. make sure the official method and polyfill code pass all of your tests
+4. make sure the native method and polyfill code pass all of your tests
     - meanwhile, you may think of some edge use cases or tests
 5. rewrite your function from scratch by building it up one test by another
     - your function should pass all tests of course
@@ -79,13 +92,13 @@ I can't get the firefox debugger properly started running at the moment, therefo
     - to refactor with util functions
     - to organize using section comments
 7. read pseudo-source code and polyfill code 
-    - to write the real source code line by line while reading the pseudo code
-    - comment on the part you don't understand
-    - read the polyfill code and check whether it mirrors the pseudo code in specs
-    - debugger to understand the part of code you don't understand
-    - start to ponder whether this is new code pattern you should learn from
+    1. to write the real source code line by line while reading the pseudo code
+    2. comment on the part you don't understand
+    3. read the polyfill code and check whether it mirrors the pseudo code in specs (or your code in 7.1 )
+    4. debugger it until you understand the part of code you don't understand
+    5. start to ponder whether this is new code pattern you should learn from
 
-I found this sequence of working is very helpful, when I was doing it, I felt confident that I won't miss anything important, and can easily focused on coding the very specific problem at hand. Because when I did miss some important use case or test, it will be caught in step 5 onward.
+I found this sequence of working is very helpful, when I was doing it, I felt confident that I won't miss anything important, and can easily focused on coding the very specific problem at hand. After the `copyWithin` demo daily meeting, I realized `copyWithin` is much more challenging than the previous methods I tried with this procedure. So, I applied this procedure to rewrite `copyWithin` and as a result I updated the procedure from 5 steps to 7 (shown above). So far it works well.
 
 ## How to learn from good code?
 

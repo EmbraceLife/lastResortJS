@@ -69,20 +69,39 @@
           throw new TypeError('this is null or not defined');
         }
 
+        // debugger; /* test on this */
         var O = Object(this);
 
         var len = O.length >>> 0; // why this way? rather than simply O.length?
 
-        var relativeTarget = target >> 0; // why this way, rather than Number(target)?
+        /* New Pattern ::: using >> to set undefined to be 0 */
+        var relativeTarget = target >> 0; // >> : make sure target is 0 if undefined
 
         /* handle all possible values of target ==> to */
-        var to = relativeTarget < 0 ?
+
+        /* ::: The New Pattern - Math.max/min + ternary operator = multiple conditions value assignment:::
+
+        if ::: relativeTarget < 0, 
+        then ::: set variable `to` to be either be 0 or `len + relativeTarget` whichever is larger; 
+          ==> if `relativeTarget` < 0, 
+          ==> it can further split into two situations 
+          ==> 1) if `-len < relativeTarget < 0` ::: then `to` = len + relativeTarget (greater than 0)
+          ==> 2) if `relativeTarget < -len` ::: then `to` = 0
+          ==> Math.max(len+relativeTarget, 0) absorbs 1) and 2) together
+        else (if relativeTarget >= 0 ) ::: set variable `to` to be either `relativeTarget` itself or `len` whichever is smaller; 
+          ==> if `relativeTarget` >= 0, 
+          ==> it can be further splitted into two situations
+          ==> 1) 0 < relativeTarget <= len, ::: then set `to` = `relativeTarget`
+          ==> 2) relativeTarget > len ::: then set `to` = `len`
+          ==> Math.min(relativeTarget, len) absorbs 1) and 2) together
+        */
+        var to = relativeTarget < 0 ? 
           Math.max(len + relativeTarget, 0) :
           Math.min(relativeTarget, len);
 
         
         /* handles all possible values of start ==> from  */
-        var relativeStart = start >> 0;
+        var relativeStart = start >> 0;/* if start is undefined, relativeStart will be 0 */
         var from = relativeStart < 0 ?
           Math.max(len + relativeStart, 0) :
           Math.min(relativeStart, len); // this is much shorter
@@ -94,19 +113,27 @@
           Math.max(len + relativeEnd, 0) :
           Math.min(relativeEnd, len);
 
-        /* I don't quite understand part of the following code from line 99 to 108. I need to debug through them to understand their usage and eventually meaning. */
+
+        /* New Pattern  */
+        /* count is actually the number of elements to be copied and pasted. 
         
-        /* Get the smaller distance between start and end vs between target and length ::: count is actually the number of elements to be copied and pasted ? */
+        final - from ::: equivalent to (end - start) ::: the number of elements to copy
+
+        len - to ::: equivalent to len - target ::: the maximum number of places to be pasted onto
+
+        between copied and pasted numbers, only the smaller one really count!
+         */
         var count = Math.min(final - from, len - to);
 
         var direction = 1;
 
-        /* if target is between start and start + count in the sequence, not outside the sequence*/
-        if (from < to && to < (from + count)) {
-          direction = -1;/* change direction but which way? */
-          from += count - 1;/* but why this? */
+        /* if target is between start and start + count in the sequence, the copied part and pasted part overlaps, so we must use  copy-paste from right to left, to avoid collision */
+        if (from < to && to < (from + count)) {/* move on from right to left */
+          direction = -1;
+          from += count - 1;
           to += count - 1;
-        }
+        } /* otherwise, target is on the left of start;
+            or target > length */
 
         while (count > 0) {/* count is the number of elements to be copied and pasted? */
           if (from in O) {/* if from is not missing */
@@ -115,12 +142,11 @@
             delete O[to];/* if value at from is missing, delete the value at idx to, to make it empty */
           }
 
-          from += direction; /* let start index move on */
-          to += direction;/* let end index move on */
+          from += direction; /* move on to the next idx to be copied as start */
+          to += direction;/* move on to the next idx to be pasted as target */
           count--;/* one element less */
         }
 
-        // Step 19.
         return O;
       },
       configurable: true,
@@ -204,6 +230,7 @@
       "Feature 1 (clean) ::: fixedLength ::: arrayTest should have the equal length with modified array ::: arrayTest.length === modified.length": function(){
         var arrayTest = [1,2,3,4];
         var modified = copyWithin(arrayTest, 0, 1, 2);
+        // var modified = arrayTest.copyWithinPF(0, 1, 2);
         console.groupCollapsed('Feature 1 logs');
         console.log("The length of arrayTest is : ", arrayTest.length, "the length of modified is : ", modified.length, "They should be equal.");
         eq(arrayTest.length, modified.length);
@@ -297,7 +324,8 @@
       "Feature 5.1 (clean) ::: targetBeyondLengthPos ::: If target is at or greater than arr.length, nothing will be copied, just return array": function(){
         var arrayTest = [1,2,3,4];
         var target = 6; /* experiment with 4,5,6 */
-        var modified = copyWithin(arrayTest, target);
+        // var modified = copyWithin(arrayTest, target);
+        var modified = arrayTest.copyWithinPF(target);
         console.groupCollapsed('Feature 5.1 logs');
         console.log("nothing shall be copied to mutatedArray, and so it stays the same : ", modified);
         eq(arrayTest, modified);
@@ -356,7 +384,8 @@
         var arrayTest = [1,2,3,4];/* make array larger, [1,2,3,4] */
         var target = 2;/* experiment 1,2,3 */
         var start = 1;/* experiment 0,1,2 */
-        var modifedArray = copyWithin(arrayTest, target, start);
+        // var modifedArray = copyWithin(arrayTest, target, start);
+        var modifedArray = arrayTest.copyWithinPF(target, start);
         console.groupCollapsed('Feature 6 logs');
         console.log("the modified array should be [1,2,2,3], and is actually : ", modifedArray);
         eq(2, modifedArray[1]);
