@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>isString, !!, String.prototype</title>
+  </head>
+  <body>
+    <script>
+      debugger;
+      
+      var stringPrimitive = "hello";
+      var stringType = typeof stringPrimitive;
+      /* we can surprisingly do  */
+      console.log("Knowing stringPrimitive is a string, it is surprising that we can do stringPrimitive.length: ", stringPrimitive.length, "and do stringPrimitive[2]: ", stringPrimitive[2]);
+      console.log(stringPrimitive[2]);
+      /* under the hood, when JS sees 
+      1) stringPrimitive.method 
+      2) or stringPrimitive[0], try 1,2,3
+      JS will do the following */
+      var stringPrimitiveHidden = new String(stringPrimitive);
+      var stringHiddenType = typeof stringPrimitiveHidden; // Object
+      var len = stringPrimitiveHidden.length;
+      var cap = stringPrimitiveHidden.toUpperCase();
+
+    </script>
+  </body>
+</html>

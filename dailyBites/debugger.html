@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>debugger tricks</title>
+  </head>
+  <body>
+    <script>
+    /* 
+    resources : https://javascript.info/debugging-chrome#debugger-command
+
+    Pause/Resume button ::: 
+    1) continue and pause at the next breakpoint
+    2) continue and pause at the next occurance of a breakpoint itself
+
+    step over ::: move over a function, treating a function execution as a single move
+
+    step into ::: move into a function and then run each line at a time inside the function
+
+    step out ::: continue the function execution till its end
+
+    enable/disable all breakpoint :::
+
+    enable/disable auto pause in case of an error :::
+
+    right click a line to continue to
+    */
+    debugger;
+    function run3times(){
+
+      for (i = 0; i < 3; i++){
+        var a = 3;
+        var b = 5;
+        console.log("a+b=", a+b);
+      }
+    }
+
+    run3times();
+    run3times();
+      
+    </script>
+  </body>
+</html>
