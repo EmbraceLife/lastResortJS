@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>2. Summarizing Rules (with codes too)</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <script>
+      console.groupCollapsed('%cRewriting Methods Step 1 ::: Use Cases', 'color: purple');
+      var preassumption = "It is natural to know how a method work before you decide to rewrite it yourself."
+      var noDocSpecs = "Imagine you don't have docs and specs for the method";
+      var noSrcPf = "Imagine you aren't allowed to access source code and polyfill";
+      var useCaseExhaust = "We can only rely on exhaustive exploration of use cases to gain proper understanding of the potential usages."; 
+      var how = "However, being literal exhaustive is time costly. So, how to explore use cases sensibly?";
+      var strategy0 = "To explore sensibly with a reasonable hypothesis"
+      var strategy1 = "To explore all sensible use cases"
+      var strategy2 = "To explore value ranges of each arg";
+      
+
+      console.log(preassumption);
+      console.log(noDocSpecs);
+      console.log(noSrcPf)
+      console.log(useCaseExhaust);
+      console.log(how);
+      console.log(strategy0);
+      console.log(strategy1);
+      console.log(strategy2);
+      console.groupEnd();
+
+      console.groupCollapsed("%cBuilding A Sensible Hypothesis From 3 Tests", "color: purple");
+      console.log('Getting a primitive hypothesis from the syntax ::: array.copyWithin(targetRequired, startOptional, endOptional) => returnedArray');
+      console.log('Hypothesis ::: copy a part of the array from index `start` to index `end` and paste at index `target`, return an array.');
+      console.log('Confirm or update the hypothesis with three tests, see what is confirmed below');
+      console.log('array ::: an array to be copied, pasted');
+      console.log('targetRequired ::: index to be pasted (onward)');
+      console.log('startOptional ::: index to be copied (onward)');
+      console.log('endOptional ::: index to finish copying (excluding)');console.groupEnd();
+
+      tests({
+        "test H : [1,2,3,4], 0, 1, 2 same reference": function(){
+          var arrayTest = [1,2,3,4];
+          var target = 0; 
+          var start = 1; 
+          var end = 2; 
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed('test logs');
+          console.log('I expect arrayTest and returnedArray share the same reference : ', arrayEq(arrayTest, returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test H : [1,2,3,4], 0, 1, 2": function(){
+          var arrayTest = [1,2,3,4];
+          var target = 0;
+          var start = 1; 
+          var end = 2; 
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed('test logs');
+          console.log('I expect arrayTest[1] is copied and pasted to arrayTest[0] : ', arrayEq([2,2,3,4], returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test H : [1,2,3,4], 1, 0, 2": function(){
+          var arrayTest = [1,2,3,4];
+          var target = 1; 
+          var start = 0; 
+          var end = 2; 
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed('test logs');
+          console.log('I expect arrayTest[0] and arrayTest[1] are copied and pasted to arrayTest[1], arrayTest[2] : ', arrayEq([1,1,2,4], returnedArray));
+          console.groupEnd();
+        },
+
+        "test H : [1,2,3,4], 3, 0, 4": function(){
+          var arrayTest = [1,2,3,4];
+          var target = 3; 
+          var start = 0; 
+          var end = 4; 
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed('test logs');
+          console.log('I expect entire arrayTest is copied and pasted at arrayTest[3] : ', arrayEq([1,2,3,1], returnedArray));
+          console.groupEnd();
+        },
+      })
+
+      console.groupCollapsed('%cPicking sensible Arrays to test', 'color: purple');
+      console.log('[], [0], [1,2] ::: are simpler than [1,2,3] or [1,2,3,4]');
+      console.log('But in real practice, [1,2,3] and longer array are more common');
+      console.log('[1,2,3] ::: should be tested first as the main case');
+      console.log('[], [0], [1,2] ::: second')
+      console.log('[1,,3] ::: is edge case to be the last.');
+      console.groupEnd();
+
+      console.groupCollapsed('%cPondering Sensible Use Cases', 'color: purple');
+      console.log('Why ::: When you create a method, you think of use cases first, then the code. For creating or rewriting, We should do the same here.');
+      console.log('%cNatural Ones ====>', 'color: cyan');
+      console.log('1->1 ::: Copy one element and get one place to Paste');
+      console.log('2->2 ::: Copy two elements and get two place to Paste');
+      console.log('3->3 ::: Copy three elements and get three place to Paste');
+      console.log('%cReasonable and Common Ones ====>', 'color: cyan');
+      console.log('3->2 ::: Copy three elements and get two place to Paste');
+      console.log('3->1 ::: Copy three elements and get one place to Paste');
+      console.log('2->1 ::: Copy two elements and get one place to Paste');
+      console.log('%cEdge Cases ====>', 'color: cyan');
+      console.log('3->0 ::: Copy three elements and get no place to Paste');
+      console.log('2->0 ::: Copy two elements and get no place to paste');
+      console.log('1->0 ::: Copy one element and get no place to paste');
+      console.log("0->0 ::: Don't Copy At All, and get no place to paste");
+      console.groupEnd();
+      
+      console.groupCollapsed('%cSensible Args Ranges', 'color: purple');
+      console.log('Why ::: We depend on rules of combining these arg values to achieve the use cases above.');
+      console.log('%cNatural ::: Natural by definition', 'color: cyan');
+      console.log('0 <= target <= array.length-1');
+      console.log('0 <= start <= array.length-1');
+      console.log('1 <= end <= array.length');
+      console.log('target < start < end ::: paste the copied in full');
+      console.log('start < target < end ::: paste the trimmed copied');
+      console.log('How to write a function for this type of cases?');
+
+      function copyWithinPos(array, target, start, end){
+
+        var copiedArray = [];
+        for (i = start; i < end; i++){
+          copiedArray.push(array[i]);
+        }
+        for (i = 0; i< copiedArray.length; i++){
+          if (target > start) {
+            copiedArray.splice(start-target, target-start);
+          }
+          array[i+target] = copiedArray[i];
+        }
+      }
+
+      console.log('%cNegative ::: negative index is common in programming, resembling the above  ======>', 'color: cyan');
+      console.log('-array.length <= target < 0');
+      console.log('-array.length <= start < 0');
+      console.log('-array.length+1 <= end < 0');
+      console.log('target < start < end ::: paste the copied in full');
+      console.log('start < target < end ::: paste the trimmed copied');
+      console.log('How to convert negative cases to positive cases above?');
+
+      function copyWithinPosNeg(array, target, start, end){
+        if (-array.length <= target && target < 0){
+          target = array.length + target;
+        }
+
+        if (-array.length <= start && start < 0){
+          start = array.length + start;
+        }
+
+        if (-array.length+1 <= end && end < 0){
+          end = array.length + end;
+        }
+
+        var copiedArray = [];
+        for (i = start; i < end; i++){
+          copiedArray.push(array[i]);
+        }
+        for (i = 0; i< copiedArray.length; i++){
+          if (target > start) {
+            copiedArray.splice(start-target, target-start);
+          }
+          array[i+target] = copiedArray[i];
+        }
+      }
+      
+      console.log('%cEdge Ones  ======>', 'color: cyan');
+      console.log('end === 0 ::: return arrayTest');
+      console.log('start === end ::: return arrayTest');
+      console.log('start > end ::: return arrayTest');
+      console.log('target >= array.length ::: return arrayTest');
+      console.log('target < -array.length ::: target will not exceed -array.length');
+      console.log('start >= array.length ::: return arrayTest');
+      console.log('start < -array.length ::: target will not exceed -array.length');
+      console.log('end > array.length ::: end will not exceed array.length');
+      console.log('end <= -array.length ::: return arrayTest');
+      console.log('How to code all these edge cases? can they merge?');
+      console.groupEnd();
+
+      function copyWithinPosNegEdge(array, target, start, end){
+
+        // edge case
+        if (target < -array.length) {
+          target = -array.length;
+        }
+
+        if (start < -array.length) {
+          start = -array.length;
+        }
+
+        if (end > array.length) {
+          end = array.length;
+        }
+
+        if (-array.length <= target && target < 0){
+          target = array.length + target;
+        }
+
+        if (-array.length <= start && start < 0){
+          start = array.length + start;
+        }
+
+        if (-array.length+1 <= end && end < 0){
+          end = array.length + end;
+        }
+
+        // Edge cases
+        if (end === 0 || start === end || start > end || target >= array.length || start >= array.length || end < -array.length) {
+          return array;
+        }
+
+        var copiedArray = [];
+        for (i = start; i < end; i++){
+          copiedArray.push(array[i]);
+        }
+        for (i = 0; i< copiedArray.length; i++){
+          if (target > start) {
+            copiedArray.splice(start-target, target-start);
+          }
+          array[i+target] = copiedArray[i];
+        }
+      }
+
+      console.groupCollapsed('%cHow To Carry Out?', 'color: purple');
+      console.log('Starting with [1,2,3]');
+      console.log('Build Sensible Base Use Cases First');
+      console.log('Test Different Arg Ranges On Base Use Cases');
+      console.log('Mindlessly apply [1,2], [0], [], [1,,3]');
+      console.groupEnd();
+
+      function copyWithinPosNegEdge(array, target, start, end){
+
+        // edge case
+        if (target < -array.length) {
+          target = -array.length;
+        }
+
+        if (start < -array.length) {
+          start = -array.length;
+        }
+
+        if (end > array.length) {
+          end = array.length;
+        }
+
+        if (-array.length <= target && target < 0){
+          target = array.length + target;
+        }
+
+        if (-array.length <= start && start < 0){
+          start = array.length + start;
+        }
+
+        if (-array.length+1 <= end && end < 0){
+          end = array.length + end;
+        }
+
+        // Edge cases
+        if (end === 0 || start === end || start > end || target >= array.length || start >= array.length || end < -array.length) {
+          return array;
+        }
+
+        var copiedArray = [];
+        for (i = start; i < end; i++){
+          copiedArray.push(array[i]);
+        }
+        for (i = 0; i< copiedArray.length; i++){
+          if (target > start) {
+            copiedArray.splice(start-target, target-start);
+          }
+          array[i+target] = copiedArray[i];
+          // Edge case ::: keep the missing value inside sparse array
+          if (copiedArray[i] === undefined) {
+            delete array[i+target];
+          }
+        }
+      }
+
+      console.groupCollapsed('%cFeedback in writing use cases');
+      console.log('The next step would be to write up my copyWithin case by case, which must pass all natural, negative and edge cases');
+      console.log('When I was writing the use cases, I realized many cases can actually merged. So, foreseeably the source code need not be as tedious as the use cases described above.');
+      console.log('I should merge cases conditions in a different file.');
+      
+      console.groupEnd();
+
+      tests({
+
+        "test ::: 1->1, Natural ::: [1,2,3], 0, 0, 1": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Natural ::: [1,2,3], 1, 0, 1": function(){
+          var arrayTest = [1,2,3];
+          var target = 1;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,3]', arrayEq([1,1,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Natural ::: [1,2,3], 2, 0, 1": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,1]', arrayEq([1,2,1],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Natural ::: [1,2,3], 2, 1, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 1;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,2]', arrayEq([1,2,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Natural ::: [1,2,3], 2, 2, 3": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 2;
+          var end = 3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 3->1, Natural ::: [1,2,3], 2, 0, 3": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 0;
+          var end = 3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,1]', arrayEq([1,2,1],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 3->2, Natural ::: [1,2,3], 1, 0, 3": function(){
+          var arrayTest = [1,2,3];
+          var target = 1;
+          var start = 0;
+          var end = 3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,2]', arrayEq([1,1,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Negative ::: [1,2,3], -1, -2, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -1;
+          var start = -2;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,2]', arrayEq([1,2,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Negative ::: [1,2,3], -2, -2, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -2;
+          var start = -2;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Negative ::: [1,2,3], -3, -2, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -3;
+          var start = -2;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [2,2,3]', arrayEq([2,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 2->1, Negative ::: [1,2,3], -2, -3, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -2;
+          var start = -3;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,2]', arrayEq([1,1,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: 1->1, Negative ::: [1,2,3], -3, -3, -2": function(){
+          var arrayTest = [1,2,3];
+          var target = -3;
+          var start = -3;
+          var end = -2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end === 0 ::: [1,2,3], 0, 0, 0": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 0;
+          var end = 0;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end === 0 ::: [1,2,3], 0, 1, 0": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 1;
+          var end = 0;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end === 0 ::: [1,2,3], 0, -1, 0": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = -1;
+          var end = 0;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: start === end !== 0 ::: [1,2,3], 0, 1, 1": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 1;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: start === end !== 0 ::: [1,2,3], 0, 2, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 2;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: start === end !== 0 ::: [1,2,3], 0, -1, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = -1;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: start === end !== 0 ::: [1,2,3], 0, -3, -3": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = -3;
+          var end = -3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: start > end !== 0 ::: [1,2,3], 0, 2, 1": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 2;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: start > end !== 0 ::: [1,2,3], 0, -1, -2": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = -1;
+          var end = -2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: target >= arrayTest.length ::: [1,2,3], 3, 1, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 3;
+          var start = 1;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: Edge: target >= arrayTest.length ::: [1,2,3], 4, 1, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 4;
+          var start = 1;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: target < -arrayTest.length ::: [1,2,3], -4, 1, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = -4;
+          var start = 1;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [2,2,3]', arrayEq([2,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: target < -arrayTest.length ::: [1,2,3], -5, 1, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = -5;
+          var start = 1;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [2,2,3]', arrayEq([2,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: start >= arrayTest.length ::: [1,2,3], 2, 3, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 3;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: start >= arrayTest.length ::: [1,2,3], 2, 4, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 4;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: start < -arrayTest.length ::: [1,2,3], 2, -4, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = -4;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,1]', arrayEq([1,2,1],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: start < -arrayTest.length ::: [1,2,3], 2, -5, 2": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = -5;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,1]', arrayEq([1,2,1],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end > arrayTest.length ::: [1,2,3], 2, 1, 4": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 1;
+          var end = 4;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,2]', arrayEq([1,2,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end > arrayTest.length ::: [1,2,3], 2, 1, 5": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = 1;
+          var end = 5;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,2]', arrayEq([1,2,2],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end <= -arrayTest.length ::: [1,2,3], 2, -3, -3": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = -3;
+          var end = -3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+
+        "test ::: Edge: end <= -arrayTest.length ::: [1,2,3], 2, -3, -4": function(){
+          var arrayTest = [1,2,3];
+          var target = 2;
+          var start = -3;
+          var end = -4;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,3]', arrayEq([1,2,3],returnedArray));
+          console.groupEnd();
+        },
+      
+        "test ::: 2->2, Natural ::: [1,2,3], 0, 1, 3": function(){
+          var arrayTest = [1,2,3];
+          var target = 0;
+          var start = 1;
+          var end = 3;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [2,3,3]', arrayEq([2,3,3],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: 2->2, Negative ::: [1,2,3], -2, -3, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -2;
+          var start = -3;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,2]', arrayEq([1,1,2],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: 2->1, Negative ::: [1,2,3], -1, -3, -1": function(){
+          var arrayTest = [1,2,3];
+          var target = -1;
+          var start = -3;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,2,1]', arrayEq([1,2,1],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [1,2], 1, 0, 1": function(){
+          var arrayTest = [1,2];
+          var target = 1;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1]', arrayEq([1,1],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [1,2], -1, -2, -1": function(){
+          var arrayTest = [1,2];
+          var target = -1;
+          var start = -2;
+          var end = -1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1]', arrayEq([1,1],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [0], 0, 0, 1": function(){
+          var arrayTest = [0];
+          var target = 0;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [0]', arrayEq([0],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [], 1, 0, 1": function(){
+          var arrayTest = [];
+          var target = 1;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be []', arrayEq([],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [1,,3], 1, 0, 1": function(){
+          var arrayTest = [1,,3];
+          var target = 1;
+          var start = 0;
+          var end = 1;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,3]', arrayEq([1,1,3],returnedArray));
+          console.groupEnd();
+        }, 
+
+        "test ::: [1,,3], 1, 0, 2": function(){
+          var arrayTest = [1,,3];
+          var target = 1;
+          var start = 0;
+          var end = 2;
+          // debugger;
+          var returnedArray = arrayTest.copyWithin(target, start, end);
+          console.groupCollapsed("test logs");
+          console.log('the returnedArray should be [1,1,]', arrayEq([1,1,,],returnedArray));
+          console.groupEnd();
+        }, 
+      });
+
+    </script>
+  </body>
+</html>

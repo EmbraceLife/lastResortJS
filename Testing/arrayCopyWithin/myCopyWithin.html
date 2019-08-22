@@ -196,8 +196,9 @@
       /* Copy Section: 
       trim the copiedArray if target > start
        */
-      if (target > start) {/* feature 6 trim copiedArray  */
-        copiedArray.splice(start-target, target-start);
+      if (array.length-target < end-start) {/* feature 6 trim copiedArray  */
+        var cutOff = (end-start) - (array.length-target);
+        copiedArray.splice(-cutOff, cutOff);
       }
 
       /* Paste Section :
@@ -237,7 +238,7 @@
         console.groupEnd();
       }, 
 
-      "Feature 2 (clean) ::: arrayMutable ::: arrayTest is mutable by copyWithin ::: arrayTestBeforeCopywithin[target] !== arrayTestAfterCopywithin[target]": function() {
+      "Feature 2 (clean) ::: arrayMutable ::: arrayTest should be mutable by copyWithin ::: arrayTestBeforeCopywithin[target] !== arrayTestAfterCopywithin[target]": function() {
         var arrayTest = [1,2];/* make it simpler */
         var target = 0;
         var start = 1;
@@ -251,8 +252,19 @@
         console.groupEnd();
       },
 
+      "Feature added (clean) ::: sameArray ::: the returned array should share the same reference with arrayTest": function(){
+        var arrayTest = [1,2,3,4];/* make it simple [1,2] or complex [1,2,3,4] */
+        var target = 0; /* at or greater than the length 4 */
+        var start = 2; /* experiment with 1,2,3 */
+        // var original = arrayTest;/* this line is not necessary now */
+        var modified = copyWithin(arrayTest, target, start);
+        console.groupCollapsed('Additional 2 logs');
+        console.log("arrayTest and modified array share the same reference: ", arrayTest === modified);
+        eq(arrayTest, modified);
+        console.groupEnd();
+      },
 
-      "Feature 3 (clean) ::: targetReplacedByStart ::: original arrayTest[target] is replaced by original arrayTest[start] ::: newArray[start] === arrayTest[target]": function(){
+      "Feature 3 (clean) ::: targetReplacedByStart ::: original arrayTest[target] should be replaced by original arrayTest[start] ::: originalArrayTest[start] === modified[target]": function(){
         var arrayTest = [1,2,3,4];/* to make it more complex, use [1,2,3,4], instead of [1,2] The result should be the same without change*/
         var target = 0;
         var start = 1;/* an edge case that start > array.length, here my function can't handle */
@@ -275,7 +287,7 @@
         console.groupEnd();
       },
 
-      "Feature 4.1 (clean) ::: negativeTarget>LengthNeg::: If negative, target will be counted from the end ::: targetCvt = length + targetNeg ": function(){
+      "Feature 4.1 (clean) ::: negTarget>negLength ::: If negative, the target index should be counted backward from the end ::: targetCvt = length + negTarget ": function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var start = 0;
@@ -291,15 +303,15 @@
         console.groupEnd();
       },
 
-      "Feature 4.2 (clean) ::: targetBeyondLengthNeg ::: if so, do nothing":function(){
+      "Feature 4.2 (clean) ::: netTarget<negLength ::: if so, it should return arrayTest":function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var start = 0;
         var negativeTarget = -8;/* experiment different values -1, -2, -3, -4, -5 (error)  */ 
         var convertedTarget = (-negativeTarget >= arrayTest1.length)? 0 : arrayTest1.length + negativeTarget;
-        // var modifiedNeg = arrayTest1.copyWithin(negativeTarget, start);/* if |negTarget| >= 4, then do nothing */
+        // var modifiedNeg = arrayTest1.copyWithin(negativeTarget, start);/* if |negTarget| >= 4, then return arrayTest */
         // var modifiedCvt = arrayTest2.copyWithin(convertedTarget, start);
-        var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);/* if |negTarget| >= 4, then do nothing */
+        var modifiedNeg = copyWithin(arrayTest1, negativeTarget, start);/* if |negTarget| >= 4, then return arrayTest */
         var modifiedCvt = copyWithin(arrayTest2, convertedTarget, start);
         console.groupCollapsed('Feature 4.2 logs');
         
@@ -309,19 +321,7 @@
         console.groupEnd();
       },
 
-      "Feature added (clean) ::: sameReference ::: the return array is the same reference array but mutated": function(){
-        var arrayTest = [1,2,3,4];/* make it simple [1,2] or complex [1,2,3,4] */
-        var target = 0; /* at or greater than the length 4 */
-        var start = 2; /* experiment with 1,2,3 */
-        // var original = arrayTest;/* this line is not necessary now */
-        var modified = copyWithin(arrayTest, target, start);
-        console.groupCollapsed('Additional 2 logs');
-        console.log("arrayTest and modified array share the same reference: ", arrayTest === modified);
-        eq(arrayTest, modified);
-        console.groupEnd();
-      },
-
-      "Feature 5.1 (clean) ::: targetBeyondLengthPos ::: If target is at or greater than arr.length, nothing will be copied, just return array": function(){
+      "Feature 5.1 (clean) ::: target>posLength ::: If target index is at or greater than arr.length, nothing will be copied, it should return arrayTest": function(){
         var arrayTest = [1,2,3,4];
         var target = 6; /* experiment with 4,5,6 */
         // var modified = copyWithin(arrayTest, target);
@@ -332,10 +332,10 @@
         console.groupEnd();
       },
 
-      "Feature 5.2 (clean) ::: startBeyondLength(Pos/Neg) ::: start >= length || start <= -length ===> do nothing":function(){
+      "Feature 5.2 (clean) ::: startBeyondLength(Pos/Neg) ::: if start > length || start < -length, then it should return arrayTest":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
-        var start = -7; /* experiment with 4,5,6 or -4,-5,-6 all do nothing*/
+        var start = -7; /* experiment with 4,5,6 or -4,-5,-6 all return arrayTest*/
         // var modified = arrayTest.copyWithin(target, start);
         var modified = copyWithin(arrayTest, target, start);
         console.groupCollapsed('Feature 5.2 start logs');
@@ -344,7 +344,7 @@
         console.groupEnd();
       },
 
-      "Feature 5.3 (clean) ::: endBeyongLengthPos ::: end >= length ===> end can't exceed length":function(){
+      "Feature 5.3 (clean) ::: end>posLength ::: if end > length, then it should make sure `end` can't exceed length":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
         var start = 1; 
@@ -357,11 +357,11 @@
         console.groupEnd();
       },
 
-      "Feature 5.4 (clean) ::: endBeyondNegLength ::: end <= -length ===> do nothing":function(){
+      "Feature 5.4 (clean) ::: end<negLength ::: if end < -length then it should return arrayTest":function(){
         var arrayTest = [1,2,3,4];
         var target = 0; 
         var start = 1; 
-        var end = -8; /* or experiment with -4,-5,-6, do nothing*/
+        var end = -8; /* or experiment with -4,-5,-6, return arrayTest*/
         // var modified = arrayTest.copyWithin(target, start, end);
         var modified = copyWithin(arrayTest, target, start, end);
         console.groupCollapsed('Feature 5.4 end logs');
@@ -380,7 +380,7 @@
         
       },
 
-      "Feature 6 (clean) ::: Target>StartCopiedTrim ::: If target is positioned after start, the copied sequence will be trimmed to fit arr.length ::: copiedPart.splice(start-target, target-start)": function(){
+      "Feature 6 (clean) ::: Target>Start=CopiedTrim ::: If target is positioned after start, the copied sequence should be trimmed to fit arr.length ::: copiedPart.splice(start-target, target-start)": function(){
         var arrayTest = [1,2,3,4];/* make array larger, [1,2,3,4] */
         var target = 2;/* experiment 1,2,3 */
         var start = 1;/* experiment 0,1,2 */
@@ -392,7 +392,7 @@
         console.groupEnd();
       },
 
-      "Feature 7 (clean)::: copyFromStart ::: Zero-based index at which to start copying elements from ::: originalStart === modifiedArray[target] ": function(){
+      "Feature 7 (clean)::: copyFromStart ::: it should start to copy element at index `start` ::: originalArrayTest[start] === modifiedArray[target] ": function(){
         var arrayTest = [1,2,3,4];
         var target = 0;
         var start = 3;/* experiment 0,1,2,3 */
@@ -404,7 +404,7 @@
         console.groupEnd();
       },
 
-      "Feature 8 (clean) ::: negStart>LengthNeg ::: If negative, start will be counted from the end ::: negStart ==> startCvt = length + negStart": function(){
+      "Feature 8 (clean) ::: negStart>LengthNeg ::: If negative, then start should be counted from the end ::: negStart ==> startCvt = length + negStart": function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var negStart = -3;/* experiment -1, -2, -3 */
@@ -417,7 +417,7 @@
         console.groupEnd();
       },
 
-      "Feature 9 (clean) ::: startOmitted ::: If start is omitted, copyWithin will copy from index 0 ::: arrayTest.copyWithin(target, 0) should be equivalent to arrayTest.copyWithin(target); ": function(){
+      "Feature 9 (clean) ::: startOmitted ::: If start is omitted, then it should assign 0 to start ::: arrayTest.copyWithin(target, 0) should be equivalent to arrayTest.copyWithin(target); ": function(){
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
         var target = -20; /* can be any number */
@@ -430,8 +430,7 @@
         console.groupEnd();
       },
       
-
-      "Feature 10 (clean)::: stopCopyBeforeEnd<=Length ::: Zero-based index at which to end copying elements from": function(){
+      "Feature 10 (clean) ::: copyUpToIndexEnd-1 ::: if end === 3, then it should copy elements up to idx 2 (including idx 2)": function(){
         var arrayTest = [1,2,3,4];
         var target = 0;
         var start = 2;
@@ -446,12 +445,12 @@
         /* I just forgot to record the experimental part: what I did is to change values for start and end. I tried 1, 2 for start, tried 3, 4 for end. The finished version used start = 2, end = 4, and tested on modified[0], modified[1] */
       },
 
-      "Feature 11 (clean)::: negEnd ::: If negative, end will be counted from the end. ::: arrayTest.copyWithin(0, 0, -1) should be equal to arrayTest.copyWithin(0, 0, arrayTest.length-1) ": function(){
+      "Feature 11 (clean)::: negEnd>=negLength ::: If so, end should be counted from the end. ::: arrayTest.copyWithin(0, 0, -1) should be equal to arrayTest.copyWithin(0, 0, arrayTest.length-1) ": function(){
 
         var arrayTest1 = [1,2,3,4];
         var arrayTest2 = [1,2,3,4];
-        var target = 0;
-        var start = 20;/* 1,2,3,20 */
+        var target = 1;
+        var start = 0;/* 1,2,3,20 */
         var negEnd = -1;
         var modified1 = copyWithin(arrayTest1, target, start, negEnd);
         var modified2 = arrayTest2.copyWithin(target, start, negEnd);
@@ -459,6 +458,22 @@
         console.log("modified1 : ", modified1, " and modified2 : ", modified2, " should be equal ");
         console.groupEnd();
       },
+
+      "Feature 11.1 (clean)::: negEnd<negLength ::: If so, end should be set to 0. ::: arrayTest.copyWithin(0, 0, -10) should be equal to arrayTest.copyWithin(0, 0, 0) ": function(){
+
+        var arrayTest1 = [1,2,3,4];
+        var arrayTest2 = [1,2,3,4];
+        var arrayTest = [1,2,3,4];
+        var target = 0;
+        var start = 2;/* 1,2,3,20 */
+        var negEnd = -10;
+        var modified1 = copyWithin(arrayTest1, target, start, negEnd);
+        var modified2 = arrayTest2.copyWithin(target, start, negEnd);
+        var modified = copyWithin(arrayTest, target, start, arrayTest.length);
+        console.groupCollapsed('Feature 11.1 logs');
+        console.log("modified1 : ", modified1, " and modified2 : ", modified2, ", and modified : ", modified, " should be equal ");
+        console.groupEnd();
+        },
 
       "Feature 12 (clean)::: endOmit ::: If end is omitted, copyWithin will copy until the last index (default to arr.length)": function(){
         var arrayTest1 = [1,2,3,4];

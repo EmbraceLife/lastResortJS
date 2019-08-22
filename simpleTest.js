@@ -86,7 +86,10 @@ var SimpleTest = {
 
       function renderPage(successes, failures){
         document.body.style.backgroundColor = (failures == 0 ? '#99ff99' : '#ff9999');
-        var updateText = successes + " successes, " + failures + " failures.";
+        var updateText = (successes + failures) + " tests : " + successes + ((successes > 1) ? " successes, " : " success, ") + failures + ((failures > 1) ? " failures." : " failure.");
+        // var testSection = document.createElement("h1");
+        // testSection.innerText = msg;
+        // document.body.appendChild(testSection);
         var updateEl = document.createElement("h1");
         updateEl.innerText = updateText;
         document.body.appendChild(updateEl);
@@ -103,9 +106,25 @@ var SimpleTest = {
       }
   },
 
+  arrayEquals: function(array1, array2){
+      if (array1.length !== array2.length) {
+          throw new Error('arrayEquals() ::: two arrays have no equal length.');
+      }
+      for (i = 0; i < array1.length; i++){
+          if (array1.hasOwnProperty(i) !== array2.hasOwnProperty(i)){
+            throw new Error(array1.hasOwnProperty(i) ? "array1 is not sparse; but array2 is sparse;" : "array2 is not sparse; but array1 is sparse;");
+          }
+          if (array1[i] !== array2[i]) {
+              throw new Error("arrayEquals() ::: element values are not equal.")
+          }
+      }
+      return true;
+  }
+
 };
 
 /* Everything works the same after comment out hte later part */
 var fail = SimpleTest.fail//.bind(TinyTest);
 var eq = SimpleTest.assertStrictEquals//.bind(TinyTest);
+var arrayEq = SimpleTest.arrayEquals//.bind(TinyTest);
 var tests = SimpleTest.run//.bind(TinyTest);

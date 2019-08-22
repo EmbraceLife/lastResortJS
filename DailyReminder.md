@@ -67,14 +67,6 @@ I can't get the firefox debugger properly started running at the moment, therefo
     - write an code example with the native method to demo the use case
     - add `debugger` into the demo example to experiment
 Note: if you are the ones highly suspect the validity of docs (also specs doesn't say much e.g., `copyWithin`), you should thoroughly experiment the options of array and arguments ::: 
-    - experiment array : try array from simple to more complex
-        - simple case : `[0]`, `[1,2]`, `[1,2,3,4]`
-        - edge case : `[]`
-    - experiment `target` (first arg in `copyWithin`): 
-        - keep other optional args empty (`undefined`)
-        - try in order `0`, `1`, `2`, ... 
-        - try leave `target` empty or `undefined` (edge case)
-    - experiment `start` ... in the similar style
 2. each use case (or test) should be as tiny, explicit, action-specific as possible
     - each use case focuses on a single, specific utility or action 
         - (i.e., one specific situation of inputs lead to one specific situation of output, always just set out to test one specific situation)
