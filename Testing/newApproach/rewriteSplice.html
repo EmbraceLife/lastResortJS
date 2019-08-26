@@ -1490,7 +1490,7 @@
       });
 
       /* Finally version with comments, further refactor can be done. */
-      function splice(array, start, deleteCount){
+      function spliceV10(array, start, deleteCount){
 
         if (isNaN(Number(start))) {
           start = 0;
@@ -1614,39 +1614,67 @@
       /* rewrite splice using specs pseudo-source and try to debug it
       https://tc39.es/ecma262/#sec-array.prototype.splice
       */
-      function splicePF(array, start, deleteCount){
+      function splice(array, start, deleteCount){
         //1. var O = Object(this)
+
+        /* Logic 1 : original array length
+        - array is mutable so its original length should be kept safe for usage later
+        */
 
         /* 2. remember the length of the array */
         var len = array.length;
 
-        /* 3. Number() turn everything to real number or NaN */
+        /* Logic 2 : constrain `start` values
+        start is the first and required argument
+        - users have to provide its value
+        - user should but may not provide a numeric value (natural), we handle it internally
+        - user should but may not give a value within [0, len), we handle it internally
+        */
+
+        /* 3. Internally make sure start is a number
+        - Number() turn everything to real number or NaN */
         var relativeStart = Number(start);
         /* Additional: like chrome to deal with NaN */
         if (isNaN(relativeStart)) {
           relativeStart = 0;
         }
         
-        /* 4. convert relativeStart when it is < 0 or >= 0 */
+        /* 4. Internally make sure start is within [0, len) */
         var actualStart;
         /* Note : if (global) {global} */
         if (relativeStart < 0){
           /* 
+          natural form : 
           1. if -len <= relativeStart < 0, then set to len+relativeStart
           2. if relativeStart < -len, then set it to 0
+          New Pattern : 
+          actualStart = (relativeStart < -len) ? 0 : len + relativeStart;
+          actualStart = Math.max(len + relativeStart, 0);
           */
           actualStart = Math.max((len + relativeStart), 0);
         } else {
-          /* 
+          /* Natural 
           1. if len > relativeStart >= 0, then set it to relativeStart
-          2. if relativeStart >= len, then set it to len
+          2. if relativeStart >= len, then set it to len (this len here is confusing !!!)
+          New Pattern
+          relativeStart = (relativeStart < len) ? relativeStart : len
           */
           actualStart = Math.min(relativeStart, len);
           /* Note: Math.min[NaN, len] === NaN */
         }
-        /* summary: actualStart range is [0, len]*/
+        /* by now, actualStart's range is constrained within [0, len]*/
 
         
+        /* Logic 3 : default situations
+        - when `start`, `deleteCount` and `item1...` are not given, then count Zero items to be inserted and deleted
+        - when `deleteCount` and `item1...` are not given, count Zero items to be inserted, but count every element from index `start` to be deleted
+        - when `deleteCount` and even `item1...` are available, use `arguments.length - 3` to count items to be inserted, and need to think about how to constrain deleteCount value (see blow)
+
+        How to constrain `deleteCount` value?
+        - users have to provide its value
+        - user should but may not provide a numeric value, we handle it internally
+        - user should but may not give a value within [0, len], we handle it internally
+        */
         var insertCount, actualDeleteCount;
         if (arguments.length === 1){ 
           /* 5. when just splice(array) */
@@ -1656,43 +1684,74 @@
         } else if (arguments.length === 2){
           /* 6. when just splice(array, start) */
           insertCount = 0;
-          actualDeleteCount = len - actualStart;
+          actualDeleteCount = len - actualStart; // setting range [0, len] not [0, len) make sense here
 
         } else {
           /* 7. when splice(array, start, deleteCount, (even)item1...) */
+
+          // count the number of items to insert
           insertCount = arguments.length - 3;
-          /* more ways to convert string to number : https://stackoverflow.com/questions/1133770/convert-a-string-to-an-integer */
+
+          // make sure deleteCount to be a number
           var dc = Number(deleteCount);
           if (isNaN(dc)) {
             dc = 0;
           }
 
-          /* 
+          // more ways to convert string to number : https://stackoverflow.com/questions/1133770/convert-a-string-to-an-integer 
+
+          /* desgin pattern :: double if ternary operation, double max-min
           1. if deleteCount < 0, set actualDeleteCount 0 
           2. if deleteCount >= 0, make it within len
+            - if len-actualStart > deleteCount, then just use deleteCount
+            - otherwise, len-actualStart
+
+          new pattern
+          actualDeleteCount = (dc < 0) ? 0 : (dc < len - actualStart) ? dc : len - actualStart;
+          actualDeleteCount = Math.min(Math.max(dc, 0), len-actualStart);
+          Note : if actualStart < len, actualDeleteCount will always be >= 1 rather than >= 0
           */
+
+          // actualDeleteCount = (dc < 0) ? 0 : (dc < len - actualStart) ? dc : len - actualStart;
           actualDeleteCount = Math.min(Math.max(dc, 0), len-actualStart);
         }
 
-        /* 8. deal with array that is too long */
+        /* Logic 4 : handle array being to long 
+        - throw an error if the array is too long
+        */
+
+        /* 8. deal with array.length or insertCount that is too large */
         if (len + insertCount - actualDeleteCount > 2**53-1) {
           throw new TypeError("the modified array has too many elements.");
         }
 
+        /* Logic 5 : save deleted items into a new array A
+        - create a new array 
+        - put deleted items into it
+        - constrain its length with actualDeleteCount
+        */
+
         /* 
         9. create a new array to store deleted items
         - create a new array with the length of actualDeleteCount 
-        var A = []; 
-        A.length = actualDeleteCount;
+
+        design pattern
+        option 1:
+        - var A = []; 
+        - A.length = actualDeleteCount; 
+        option 2: 
+        - var A = new Array(actualDeleteCount);
         */
         var A = new Array(actualDeleteCount);
-        var k = 0;/* 10. set k to 0 */
+        
+        /* 10. set k to 0 */
+        var k = 0;
 
         /* 11. use a while loop to get deleted items into array A */
         var from, fromPresent, fromValue;
-        /* loop the number of deleted-items times */
+        /* loop the number of `actualDeleteCount` times */
         while (k < actualDeleteCount) {
-          /* 11.a from is the index of the item to be deleted */
+          /* 11.a from is the index of the item to be deleted; get the items from left to right */
           from = String(actualStart + k);
           /* 11.b whether there is a value at index from or not */
           fromPresent = array.hasOwnProperty(from);
@@ -1701,7 +1760,8 @@
             /* 11.c.i get the value at idx from
             Note : from can be or should be a string (not has to be a number) */
             fromValue = array[from];
-            /* 11.c.ii store the value at idx from to A at idx k */
+            // 11.c.ii store the value to A at idx k (from left to right)
+            // missing value in the middle of deleted items can be handled here
             A[String(k)] = fromValue;
           }
           /* 11.c.iii increment k to iterate  */
@@ -1710,7 +1770,13 @@
 
         /* 12. make sure the length of A is actualDeleteCount
         Note: the effect is if A.length > actualDeleteCount, then trim at the end; if < actualDeleteCount, add empty value at the end */
+        // missing value at the end of the deleted items can be hanlded here
         A.length = actualDeleteCount;
+
+        /* Logic 6 : store new items into a new array
+        - get all new items saved into a new array `items`
+        - remember the length of `items` array
+        */
 
         /* 13. save the item1, item2, ... into a list `items` */
         var items = [];
@@ -1723,7 +1789,18 @@
         /* 14. count the length of items array */
         var itemCount = items.length;
 
-        /* 15 when deleted is more than added, then how to move the right side left-over elements moved to new idxes of modified array*/
+        /* Logic 7 : move leftover elements on the right to new positions
+        - move the leftover elements on the right side to the modified array
+          - conditionsHandled 1:
+            - when added items are less than deleted items
+            - when more than the deleted items
+          - conditionsHandled 2: move = copy + delete
+            - copy right side leftovers to new positions
+            - delete the right side leftovers
+        - the leftover elements on the left side stay there on the array (no need to touch it)
+        */
+
+        /* 15 when deleted is more than added, then how to move the right side left-over elements to new idxes of modified array*/
         var to;
         // when items to add are less than items deleted
         if (itemCount < actualDeleteCount) {
@@ -1754,7 +1831,7 @@
           // 15.c make k to be len
           k = len;
 
-          // 15.d while actualDeleteCount > itemCount
+          // 15.d after right side leftover elements copied to new positions, the old leftovers should be deleted
           while (k > len - actualDeleteCount + itemCount) {
             // 15.d.i delete one last element in array
             delete array[String(k-1)];
@@ -1786,6 +1863,11 @@
           }
         }
 
+
+        /* Logic 8
+        - insert new items into the modified array from idx `start`
+        */
+
         /* 17 reset index back to actualStart */
         k = actualStart;
         /* 18 replace items onto the positions or idx to be deleted/replaced */
@@ -1795,7 +1877,13 @@
           array[String(k)] = E;
           k++;
         }
+
+        /* Logic 9
+        - handle the missing values (empty values) at the end of the original array 
+        */
+
         /* 19 verify the length of array*/
+        // Note : missing value at the end of the right-side leftovers can be hanlded here
         array.length = len - actualDeleteCount + itemCount;
 
         /* 20 */
