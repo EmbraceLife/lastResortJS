@@ -763,6 +763,119 @@
         return arrDeletedItems;
         }
 
+      /* discovered a new use case (when deleteCount is not given) when implementing specs */
+      function spliceV9(array, start, deleteCount){
+
+        /* handle edge case specifically */
+        if (deleteCount <= 0 && arguments.length === 3){ 
+          return [];
+        }
+
+        var oldLen = array.length; 
+
+        /* handle edge case specifically */
+        if (start < -oldLen) {
+          start = -oldLen;
+        }
+
+        /* convert negative start to positive */
+        if (-oldLen <= start && start < 0) {
+          start = oldLen + start; 
+        }
+
+        /* handle when deleteCount is not provided */
+        if (arguments.length === 2){
+          var deleteCount = oldLen - start;
+        }
+
+        /* handle missing values in array, (added items won't be missing values by default) */
+        for (i = 0; i < array.length; i++) {
+          if (!array.hasOwnProperty(i)){
+            array[i] = 'missing';
+          }
+        }
+
+        /* save deleted items and remained items into two seperate arrays */
+        var arrDeletedItems = [];
+        var arrRemained = [];
+        for (i = 0; i < oldLen; i++){
+          
+          if (start <= i && i <= start + deleteCount - 1) {
+            arrDeletedItems.push(array[i]);
+          } else {
+            arrRemained.push(array[i]);
+          }
+        }
+
+        /* remove everything in array */
+        array.length = 0;
+
+        /* when no new items to be replaced or added */
+        if (!(arguments.length > 3)){  // no new items added
+          for (i = 0; i < arrRemained.length; i++) {
+            array.push(arrRemained[i]);
+            
+          }
+        } else { 
+          /* when there are new items to be added */
+
+          var numItems = arguments.length - 3;
+
+          /* when adding new items to the front */
+          if (start === 0) { 
+            for (idxArg = 3; idxArg < 3+numItems; idxArg++) {
+              array.push(arguments[idxArg]);
+            }
+
+            for (i = 0; i < arrRemained.length; i++) { 
+              array.push(arrRemained[i]);
+            }
+
+            /* when adding new items to the end */
+          } else if (start + deleteCount -1 >= oldLen - 1) { 
+
+            for (i = 0; i < arrRemained.length; i++) { /* put arrRemained in the front */
+              array.push(arrRemained[i]);
+            }
+
+            for (idxArg = 3; idxArg < 3+numItems; idxArg++) {/* put new items in the end */
+              array.push(arguments[idxArg]);
+            }
+
+            /* add new items in the middle */
+          } else {  
+
+            for (i = 0; i < start; i++) { /* the front part of arrRemained */
+              array.push(arrRemained[i]); 
+            }
+
+            for (idxArg = 3; idxArg < 3+numItems; idxArg++) { /* put the new items in the middle */
+              array.push(arguments[idxArg]);
+            }
+
+            for (i = start; i < arrRemained.length; i++) { /*  put the remaining elements in arrRemained to the end */
+              array.push(arrRemained[i]);
+              
+            }
+          }
+        }
+
+        /* handling missing values stored in arrDeletedItems */
+        for (i in arrDeletedItems) {
+          if (arrDeletedItems[i] === "missing") {
+            delete arrDeletedItems[i];
+          }
+        }
+
+        /* handling missing values stored in array */
+        for (i in array) {
+          if (array[i] === "missing") {
+            delete array[i];
+          }
+        }
+
+        return arrDeletedItems;
+        }
 
 
       console.groupCollapsed('%cStep 4 ::: Writing tests and Iteration', 'color: purple');
@@ -778,6 +891,7 @@
       console.log('4.7 when function is rewritten and refactored, start to read docs/specs/polyfill');
       console.log('4.8 debug the polyfill to learn how they are written the way they do');
       console.groupEnd();
+
 
       /* For simplicity, write tests with combination between delete 1 case, obvious, negative, edge first; and then add delete 2 case onto it  */
       tests({
@@ -1256,7 +1370,7 @@
           var start = 1; 
           var deleteCount = 0;
           var item1 = 2;
-          debugger;
+          // debugger;
           // var arrDeletedItems = arrayTest.splice(start, deleteCount, item1);
           var arrDeletedItems = splice(arrayTest, start, deleteCount, item1);
           console.groupCollapsed("test logs");
@@ -1376,7 +1490,15 @@
       });
 
       /* Finally version with comments, further refactor can be done. */
-      function splice(array, start, deleteCount){
+      function spliceV10(array, start, deleteCount){
+
+        if (isNaN(Number(start))) {
+          start = 0;
+        }
+
+        if (isNaN(Number(deleteCount))) {
+          deleteCount = 0;
+        }
 
         /* handle edge case specifically */
         if (deleteCount <= 0 && arguments.length === 3){ 
@@ -1393,6 +1515,11 @@
         /* convert negative start to positive */
         if (-oldLen <= start && start < 0) {
           start = oldLen + start; 
+        }
+
+        /* handle when deleteCount is not provided */
+        if (arguments.length === 2){
+          var deleteCount = oldLen - start;
         }
 
         /* handle missing values in array, (added items won't be missing values by default) */
@@ -1484,7 +1611,445 @@
         return arrDeletedItems;
         }
 
+      /* rewrite splice using specs pseudo-source and try to debug it
+      https://tc39.es/ecma262/#sec-array.prototype.splice
+      */
+      function splice(array, start, deleteCount){
+        //1. var O = Object(this)
 
+        /* Logic 1 : original array length
+        - array is mutable so its original length should be kept safe for usage later
+        */
+
+        /* 2. remember the length of the array */
+        var len = array.length;
+
+        /* Logic 2 : constrain `start` values
+        start is the first and required argument
+        - users have to provide its value
+        - user should but may not provide a numeric value (natural), we handle it internally
+        - user should but may not give a value within [0, len), we handle it internally
+        */
+
+        /* 3. Internally make sure start is a number
+        - Number() turn everything to real number or NaN */
+        var relativeStart = Number(start);
+        /* Additional: like chrome to deal with NaN */
+        if (isNaN(relativeStart)) {
+          relativeStart = 0;
+        }
+        
+        /* 4. Internally make sure start is within [0, len) */
+        var actualStart;
+        /* Note : if (global) {global} */
+        if (relativeStart < 0){
+          /* 
+          natural form : 
+          1. if -len <= relativeStart < 0, then set to len+relativeStart
+          2. if relativeStart < -len, then set it to 0
+          New Pattern : 
+          actualStart = (relativeStart < -len) ? 0 : len + relativeStart;
+          actualStart = Math.max(len + relativeStart, 0);
+          */
+          actualStart = Math.max((len + relativeStart), 0);
+        } else {
+          /* Natural 
+          1. if len > relativeStart >= 0, then set it to relativeStart
+          2. if relativeStart >= len, then set it to len (this len here is confusing !!!)
+          New Pattern
+          relativeStart = (relativeStart < len) ? relativeStart : len
+          */
+          actualStart = Math.min(relativeStart, len);
+          /* Note: Math.min[NaN, len] === NaN */
+        }
+        /* by now, actualStart's range is constrained within [0, len]*/
+
+        
+        /* Logic 3 : default situations
+        - when `start`, `deleteCount` and `item1...` are not given, then count Zero items to be inserted and deleted
+        - when `deleteCount` and `item1...` are not given, count Zero items to be inserted, but count every element from index `start` to be deleted
+        - when `deleteCount` and even `item1...` are available, use `arguments.length - 3` to count items to be inserted, and need to think about how to constrain deleteCount value (see blow)
+
+        How to constrain `deleteCount` value?
+        - users have to provide its value
+        - user should but may not provide a numeric value, we handle it internally
+        - user should but may not give a value within [0, len], we handle it internally
+        */
+        var insertCount, actualDeleteCount;
+        if (arguments.length === 1){ 
+          /* 5. when just splice(array) */
+          insertCount = 0;
+          actualDeleteCount = 0;
+
+        } else if (arguments.length === 2){
+          /* 6. when just splice(array, start) */
+          insertCount = 0;
+          actualDeleteCount = len - actualStart; // setting range [0, len] not [0, len) make sense here
+
+        } else {
+          /* 7. when splice(array, start, deleteCount, (even)item1...) */
+
+          // count the number of items to insert
+          insertCount = arguments.length - 3;
+
+          // make sure deleteCount to be a number
+          var dc = Number(deleteCount);
+          if (isNaN(dc)) {
+            dc = 0;
+          }
+
+          // more ways to convert string to number : https://stackoverflow.com/questions/1133770/convert-a-string-to-an-integer 
+
+          /* desgin pattern :: double if ternary operation, double max-min
+          1. if deleteCount < 0, set actualDeleteCount 0 
+          2. if deleteCount >= 0, make it within len
+            - if len-actualStart > deleteCount, then just use deleteCount
+            - otherwise, len-actualStart
+
+          new pattern
+          actualDeleteCount = (dc < 0) ? 0 : (dc < len - actualStart) ? dc : len - actualStart;
+          actualDeleteCount = Math.min(Math.max(dc, 0), len-actualStart);
+          Note : if actualStart < len, actualDeleteCount will always be >= 1 rather than >= 0
+          */
+
+          // actualDeleteCount = (dc < 0) ? 0 : (dc < len - actualStart) ? dc : len - actualStart;
+          actualDeleteCount = Math.min(Math.max(dc, 0), len-actualStart);
+        }
+
+        /* Logic 4 : handle array being to long 
+        - throw an error if the array is too long
+        */
+
+        /* 8. deal with array.length or insertCount that is too large */
+        if (len + insertCount - actualDeleteCount > 2**53-1) {
+          throw new TypeError("the modified array has too many elements.");
+        }
+
+        /* Logic 5 : save deleted items into a new array A
+        - create a new array 
+        - put deleted items into it
+        - constrain its length with actualDeleteCount
+        */
+
+        /* 
+        9. create a new array to store deleted items
+        - create a new array with the length of actualDeleteCount 
+
+        design pattern
+        option 1:
+        - var A = []; 
+        - A.length = actualDeleteCount; 
+        option 2: 
+        - var A = new Array(actualDeleteCount);
+        */
+        var A = new Array(actualDeleteCount);
+        
+        /* 10. set k to 0 */
+        var k = 0;
+
+        /* 11. use a while loop to get deleted items into array A */
+        var from, fromPresent, fromValue;
+        /* loop the number of `actualDeleteCount` times */
+        while (k < actualDeleteCount) {
+          /* 11.a from is the index of the item to be deleted; get the items from left to right */
+          from = String(actualStart + k);
+          /* 11.b whether there is a value at index from or not */
+          fromPresent = array.hasOwnProperty(from);
+          /* 11.c if there is actual value at the idx from */
+          if (fromPresent) {
+            /* 11.c.i get the value at idx from
+            Note : from can be or should be a string (not has to be a number) */
+            fromValue = array[from];
+            // 11.c.ii store the value to A at idx k (from left to right)
+            // missing value in the middle of deleted items can be handled here
+            A[String(k)] = fromValue;
+          }
+          /* 11.c.iii increment k to iterate  */
+          k++;
+        }
+
+        /* 12. make sure the length of A is actualDeleteCount
+        Note: the effect is if A.length > actualDeleteCount, then trim at the end; if < actualDeleteCount, add empty value at the end */
+        // missing value at the end of the deleted items can be hanlded here
+        A.length = actualDeleteCount;
+
+        /* Logic 6 : store new items into a new array
+        - get all new items saved into a new array `items`
+        - remember the length of `items` array
+        */
+
+        /* 13. save the item1, item2, ... into a list `items` */
+        var items = [];
+        if (arguments.length >= 4) {
+          for (i = 0; i < arguments.length-3; i++ ){
+            items[i] = arguments[3+i];
+          }
+        }
+
+        /* 14. count the length of items array */
+        var itemCount = items.length;
+
+        /* Logic 7 : move leftover elements on the right to new positions
+        - move the leftover elements on the right side to the modified array
+          - conditionsHandled 1:
+            - when added items are less than deleted items
+            - when more than the deleted items
+          - conditionsHandled 2: move = copy + delete
+            - copy right side leftovers to new positions
+            - delete the right side leftovers
+        - the leftover elements on the left side stay there on the array (no need to touch it)
+        */
+
+        /* 15 when deleted is more than added, then how to move the right side left-over elements to new idxes of modified array*/
+        var to;
+        // when items to add are less than items deleted
+        if (itemCount < actualDeleteCount) {
+          // 15.a get the idx to delete
+          k = actualStart;
+          // 15.b (loop as long as there is ending element left)
+          while (k < len - actualDeleteCount) {
+            // 15.b.i get the left-over ending element idx in array
+            from = String(k + actualDeleteCount);
+            // 15.b.ii prepare idx for this left-over element in modified array
+            to = String(k + itemCount);
+            // 15.b.iii whether this left-over ending element exist or not
+            fromPresent = array.hasOwnProperty(from);
+            // 15.b.iv move the left-over element to modified array's corresponding idx (of course they are the same array)
+            if (fromPresent) {
+              fromValue = array[from];
+              array[to] = fromValue;
+            } else {
+              // 15.b.v
+              // if value at idx from is missing, then make array[to] empty/missing too
+              delete array[to]; 
+            }
+            // 15.b.vi
+            k++;
+          }
+          /* by now, the left-over items on the right side of the deleted elements are moved to new idx on the same array reference */
+
+          // 15.c make k to be len
+          k = len;
+
+          // 15.d after right side leftover elements copied to new positions, the old leftovers should be deleted
+          while (k > len - actualDeleteCount + itemCount) {
+            // 15.d.i delete one last element in array
+            delete array[String(k-1)];
+            // 15.d.ii make k closer to modified array's length
+            k--;
+          }
+
+          /* 16. when added are more than deleted, how to move right side left-over to new positions in the modified array */
+        } else if (itemCount > actualDeleteCount) {
+          // 16.a
+          k = len - actualDeleteCount;
+          // 16.b loop as long as there are left-over on the right hand side of the deleted elements
+          while (k > actualStart) {
+            // from is set to be the index of the last left-over element in the original array
+            from = String(k + actualDeleteCount -1);
+            // to is set to be the new index of the last left-over element in the modified array
+            to = String(k + itemCount -1);
+            fromPresent = array.hasOwnProperty(from);
+            // if the last left-over element's value is not missing
+            if (fromPresent){
+              // copy it to the new idx
+              fromValue = array[from];
+              array[to] = fromValue;
+            } else {
+              // otherwise, delete the value at idx to
+              delete array[to];
+            }
+            k--;
+          }
+        }
+
+
+        /* Logic 8
+        - insert new items into the modified array from idx `start`
+        */
+
+        /* 17 reset index back to actualStart */
+        k = actualStart;
+        /* 18 replace items onto the positions or idx to be deleted/replaced */
+        var E;
+        while (items.length > 0) {
+          E = items.shift();
+          array[String(k)] = E;
+          k++;
+        }
+
+        /* Logic 9
+        - handle the missing values (empty values) at the end of the original array 
+        */
+
+        /* 19 verify the length of array*/
+        // Note : missing value at the end of the right-side leftovers can be hanlded here
+        array.length = len - actualDeleteCount + itemCount;
+
+        /* 20 */
+        return A;
+      }
+
+      /* more tests discovered when implementing specs */
+      tests({
+
+        /* spliceV8 failed on this (no deleteCount nor item1... are provided), make it to work in V9 */
+        "[1,2,3], 0 => [1,2,3],[]": function(){
+          // fail();
+          var arrayTest = [1,2,3];
+          var start = 0;
+          // var deleteCount = 1;
+          // debugger;
+          var arrDeletedItems = arrayTest.splice(start);
+          // var arrDeletedItems = splice(arrayTest, start);
+          console.groupCollapsed("test logs");
+          console.log('the arrDeletedItems should be [1,2,3]', arrayEq([1,2,3],arrDeletedItems));
+          console.log('the arrayTest should be []', arrayEq([],arrayTest));
+          console.groupEnd();
+        },
+
+        "[1,2,3], null => [1,2,3],[]": function(){
+          // fail();
+          var arrayTest = [1,2,3];
+          var start = null; /* relativeStart = 0 */
+          // var deleteCount = 1;
+          // debugger;
+          // var arrDeletedItems = arrayTest.splice(start);
+          var arrDeletedItems = splice(arrayTest, start);
+          console.groupCollapsed("test logs");
+          console.log('the arrDeletedItems should be [1,2,3]', arrayEq([1,2,3],arrDeletedItems));
+          console.log('the arrayTest should be []', arrayEq([],arrayTest));
+          console.groupEnd();
+        },
+
+        "[1,2,3], [0] => [1,2,3],[]": function(){
+          // fail();
+          var arrayTest = [1,2,3];
+          var start = [0]; /* relativeStart = 0 */
+          // var deleteCount = 1;
+          // debugger;
+          // var arrDeletedItems = arrayTest.splice(start);
+          var arrDeletedItems = splice(arrayTest, start);
+          console.groupCollapsed("test logs");
+          console.log('the arrDeletedItems should be [1,2,3]', arrayEq([1,2,3],arrDeletedItems));
+          console.log('the arrayTest should be []', arrayEq([],arrayTest));
+          console.groupEnd();
+        },
+
+        /* V9 can't handle this yet */
+        "[1,2,3], NaN(with many equivalence) => [1,2,3],[]": function(){
+          // fail();
+          var arrayTest = [1,2,3];
+          var start = NaN; /* undefined, 'string', {}, NaN, [1,2] ==> NaN;   */
+          // var deleteCount = 1;
+          // debugger;
+          // var arrDeletedItems = arrayTest.splice(start);
+          var arrDeletedItems = splice(arrayTest, start);
+          console.groupCollapsed("test logs");
+          console.log('the arrDeletedItems should be [1,2,3]', arrayEq([1,2,3],arrDeletedItems));
+          console.log('the arrayTest should be []', arrayEq([],arrayTest));
+          console.groupEnd();
+        },
+
+        "[1,2,3], 1, NaN(with many equivalence) => [], [1,2,3]": function(){
+          // fail();
+          var arrayTest = [1,2,3];
+          var start = 1; 
+          var deleteCount = NaN; /* undefined, 'string', {}, NaN, [1,2] ==> NaN;   */
+          // var deleteCount = 1;
+          // debugger;
+          // var arrDeletedItems = arrayTest.splice(start, deleteCount);
+          var arrDeletedItems = splice(arrayTest, start, deleteCount);
+          console.groupCollapsed("test logs");
+          console.log('the arrDeletedItems should be []', arrayEq([],arrDeletedItems));
+          console.log('the arrayTest should be [1,2,3]', arrayEq([1,2,3],arrayTest));
+          console.groupEnd();
+        },
+
+      });
+
+
+      /* 
+      New Process 
+      - tests/code-driven method rewriting process
+
+      method designer 
+      - think of use cases before coding
+
+      method rewriter 
+      - without docs, specs and source, can only reply on tests to understand and rewrite
+
+      difficulty 
+      - to write down use cases or tests sensibly and exhaustively
+
+      Check value ranges of all args
+      1. start 
+        - var len = array.length
+        - a. 0 <= start <= len - 1
+        - b. start >= len
+        - c. -len <= start < 0
+        - d. start < -len
+        - e. actualStart === NaN (when start = NaN, undefined, "non-number", [0,1], {})
+      2. deleteCount  
+        - a. deleteCount === 0 
+        - b. 0 < deleteCount <= len
+        - c. deleteCount > len
+        - d. deleteCount < 0
+        - e. deleteCount = bool, string, undefined, NaN, null, {}, []
+      3. item1 ...  
+        - anything : number, string, bool, undefined, null, NaN, [], {}
+
+      Note   
+      - focus on array [1,2,3] exhaustive, and in the end add tests for arrays like [],[0],[1,2], [1,,,3]
+
+      test description format   
+      - [1,2,3], start-range-option, deleteCount-range-option
+        - [1,2,3], start-value, deleteCount-value, item1..., => arrDeletedItems, array
+      
+      Organizing tests sensibly and logically as follows
+      - [1,2,3], _, _, _ (use default values)
+      - [1,2,3], 1.a, _, _
+        - [1,2,3], 0 => [], [1,2,3]
+      - [1,2,3], 1.a, 2.a, _ 
+        - [1,2,3], 0, 0  => [], [1,2,3]
+        - [1,2,3], 1, 0  => [], [1,2,3]
+        - [1,2,3], 2, 0  => [], [1,2,3]
+        - [1,2,3], 0, 0, 100  => [], [100,1,2,3]
+        - [1,2,3], 1, 0, undefined  => [], [1,undefined,2,3]
+        - [1,2,3], 2, 0, null, true  => [], [1,2,null,true,3]
+        - ...
+      - [1,2,3], 1.a, 2.b, _ 
+        - [1,2,3], 0, 1 => [2], [1,3]
+        - [1,2,3], 1, 1
+        - [1,2,3], 2, 1
+        - [1,2,3], 0, 2
+        - [1,2,3], 1, 2
+        - [1,2,3], 2, 2
+        - [1,2,3], 0, 3
+        - [1,2,3], 1, 3
+        - [1,2,3], 2, 3
+        - [1,2,3], 0, 1, NaN => [2], [NaN,1,3]
+      - [1,2,3], 1.a, 2.c, _
+        - [1,2,3], 0, 4
+        - [1,2,3], 0, 5
+        - [1,2,3], 1, 4
+        - [1,2,3], 2, 5
+        - [1,2,3], 0, 4, 'yes'
+        - [1,2,3], 0, 5, 'yes', 'no'
+      - [1,2,3], 1.a, 2.d, _
+        - [1,2,3], 0, -1
+        - [1,2,3], 0, -2
+      - [1,2,3], 1.a, 2.e, _
+        - [1,2,3], 0, undefined 
+        - [1,2,3], 0, NaN
+        - [1,2,3], 0, {}, 100
+      */
+
+      /*
+      es 262test
+      https://github.com/tc39/test262/tree/master/test/built-ins/Array/prototype/splice
+      https://github.com/tc39/test262/tree/master/harness
+       */
     </script>
   </body>
 </html>

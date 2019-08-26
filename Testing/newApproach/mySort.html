@@ -36,17 +36,20 @@
             return el2 > el1;
           }
         }
-        /*  ['2','3','1'] => ['1','2','3'] */
+        /* debugger;
+         ['2','3','1'].mySort() => ['1','2','3'] */
 
         if (typeof compareFunc !== "function"){
           throw new TypeError("The comparison func must be a function or undefined, but we got : " + compareFunc);
         }
-        /* [1,2,3].sort(4) => TypeError */
+        /* debugger;
+        [1,2,3].mySort(4) => TypeError */
 
         if (!Array.isArray(array)){
           throw new TypeError("The first argument must be an array, but got : " + array);
         }
-        /*  '2,3,1' => type error */
+        /*  debugger; 
+        '2,3,1'.mySort() => type error */
 
 
         /* Block1 : holesCount, undefinedCount, noHolesArray, tidyArray */
@@ -56,7 +59,8 @@
             holesCount++;
           }
         }
-        /* [1,2,,].mySort() => holesCount = 1 */
+        /* debugger;
+        [1,2,,].mySort() => holesCount = 1 */
 
         var noHolesArray = [];
         // for (i in array){
@@ -67,7 +71,8 @@
             noHolesArray.push(array[i]);
           }
         }
-        /* [1,2,,].mySort() => noHolesArray : [1,2] */
+        /* debugger;
+        [1,2,,].mySort() => noHolesArray : [1,2] */
 
         var undefinedCount = 0;
         var tidyArray = [];
@@ -79,7 +84,8 @@
             tidyArray.push(noHolesArray[i]);
           }
         }
-        /* [1,2,undefined,,].mySort() => undefinedCount : 1, tidyArray : [1,2]  */
+        /* debugger;
+        [1,2,undefined,,].mySort() => undefinedCount : 1, tidyArray : [1,2]  */
 
 
         // borrowed and modified the bubble sort algo from https://www.w3resource.com/javascript-exercises/javascript-function-exercise-24.php
@@ -106,14 +112,16 @@
         }
 
         tidyArray = bubble_Sort(tidyArray, compareFunc);
-        /* [3,1,2,3] return el1 > el2 => [1,2,3,3] */
+        /* debugger;
+        [3,1,2,3].mySort(function(el1,el2) {return el1 > el2;}) => [1,2,3,3] */
 
 
         // for (i in tidyArray) {
         for (i = 0; i < tidyArray.length; i++){
           array[i] = tidyArray[i];
         }
-        /* [,undefined,1].mySort() => [1,undefined,1] */
+        /* debugger;
+        [,undefined,1].mySort() => [1,undefined,1] */
 
 
         /* Note: previous `i in tidyArray` is a string `i`, but `i < undefinedCount` is a number `i` */
@@ -122,7 +130,8 @@
           array[i + tidyArray.length] = undefined;
           i++;
         }
-        /* [,undefined,1].mySort() => [1,undefined,1] */
+        /* debugger;
+         [,undefined,1].mySort() => [1,undefined,1] */
 
 
         i = 0;
@@ -130,7 +139,8 @@
           delete array[tidyArray.length + undefinedCount + i];
           i++;
         }
-        /* [,undefined,1].mySort() => [1,undefined,,] */
+        /* debugger;
+        [,undefined,1].mySort() => [1,undefined,,] */
 
 
         return array;
