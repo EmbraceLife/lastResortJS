@@ -11,12 +11,12 @@
         console.log(name);
       }
 
-      (function enclosingFunction1(){ // executing functions won't saved in global
+      (function enclosingFunction1(){ // IIFE does not leave a trace in global
         var name = "Daniel";
         function sayName1(){
           console.log(name);
         }
-        window.sayName1 = sayName1;
+        window.sayName1 = sayName1; // but can throw a function to global
       })();
       
       (function enclosingFunction2(){
@@ -27,8 +27,8 @@
         window.sayName2 = sayName2;
       })();
 
-      sayName1(); // executing functions won't saved in global
-      sayName2();
+      sayName1(); // when step inside the function, enclosingFunc1 scope is accessible
+      sayName2(); // when step inside the function, enclosingFunc2 scope is accessible
     </script>
   </body>
 </html>

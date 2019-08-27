@@ -40,11 +40,15 @@
       }
 
       if (typeof librarySystem !== undefined) {
+
+        /* if librarySystem is on global, then save sandwichLibrary inside libraryStorage under keyName `sandwichLibrary` */
         librarySystem("sandwichLibrary", function(){
           return sandwichLibrary
-        });/* now, sandwichLibrary is saved in enclosingFunc closure's LibraryStorage */
+        });
+
       } else {
-        window.sandwichLibrary = sandwichLibrary; /* lib saved in global */
+        /* if librarySystem is not defined on global, save this library `sandwichLibrary` onto the global directly */
+        window.sandwichLibrary = sandwichLibrary; 
       }
 
     })();

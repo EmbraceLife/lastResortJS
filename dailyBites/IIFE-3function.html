@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Library System</title>
+  </head>
+  <body>
+    <script>
+
+    /* Function approach vs IIFE approach ::: no difference except, the first has to save the function in the global  */
+
+    
+    function enclosingFunc1(){ /* stored globally */
+      var libraryStorage = {};
+
+      function librarySystem(libraryName, callback){
+        if (arguments.length > 1){
+          libraryStorage[libraryName] = callback();
+        } else { 
+          return libraryStorage[libraryName];
+        }
+      }
+
+      window.librarySystem1 = librarySystem; 
+    };  
+
+    enclosingFunc1(); 
+    /* debugger;
+    typeof librarySystem1; // check librarySystem1 is on global scope */
+
+    /* step into librarySystem1 function, we can access enclosing scope 'enclosingFunc1', inside we can access libraryStorage*/
+    // debugger;
+    librarySystem1("sandwich1", function(){
+      
+      return {"this is sandwich1": function(){},}
+    });
+    /* debugger;
+    typeof libraryStorage; // The libraryStorage is only on 'enclosingFunc' scope */
+
+    var lib1 = librarySystem1("sandwich1");
+    
+
+    /* approach 2: use IIFE */
+    (function enclosingFunc2(){
+      var libraryStorage = {};
+
+      function librarySystem(libraryName, callback){
+        if (arguments.length > 1){
+          libraryStorage[libraryName] = callback(); 
+        } else { 
+          return libraryStorage[libraryName]; 
+        }
+      }
+
+      
+      window.librarySystem2 = librarySystem; 
+    })();  
+
+    /* debugger;
+    typeof enclosingFunc2; // not on global */
+
+    librarySystem2("sandwich2", function(){
+      return {"this is sandwich2": function(){},}
+    });
+    var lib2 = librarySystem2("sandwich2");
+    /* There is a different libraryStorage inside enclosingFunc2 scope */
+      
+    </script>
+  </body>
+</html>
