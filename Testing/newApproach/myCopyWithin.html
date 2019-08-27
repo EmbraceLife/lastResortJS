@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>copyWithin PolyFill</title>
+  </head>
+  <body>
+    <script src="../../simpleTest.js"></script>
+    <script>
+    /* Let's read pseudo codes in specs
+    Function copyWithin(array, target, start, end) {
+      1. var O = Object(array);
+      2. var len = O.length;
+      3. var relativeTarget = Number(target);
+      4. if (relativeTarget < 0) {
+        var to = Math.max(len+relativeTarget, 0);
+      } else {
+        var to = Math.min(relativeTarget, len); [Obviously if-else block is more efficient than mine]
+      }
+      5. var relativeStart = Number(start);
+      6. if (relativeStart < 0) {
+        var from = Math.max(len+relativeStart, 0); 
+      } else {
+        var from = Math.min(relativeStart, len);
+      }
+      7. if (end === undefined) {
+        var relativeEnd = len;
+      } else {
+        var relativeEnd = Number(end);
+      }
+      8. if (relativeEnd < 0) {
+        var final = Math.max(len+relativeEnd, 0) [this use of 0 here may not be as efficient as mine]
+      } else {
+        var final = Math.min(relativeEnd, len) [Obviously if-else block is more efficient than mine]
+      }
+      // I don't understand the code below!!!
+      9. var count = Math.min(final-from, len-to); [handling trim, I think]
+      10. if (from < to && to < from + count) {
+        var direction = -1; 
+        from = from + count - 1;
+        to = to + count - 1;
+      } 11. else {
+        var direction = 1;
+      }
+      12. while (count > 0) {
+        a. var fromKey = String(from);
+        b. var toKey = String(to);
+        c. var fromPresent = O.hasOwnProperty(fromKey);
+        d. if (fromPresent) {
+          i. var fromVal = O[fromKey];
+          ii. O[toKey] = fromVal;
+        } e. else {
+          i. assert fromPresent === false;
+          ii. DeletePropertyOrThrow(O, toKey);
+        f. from = from + direction;
+        g. to = to + direction;
+        h. count = count - 1;
+      13. return O
+        }
+      }
+    }
+
+    By reading the pseudo code against polyfill, I am certain that polyfill mirrors the pseudo-code.
+     */
+    if (!Array.prototype.myCopywithin) {
+      Object.defineProperty(Array.prototype, 'myCopywithin', {
+        value: function(target, start/*, end*/) {
+        if (this == null) {
+          throw new TypeError('this is null or not defined');
+        }
+        /* I don't see how this TypeError is ever triggered */
+
+        var array = Object(this);
+
+        var len = array.length; 
+
+        var relativeTarget = Number(target); 
+        if (isNaN(relativeTarget)) {
+          relativeTarget = 0;
+        }
+        /* debugger;
+        [1,2,3].myCopywithin(undefined); => relativeStart === 0 */
+
+        var actualTarget = relativeTarget < 0 ?
+          Math.max(len + relativeTarget, 0) :
+          Math.min(relativeTarget, len);
+        /* 
+        [1,2,3].myCopywithin(-1); => actualTarget: 2
+        [1,2,3].myCopywithin(-2); => actualTarget: 1
+        [1,2,3].myCopywithin(-3); => actualTarget: 0
+        [1,2,3].myCopywithin(-4); => actualTarget: 0
+        [1,2,3].myCopywithin(-5); => actualTarget: 0
+
+        [1,2,3].myCopywithin(0); => actualTarget: 0
+        [1,2,3].myCopywithin(1); => actualTarget: 1
+        [1,2,3].myCopywithin(2); => actualTarget: 2
+        [1,2,3].myCopywithin(3); => actualTarget: 3
+        [1,2,3].myCopywithin(4); => actualTarget: 3
+        */
+        
+        var relativeStart = Number(start);
+        if (isNaN(relativeStart)){
+          relativeStart = 0;
+        }
+        /* debugger;
+        [1,2,3].myCopywithin(1,undefined); => relativeStart: 0 */
+
+        var from = relativeStart < 0 ?
+          Math.max(len + relativeStart, 0) :
+          Math.min(relativeStart, len); 
+
+        /* handles all possible values of end ==> final */
+        var end = arguments[2];
+        var relativeEnd = end === undefined ? len : end >> 0;
+        var final = relativeEnd < 0 ?
+          Math.max(len + relativeEnd, 0) :
+          Math.min(relativeEnd, len);
+
+        /* I don't quite understand part of the following code from line 99 to 108. I need to debug through them to understand their usage and eventually meaning. */
+        
+        /* Get the smaller distance between start and end vs between target and length ::: count is actually the number of elements to be copied and pasted ? */
+        var count = Math.min(final - from, len - to);
+
+        var direction = 1;
+
+        /* if target is between start and start + count in the sequence, not outside the sequence*/
+        if (from < to && to < (from + count)) {
+          direction = -1;/* change direction but which way? */
+          from += count - 1;/* but why this? */
+          to += count - 1;
+        }
+
+        while (count > 0) {/* count is the number of elements to be copied and pasted? */
+          if (from in O) {/* if from is not missing */
+            O[to] = O[from];/* take value at from and paste to idx to */
+          } else {
+            delete O[to];/* if value at from is missing, delete the value at idx to, to make it empty */
+          }
+
+          from += direction; /* let start index move on */
+          to += direction;/* let end index move on */
+          count--;/* one element less */
+        }
+
+        // Step 19.
+        return O;
+      },
+      configurable: true,
+      writable: true
+      });
+    }
+
+
+  </script>
+  </body>
+</html>
