@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>my Array.prototype.map</title>
+  </head>
+  <body>
+    <script src='../../simpleTest.js'></script>  
+    <script>
+      // Production steps of ECMA-262, Edition 5, 15.4.4.19
+      // Reference: http://es5.github.io/#x15.4.4.19
+
+      Array.prototype.myMap = function(callback/*, thisArg*/) {
+
+        if (this == null) {
+          throw new TypeError('this is null or not defined');
+        }
+
+        var array = Object(this);
+       
+        var len = array.length;
+
+        if (typeof callback !== 'function') {
+          throw new TypeError('callback should be a function, but got : ', callback);
+        }
+        // [1,2,3].myMap(3); => TypeError
+
+        if (arguments.length > 1) {
+          var thisArg = arguments[1];
+        }
+        // [1,2,3].myMap(function(el){
+        //   return String(el) + this.str;
+        //   }, {str: "yes"}); // => ['1yes', '2yes', '3yes']
+
+        var returnedArray = new Array(len);
+
+        k = 0;
+
+        var kValue, mappedValue;
+        while (k < len) {
+
+          if (k in array) {
+
+            kValue = array[k];
+            mappedValue = callback.call(thisArg, kValue, k, array);
+            returnedArray[k] = mappedValue;
+          }
+          // [1,,3].myMap(function(el){return String(el)}); => ['1', , '3']
+
+          k++;
+        }
+
+        return returnedArray;
+      };
+      debugger;
+      
+    </script>
+  </body>
+</html>

@@ -104,6 +104,7 @@ var SimpleTest = {
       if (expected !== actual) {
           throw new Error('assertStrictEquals() "' + expected + '" !== "' + actual + '"');
       }
+      return true;
   },
 
   arrayEquals: function(array1, array2){
