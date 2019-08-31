@@ -56,8 +56,8 @@ now, we need to go beyond basic description of what a library does to how to des
     - put step 8 and step 9 under `renderUpdate`
 
 */
-
-var SimpleTest = {
+(function simpleTest(){
+  var SimpleTest = {
 
     run: function(tests) {
         var failures = 0;
@@ -140,18 +140,41 @@ var SimpleTest = {
           }
       }
       return true;
-  }
+    }
   
   };
   
-  /* Everything works the same after comment out hte later part */
-  var fail = SimpleTest.fail//.bind(TinyTest);
-  var eq = SimpleTest.assertStrictEquals//.bind(TinyTest);
-  var arrayEq = SimpleTest.arrayEquals//.bind(TinyTest);
-  var objEq = SimpleTest.objEquals//.bind(TinyTest);
-  var tests = SimpleTest.run//.bind(TinyTest);
-
-  module.exports.tests = tests;
-  module.exports.fail = fail;
-  module.exports.eq = eq;
   
+
+  if (myLibs !== undefined){
+    myLibs("fail", function(){
+      return SimpleTest.fail;
+    });
+
+    myLibs("eq", function(){
+      return SimpleTest.assertStrictEquals;
+    });
+
+    myLibs("arrayEq", function(){
+      return SimpleTest.arrayEquals;
+    });
+
+    myLibs("objEq", function(){
+      return SimpleTest.objEquals;
+    });
+
+    myLibs("tests", function(){
+      return SimpleTest.run;
+    });
+
+  } else {
+    /* Everything works the same after comment out hte later part */
+    window.fail = SimpleTest.fail//.bind(TinyTest);
+    window.eq = SimpleTest.assertStrictEquals//.bind(TinyTest);
+    window.arrayEq = SimpleTest.arrayEquals//.bind(TinyTest);
+    window.objEq = SimpleTest.objEquals//.bind(TinyTest);
+    window.tests = SimpleTest.run//.bind(TinyTest);
+  }
+})()
+
+var arrayEq = myLibs('arrayEq');

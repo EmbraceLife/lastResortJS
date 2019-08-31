@@ -4,7 +4,8 @@
     <title>my Accounting.JS explored</title>
   </head>
   <body>
-    <script src="../../simpleTest.js"></script>
+    <!-- <script src="../../simpleTest.js"></script> -->
+    <script src="../../myUtils.js"></script>
     <script>
         (function(root, undefined) {
           /* debugger;
@@ -53,20 +54,25 @@
           function isArray(obj) {
             return nativeIsArray ? nativeIsArray(obj) : toString.call(obj) === '[object Array]';
           }
-          /* debugger;
-          isArray([]); // expect an argument of array
-          toString([]); // expect no argument, like toString(), return [object, undefined]
-          toString.call([]); // [object, Array], call takes [] to be the class?
-          toString.call(1); // [object, Number] */
+          // myDebugger(isArray, [[]]);
+          // isArray([]); // true
+          // toString([]); // [object undefined]
+          // toString({}); // [object undefined]
+          /* assign Object.prototype.tostring into a new variable, makes `this` from Object to undefined*/
+          // Object.prototype.toString(); // [object, Object]
+          // toString.call(undefined); // [object undefined]
+          // toString.call({}); // [object, Object]
+          // toString.call([]); // [object, Array], call takes [] to be the class?
+          // toString.call(1); // [object, Number]
 
           
           function isObject(obj) {
             return obj && toString.call(obj) === '[object Object]';
           }
-          /* debugger;
-          isObject({});
-          undefined && true; NaN && true; 
-          // return true if object, otherwise the thing itself */
+          // myDebugger(isObject, [null]);
+          // eq(isObject(null), null);
+          // eq(isObject(undefined), undefined);
+          // this may be a bug or a feature according to how author uses it
 
           /* pass unique content of defs to object */
           function defaults(object, defs) {
@@ -395,7 +401,7 @@
             // Use accounting.noConflict to restore `accounting` back to its original value.
             // Returns a reference to the library's `accounting` object;
             // e.g. `var numbers = accounting.noConflict();`
-            debugger;
+            // debugger;
             root.accounting = "this is an old accounting.";
 
             lib.noConflict = (function(oldAccounting) {
