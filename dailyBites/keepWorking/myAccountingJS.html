@@ -68,7 +68,7 @@
           undefined && true; NaN && true; 
           // return true if object, otherwise the thing itself */
 
-          /* pass content of defs to object */
+          /* pass unique content of defs to object */
           function defaults(object, defs) {
             var key;
             object = object || {};
@@ -83,13 +83,17 @@
             }
             return object;
           }
-          /* debugger;
-          var obf = defaults(undefined,{number: 1, str: "yes"});
-          var obj = defaults({str:"yes"}, {number:1});
-          var obj = defaults(["yes"], {number:1}); // return ['yes', number:1]
-          var obj = defaults("yes", {number:1}); // return yes
-          var obj = defaults(1, {number:1}); // return 1
-          undefined || {}; undefined && {}; */
+          // debugger;
+          // objEq(defaults(undefined,{number: 1, str: "yes"}), {number: 1, str: "yes"});
+          // var a = ['yes']; a['number'] = 1;
+          // arrayEq(defaults(["yes"], {number:1}), a);
+          // var b = ['yes']; b['number'] = 2;
+          // arrayEq(defaults(b, a), b);
+          // var a = {str: undefined, number: undefined}, b = {str: 'yes', number: 1};
+          // objEq(defaults(a, b), b);
+          // eq(defaults("yes", {number:1}), 'yes');
+          // eq(defaults(1, {number:1}), 1);
+          // undefined || {}; undefined && {};
           
 
           function map(obj, iterator, context) {
@@ -101,7 +105,7 @@
             /* New Pattern ::: (nativeMap && obj.map === nativeMap) 
             to make sure nativeMap is not assigned to something else other than Array.prototype.map method */
 
-            // Fallback for native .map:
+            // the shortest way to implement array.map
             for (i = 0, j = obj.length; i < j; i++ ) {
               results[i] = iterator.call(context, obj[i], i, obj);
             }
@@ -111,17 +115,20 @@
           map([1,2,3], function(el){return String(el);}) // ['1','2', '3']
           map([1,2,3], function(el){return String(el) + this.str;}, {str: "yes"}); */
 
+          /* why does it called checkPrecision when it is just round up numbers??? 
+          - it made sense when used inside toFixed method
+          */
           function checkPrecision(val, base) {
             val = Math.round(Math.abs(val));
             return isNaN(val)? base : val;
           }
           // debugger;
-          // checkPrecision(-2.13);
-          // checkPrecision([undefined]);
-          // checkPrecision(NaN);
-          // checkPrecision(NaN, 2);
+          // eq(checkPrecision(-2.13), 2);
+          // eq(checkPrecision([undefined]), 0);
+          // eq(checkPrecision(NaN), undefined);
+          // eq(checkPrecision(NaN, 2), 2);
 
-          // debugger;
+          /* return an object with pos, neg, zero situation formats */
           function checkCurrencyFormat(format) {
             var defaults = lib.settings.currency.format;
 
@@ -206,40 +213,30 @@
           // unformat([1,'(2)', '$(3)']); /* => [1,-2,-3] */
           
 
-          /**
-           * Implementation of toFixed() that treats floats more like decimals
-           *
-           * Fixes binary rounding issues (eg. (0.615).toFixed(2) === "0.61") that present
-           * problems for accounting- and finance-related software.
-           */
+          /* toFixed(value, precision) can make sure user won't break precision */
           var toFixed = lib.toFixed = function(value, precision) {
             precision = checkPrecision(precision, lib.settings.number.precision);
+            // eq(toFixed(2.345, -2.13),toFixed(2.345, 2));
             var power = Math.pow(10, precision);
 
-            // Multiply up by precision, round accurately, then divide and use native toFixed():
+            // Number.toFixed(precision) is the native method
             return (Math.round(lib.unformat(value) * power) / power).toFixed(precision);
           };
+          // debugger;
+          // eq(toFixed(2.345, -2.13),toFixed(2.345, 2));
+          // eq(toFixed(2.345, -2.5),toFixed(2.345, 2.99));
+          // eq(toFixed(2.345, -3.99),2.345.toFixed(4));
 
-
-          /**
-           * Format a number, with comma-separated thousands and custom precision/decimal places
-           * Alias: `accounting.format()`
-           *
-           * Localise by overriding the precision and thousand / decimal separators
-           * 2nd parameter `precision` can be an object matching `settings.number`
-           */
           var formatNumber = lib.formatNumber = lib.format = function(number, precision, thousand, decimal) {
-            // Resursively format arrays:
+            // new pattern : recursion again
             if (isArray(number)) {
               return map(number, function(val) {
                 return formatNumber(val, precision, thousand, decimal);
               });
             }
 
-            // Clean up number:
             number = unformat(number);
 
-            // Build options object from second param (if object) or all params, extending defaults:
             var opts = defaults(
                 (isObject(precision) ? precision : {
                   precision : precision,
@@ -249,42 +246,35 @@
                 lib.settings.number
               ),
 
-              // Clean up precision
               usePrecision = checkPrecision(opts.precision),
 
-              // Do some calc:
               negative = number < 0 ? "-" : "",
+              /* get int version of number */
               base = parseInt(toFixed(Math.abs(number || 0), usePrecision), 10) + "",
+              /* how many digits ahead of the most left thousand symbol */
               mod = base.length > 3 ? base.length % 3 : 0;
 
-            // Format the number:
+            // "" + "5," + "318,008" + ".12"
             return negative + (mod ? base.substr(0, mod) + opts.thousand : "") + base.substr(mod).replace(/(\d{3})(?=\d)/g, "$1" + opts.thousand) + (usePrecision ? opts.decimal + toFixed(Math.abs(number), usePrecision).split('.')[1] : "");
           };
+          // debugger;
+          // eq(formatNumber(5318008.12, 2), '5,318,008.12');
+          // eq(formatNumber(9876543.21, 3, " ", ","), '9 876 543,210');
+          // base = '12345678987669'
+          // base.substr(mod).replace(/(\d{3})(?=\d)/g, "$1" + opts.thousand)
+          // /(\d{3})(?=\d)/g ::: regexr.com/4k1il
 
 
-          /**
-           * Format a number into currency
-           *
-           * Usage: accounting.formatMoney(number, symbol, precision, thousandsSep, decimalSep, format)
-           * defaults: (0, "$", 2, ",", ".", "%s%v")
-           *
-           * Localise by overriding the symbol, precision, thousand / decimal separators and format
-           * Second param can be an object matching `settings.currency` which is the easiest way.
-           *
-           * To do: tidy up the parameters
-           */
           var formatMoney = lib.formatMoney = function(number, symbol, precision, thousand, decimal, format) {
-            // Resursively format arrays:
+
             if (isArray(number)) {
               return map(number, function(val){
                 return formatMoney(val, symbol, precision, thousand, decimal, format);
               });
             }
 
-            // Clean up number:
             number = unformat(number);
 
-            // Build options object from second param (if object) or all params, extending defaults:
             var opts = defaults(
                 (isObject(symbol) ? symbol : {
                   symbol : symbol,
@@ -305,6 +295,12 @@
             // Return with currency symbol added:
             return useFormat.replace('%s', opts.symbol).replace('%v', formatNumber(Math.abs(number), checkPrecision(opts.precision), opts.thousand, opts.decimal));
           };
+          // debugger;
+          // formatMoney(12345678); // $12,345,678.00
+          // formatMoney(12345678, "$", 2, ",", ".", "%s%v"); // $12,345,678.00
+          // formatMoney(4999.99, "€", 2, ".", ","); // €4.999,99
+          // formatMoney(-500000, "£ ", 0); // £ -500,000
+          // formatMoney(5318008, { symbol: "GBP",  format: "%v %s" }); // 5,318,008.00 GBP
 
 
           /**
@@ -322,7 +318,14 @@
           lib.formatColumn = function(list, symbol, precision, thousand, decimal, format) {
             if (!list) return [];
 
-            // Build options object from second param (if object) or all params, extending defaults:
+            /* opts = {
+            decimal: "."
+            format: "%s%v"
+            grouping: 3
+            precision: 2
+            symbol: "$ "
+            thousand: "," }
+            */
             var opts = defaults(
                 (isObject(symbol) ? symbol : {
                   symbol : symbol,
@@ -334,51 +337,49 @@
                 lib.settings.currency
               ),
 
-              // Check format (returns object with pos, neg and zero), only need pos for now:
+              // {pos: "%s%v", neg: "%s-%v", zero: "%s%v"}
               formats = checkCurrencyFormat(opts.format),
 
-              // Whether to pad at start of string or after currency symbol:
+              // true if symbole first; false if value first
               padAfterSymbol = formats.pos.indexOf("%s") < formats.pos.indexOf("%v") ? true : false,
 
-              // Store value for the length of the longest string in the column:
               maxLength = 0,
 
-              // Format the list according to options, store the length of the longest string:
               formatted = map(list, function(val, i) {
                 if (isArray(val)) {
-                  // Recursively format columns if list is a multi-dimensional array:
+                  // recursion
                   return lib.formatColumn(val, opts);
                 } else {
-                  // Clean up the value
                   val = unformat(val);
-
-                  // Choose which format to use for this value (pos, neg or zero):
-                  var useFormat = val > 0 ? formats.pos : val < 0 ? formats.neg : formats.zero,
-
-                    // Format this value, push into formatted list and save the length:
-                    fVal = useFormat.replace('%s', opts.symbol).replace('%v', formatNumber(Math.abs(val), checkPrecision(opts.precision), opts.thousand, opts.decimal));
-
+                  // choose format for each value 
+                  var useFormat = val > 0 ? formats.pos : val < 0 ? formats.neg : formats.zero;
+                  // apply format to each value
+                  var fVal = useFormat.replace('%s', opts.symbol).replace('%v', formatNumber(Math.abs(val), checkPrecision(opts.precision), opts.thousand, opts.decimal));
+                  // keep track the longest string length for each value
                   if (fVal.length > maxLength) maxLength = fVal.length;
+
                   return fVal;
                 }
               });
 
-            // Pad each number in the list and send back the column of numbers:
+            
             return map(formatted, function(val, i) {
-              // Only if this is a string (not a nested array, which would have already been padded):
+              
               if (isString(val) && val.length < maxLength) {
-                // Depending on symbol position, pad after symbol or at index 0:
+                // padAfterSymbol ?  "$        123.50"  : "       $ 123.50"
                 return padAfterSymbol ? val.replace(opts.symbol, opts.symbol+(new Array(maxLength - val.length + 1).join(" "))) : (new Array(maxLength - val.length + 1).join(" ")) + val;
               }
               return val;
             });
           };
-
+          // debugger;
+          // lib.formatColumn([123.5, 3456.49, 777888.99, 12345678, -5432], "$ ");
+          /* ["$        123.50", "$      3,456.49", "$    777,888.99", "$ 12,345,678.00", "$     -5,432.00"] */
 
           /* --- Module Definition --- */
 
           // Export accounting for CommonJS. If being loaded as an AMD module, define it as such.
-          // Otherwise, just add `accounting` to the global object
+          // debugger;
           if (typeof exports !== 'undefined') {
             if (typeof module !== 'undefined' && module.exports) {
               exports = module.exports = lib;
@@ -389,13 +390,17 @@
             define([], function() {
               return lib;
             });
+          // Otherwise, just add `accounting` to the global object
           } else {
             // Use accounting.noConflict to restore `accounting` back to its original value.
             // Returns a reference to the library's `accounting` object;
             // e.g. `var numbers = accounting.noConflict();`
+            debugger;
+            root.accounting = "this is an old accounting.";
+
             lib.noConflict = (function(oldAccounting) {
               return function() {
-                // Reset the value of the root's `accounting` variable:
+                // use IIFE save the oldAccounting info
                 root.accounting = oldAccounting;
                 // Delete the noConflict method:
                 lib.noConflict = undefined;
@@ -407,10 +412,14 @@
             // Declare `fx` on the root (global/window) object:
             root['accounting'] = lib;
           }
-
+          
           // Root will be `window` in browser or `global` on the server:
         }(this));
-
+        
+        // debugger;
+        /* at the moment, the oldAccounting only exist in enclosing scope, not global scope */
+        accounting.noConflict();
+        
     </script>
 
   </body>

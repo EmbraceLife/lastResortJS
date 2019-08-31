@@ -120,7 +120,27 @@ var SimpleTest = {
           }
       }
       return true;
-  }
+  },
+
+  /* both objects' keys have to be in the same order to use this objEquals method */
+  objEquals: function(obj1, obj2){
+    var obj1Keys = Object.keys(obj1);
+    var obj2Keys = Object.keys(obj2);
+    if (obj1Keys.length !== obj2Keys.length) {
+        throw new Error('objEquals() ::: two objects have no equal number of keys.');
+    }
+
+    for (i in obj1Keys) {
+        if (obj1Keys[i] !== obj2Keys[i]) {
+            throw new Error("objEquals() ::: object2 does not have the same key : "+i);
+        } else {
+            if (obj1[obj1Keys[i]] !== obj2[obj2Keys[i]]){
+                throw new Error('objEquals() ::: same keys do not match the same values, the key is :' + i);    
+            }
+        }
+    }
+    return true;
+}
 
 };
 
@@ -128,4 +148,5 @@ var SimpleTest = {
 var fail = SimpleTest.fail//.bind(TinyTest);
 var eq = SimpleTest.assertStrictEquals//.bind(TinyTest);
 var arrayEq = SimpleTest.arrayEquals//.bind(TinyTest);
+var objEq = SimpleTest.objEquals//.bind(TinyTest);
 var tests = SimpleTest.run//.bind(TinyTest);

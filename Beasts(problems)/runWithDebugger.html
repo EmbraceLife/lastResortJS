@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>run with debugger</title>
+  </head>
+  <body>
+    
+    <script src="../simpleTest.js"></script>
+    <script>
+    
+      function sayHi() {
+        console.log('hello');
+      }
+      // runWithDebugger(sayHi); /* should start to debug on sayHi */
+
+      function sayHiTo(name) {
+        console.log('hi ' + name);
+      }
+      // runWithDebugger(sayHiTo, ['Daniel']); /* should start to debug on sayHiTo */
+    
+      function sayFullName(first, last) {
+        console.log(first + ' '  + last);
+      }
+      // runWithDebugger(sayFullName, ['Daniel', 'L']); /* should start to debug on sayFullName */
+
+      function runWithDebugger(callback, argsArray){
+        if (argsArray && argsArray.length){
+          if (argsArray.length === 1) {
+            debugger;
+            callback(argsArray[0]);
+          } else if (argsArray.length === 2) {
+            debugger;
+            callback(argsArray[0], argsArray[1]);
+          } else if (argsArray.length === 3) {
+            debugger;
+            callback(argsArray[0], argsArray[1], argsArray[2]);
+          } else if (argsArray.length === 4) {
+            debugger;
+            callback(argsArray[0], argsArray[1], argsArray[2], argsArray[3]);
+          }
+
+        } else {
+          debugger;
+          callback();
+        }
+      }
+
+      
+    </script>
+  </body>
+</html>
