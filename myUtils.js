@@ -30,9 +30,18 @@
   }
   // runWithDebugger(sayFullName, ['Daniel', 'L']); /* should start to debug on sayFullName */
 
-  function runWithDebugger(callback, argsArray){
+  function runWithDebugger(callback, argsArray, compare){
+    // var oldArgs = argsArray; /* a deep copy is needed */
     debugger;
-    callback.apply(this, argsArray);
+    var res = callback.apply(this, argsArray);
+    console.groupCollapsed('checks');
+    // console.log("before execution the arguments are: ", argsArray);
+    console.log("returned value is : ", res);
+    console.log("arguments after the execution become: ", argsArray);
+    // if (Object.keys(compare)>0) {
+    //   console.log("the returned object and ")
+    // }
+    console.groupEnd();
   }
 
   if (typeof myLibs !== undefined) {
@@ -170,5 +179,6 @@
 })()
 
 var arrayEq = myLibs('arrayEq');
+var objEq = myLibs('objEq');
 var eq = myLibs('eq');
 var myDebugger = myLibs("myDebugger");

@@ -89,17 +89,18 @@
             }
             return object;
           }
-          // debugger;
-          // objEq(defaults(undefined,{number: 1, str: "yes"}), {number: 1, str: "yes"});
-          // var a = ['yes']; a['number'] = 1;
-          // arrayEq(defaults(["yes"], {number:1}), a);
-          // var b = ['yes']; b['number'] = 2;
-          // arrayEq(defaults(b, a), b);
-          // var a = {str: undefined, number: undefined}, b = {str: 'yes', number: 1};
-          // objEq(defaults(a, b), b);
-          // eq(defaults("yes", {number:1}), 'yes');
-          // eq(defaults(1, {number:1}), 1);
-          // undefined || {}; undefined && {};
+          // myDebugger(defaults, [{str: undefined, number: undefined}, {str: 'yes', number: 1}]);
+          
+          function myDefaults(object, defs) {
+            var key;
+            object = object || {};
+            defs = defs || {};
+            for (key in defs) {
+              if ([NaN, null, undefined].includes(object[key])) object[key] = defs[key];
+            }
+            return object;
+          }
+          // myDebugger(myDefaults, [{str: null, number: NaN}, {str: 'yes', number: 1}]);
           
 
           function map(obj, iterator, context) {
@@ -108,8 +109,14 @@
             if (!obj) return results;
 
             if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
-            /* New Pattern ::: (nativeMap && obj.map === nativeMap) 
-            to make sure nativeMap is not assigned to something else other than Array.prototype.map method */
+            /* 
+            0 && 1 => 0 ; Boolean(0 && 1) => Boolean(0) => false
+            1 && 0 => 0 ; Boolean(0 && 1) => Boolean(0) => false
+            1 && 2 => 2 ; Boolean(1 && 2) => Boolean(2) => true
+            0 || 1 => 1 ; Boolean(0 || 1) => Boolean(1) => true
+            1 || 0 => 1 ; Boolean(1 || 0) => Boolean(1) => true
+            "" || 0 || undefined || NaN || null  => null ; Boolean(...) => Boolean(null) => false
+            */
 
             // the shortest way to implement array.map
             for (i = 0, j = obj.length; i < j; i++ ) {
@@ -117,9 +124,9 @@
             }
             return results;
           }
-          /* debugger;
-          map([1,2,3], function(el){return String(el);}) // ['1','2', '3']
-          map([1,2,3], function(el){return String(el) + this.str;}, {str: "yes"}); */
+          // myDebugger(map, [[1,2,3],function(el){return String(el);}]);
+          // myDebugger(map, [[1,2,3], function(el){return String(el)+this.str;}, {str: 'yes'}]);
+          
 
           /* why does it called checkPrecision when it is just round up numbers??? 
           - it made sense when used inside toFixed method
