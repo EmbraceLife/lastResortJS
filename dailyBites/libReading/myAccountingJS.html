@@ -233,6 +233,8 @@
             var power = Math.pow(10, precision);
 
             // Number.toFixed(precision) is the native method
+            // Math.round(123.49) => 123
+            // 1234.549.toFixed(1) => 1234.5
             return (Math.round(lib.unformat(value) * power) / power).toFixed(precision);
           };
           // debugger;
@@ -268,6 +270,7 @@
               mod = base.length > 3 ? base.length % 3 : 0;
 
             // "" + "5," + "318,008" + ".12"
+            // "12345".substr(-2,2) => '45'; "12345".substr(2) => '345'
             return negative + (mod ? base.substr(0, mod) + opts.thousand : "") + base.substr(mod).replace(/(\d{3})(?=\d)/g, "$1" + opts.thousand) + (usePrecision ? opts.decimal + toFixed(Math.abs(number), usePrecision).split('.')[1] : "");
           };
           // debugger;
@@ -380,6 +383,8 @@
               
               if (isString(val) && val.length < maxLength) {
                 // padAfterSymbol ?  "$        123.50"  : "       $ 123.50"
+                // var b = new Array(8); b + " "; => ",,,,,,,,"
+                // var b = new Array(8); b.join(" "); => "          "
                 return padAfterSymbol ? val.replace(opts.symbol, opts.symbol+(new Array(maxLength - val.length + 1).join(" "))) : (new Array(maxLength - val.length + 1).join(" ")) + val;
               }
               return val;
@@ -431,7 +436,7 @@
         
         // debugger;
         /* at the moment, the oldAccounting only exist in enclosing scope, not global scope */
-        accounting.noConflict();
+        // accounting.noConflict();
         
     </script>
 
