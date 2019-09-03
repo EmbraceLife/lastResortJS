@@ -2,13 +2,51 @@
 (function createLibrarySystems(){
   var libraryStorage = {};
 
-  function librarySystem(libraryName, callback){
+  function isDependencyString(obj){
+    return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+  }
+
+  function librarySystem(libraryName, dependenciesArray, callback){
       if (arguments.length > 1){
-        libraryStorage[libraryName] = callback(); 
+
+        if (dependenciesArray.length > 0) {
+
+          if (!isDependencyString(dependenciesArray[0])) {
+            throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+          }
+
+          var dependencyLibs = dependenciesArray.map(function(dep){
+            return libraryStorage[dep]; 
+          })
+          libraryStorage[libraryName] = callback.apply(this, dependencyLibs);   
+
+        } else {
+
+          libraryStorage[libraryName] = callback(); 
+        }
       } else { 
         return libraryStorage[libraryName]; 
       }
   }
+  // debugger;
+
+  // librarySystem('name', [""], function() {
+  //   return 'Gordon';
+  // });
+
+  // librarySystem('name', [], function() {
+  //   return 'Gordon';
+  // });
+  
+  // librarySystem('company', [], function() {
+  //   return 'Watch and Code';
+  // });
+  
+  // librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+  //   return name + ' works at ' + company;
+  // });
+  
+  // librarySystem('workBlurb'); // 'Gordon works at Watch and Code'
 
   window.myLibs = librarySystem; 
 })();  

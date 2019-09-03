@@ -6,6 +6,7 @@
 - codingTrain : ES 6 https://www.youtube.com/playlist?list=PLRqwX-V7Uu6YgpA3Oht-7B4NBQwFVe3pr
 - todo mvc
 - update node : https://bytearcher.com/articles/ways-to-get-the-latest-node.js-version-on-a-mac/
+- Javascript.info, eliquent Javascript: code examples
 
 next meeting
 - what satisfy you the most? what cheers you up everyday?
