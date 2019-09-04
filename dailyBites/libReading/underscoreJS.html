@@ -20,11 +20,12 @@
       // Establish the root object, `window` (`self`) in the browser, `global`
       // on the server, or `this` in some virtual machines. We use `self`
       // instead of `window` for `WebWorker` support.
+      // self -> global -> this -> {}
       var root = typeof self == 'object' && self.self === self && self ||
                 typeof global == 'object' && global.global === global && global ||
                 this ||
                 {};
-      debugger;
+      // debugger;
       // && looks for first false and last true; || looks for first true and last false
       // 0 && 1 && 2 => 0 first false 
       // 1 && 2 && -1 => -1 last true
@@ -50,7 +51,9 @@
           nativeKeys = Object.keys,
           nativeCreate = Object.create;
 
+      //
       // Naked function reference for surrogate-prototype-swapping.
+      /* surrogate prototype methods, see later usages */
       var Ctor = function(){};
 
       // Create a safe reference to the Underscore object for use below.
@@ -59,13 +62,25 @@
         if (!(this instanceof _)) return new _(obj);
         this._wrapped = obj;
       };
+      /** save obj into an object under the name _
+       * debugger;
+       * myDebugger(_, ['a string']);/*  => object with name _ {_wrapped: 'a string'}
+       * myDebugger(_, [Ctor]); /* => object with name _ {_wrapped: Ctor} 
+       */
 
-      // Export the Underscore object for **Node.js**, with
-      // backwards-compatibility for their old module API. If we're in
-      // the browser, add `_` as a global object.
-      // (`nodeType` is checked to ensure that `module`
-      // and `exports` are not HTML elements.)
-      if (typeof exports != 'undefined' && !exports.nodeType) {
+      //
+
+      /** official 
+       * Export the Underscore object for **Node.js**, with
+       * backwards-compatibility for their old module API. If we're in
+       * the browser, add `_` as a global object.
+       * (`nodeType` is checked to ensure that `module`
+       * and `exports` are not HTML elements.)
+      */
+      /** export _ for current node, old node, and browser root
+       * debugger;
+      */
+       if (typeof exports != 'undefined' && !exports.nodeType) {
         if (typeof module != 'undefined' && !module.nodeType && module.exports) {
           exports = module.exports = _;
         }
