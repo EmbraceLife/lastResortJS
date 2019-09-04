@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LibrarySystem out of order</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+   
+      (function createLibrarySystems(){
+          var libraryStorage = {};
+          var numLibsPending;
+          var pendingLibsNameArray = [];
+          var missingLibsArray = [];
+          var pendingTargetLib;
+          var pendingLibsArray;
+          var numCalls = 0;
+
+          function isDependencyString(obj){
+            return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+          }
+
+          function librarySystem(libraryName, dependenciesArray, callback){
+              if (arguments.length > 1){
+
+                if (dependenciesArray.length > 0) {
+
+                  if (!isDependencyString(dependenciesArray[0])) {
+                    throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+                  }
+
+                  pendingLibsArray = dependenciesArray.map(function(dep){
+                    return libraryStorage[dep]; 
+                  });
+
+                  if (pendingLibsArray.includes(undefined)){
+                    numLibsPending = 0;
+                    pendingTargetLib = libraryName;
+                    
+                    for (i = 0; i < pendingLibsArray.length; i++){
+
+                      if (pendingLibsArray[i] === undefined){
+
+                        numLibsPending++;
+                        pendingLibsNameArray.push(dependenciesArray[i]);
+                        missingLibsArray.push(dependenciesArray[i]);
+                      }
+                    }
+
+                    libraryStorage['PendingLib'] = function(){
+                        numCalls++;
+                        return callback.apply(this, pendingLibsArray);
+                      }
+                    
+                  } else {
+
+                    libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+                  }
+
+                } else {
+                  
+
+                    libraryStorage[libraryName] = callback(); 
+
+                    if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+                      numLibsPending--;
+                      
+                      if (pendingLibsNameArray.includes(libraryName)){
+                        var idx = pendingLibsNameArray.findIndex(function(el){
+                          return el === libraryName;
+                        });
+                        pendingLibsArray[idx] = callback();
+                        missingLibsArray = missingLibsArray.filter(function(el){
+                          return el !== libraryName;
+                        });
+                      }
+                    }
+                }
+              } else { 
+                if (pendingTargetLib === libraryName && numLibsPending === 0) {
+
+                  libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+                  delete libraryStorage.PendingLib;
+                  numLibsPending = undefined;
+
+                  console.log("the number of calls is : ", numCalls);
+                  return libraryStorage[libraryName]; 
+
+                } else if (pendingTargetLib === libraryName && numLibsPending !== 0) {
+                  
+                  throw new Error("To load " + pendingTargetLib + ", must load the following libs : " + missingLibsArray);
+
+                } else {
+                  return libraryStorage[libraryName]; 
+                }
+              }
+          }
+
+          window.librarySystem = librarySystem; 
+        })();  
+
+      
+        tests({
+
+        "order": function(){
+
+          (function createLibrarySystems(){
+            var libraryStorage = {};
+            var numLibsPending;
+            var pendingLibsNameArray = [];
+            var pendingLibsArray;
+            var numCalls = 0;
+
+            function isDependencyString(obj){
+              return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+            }
+
+            function librarySystem(libraryName, dependenciesArray, callback){
+                if (arguments.length > 1){
+
+                  if (dependenciesArray.length > 0) {
+
+                    if (!isDependencyString(dependenciesArray[0])) {
+                      throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+                    }
+
+                    pendingLibsArray = dependenciesArray.map(function(dep){
+                      return libraryStorage[dep]; 
+                    });
+
+                    if (pendingLibsArray.includes(undefined)){
+                      numLibsPending = 0;
+                      
+                      for (i = 0; i < pendingLibsArray.length; i++){
+
+                        if (pendingLibsArray[i] === undefined){
+
+                          numLibsPending++;
+                          pendingLibsNameArray.push(dependenciesArray[i]);
+                        }
+                      }
+
+                      libraryStorage['PendingLib'] = function(){
+                          numCalls++;
+                          return callback.apply(this, pendingLibsArray);
+                        }
+                      
+                    } else {
+
+                      libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+                    }
+
+                  } else {
+                    
+
+                      libraryStorage[libraryName] = callback(); 
+
+                      if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+                        numLibsPending--;
+                        
+                        if (pendingLibsNameArray.includes(libraryName)){
+                          var idx = pendingLibsNameArray.findIndex(function(el){
+                            return el === libraryName;
+                          });
+                          pendingLibsArray[idx] = callback();
+                        }
+                      }
+                  }
+                } else { 
+                  if (numLibsPending === 0) {
+
+                    libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+                    delete libraryStorage.PendingLib;
+                    numLibsPending = undefined;
+
+                    console.log("the number of calls is : ", numCalls);
+                    return libraryStorage[libraryName]; 
+
+                  } else {
+                    return libraryStorage[libraryName]; 
+                  }
+                }
+            }
+
+            window.librarySystem = librarySystem; 
+          })();  
+
+          librarySystem('name', [], function() {
+            return 'Gordon';
+          });
+
+          librarySystem('company', [], function() {
+            return 'Watch and Code';
+          });
+
+          librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+            return name + ' works at ' + company;
+          });
+          console.groupCollapsed('checks');
+          console.log("eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code') => ", eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code'));
+          console.groupEnd();
+
+          },
+
+        "out of order": function(){
+          (function createLibrarySystems(){
+            var libraryStorage = {};
+            var numLibsPending;
+            var pendingLibsNameArray = [];
+            var pendingLibsArray;
+            var numCalls = 0;
+
+            function isDependencyString(obj){
+              return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+            }
+
+            function librarySystem(libraryName, dependenciesArray, callback){
+                if (arguments.length > 1){
+
+                  if (dependenciesArray.length > 0) {
+
+                    if (!isDependencyString(dependenciesArray[0])) {
+                      throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+                    }
+
+                    pendingLibsArray = dependenciesArray.map(function(dep){
+                      return libraryStorage[dep]; 
+                    });
+
+                    if (pendingLibsArray.includes(undefined)){
+                      numLibsPending = 0;
+                      
+                      for (i = 0; i < pendingLibsArray.length; i++){
+
+                        if (pendingLibsArray[i] === undefined){
+
+                          numLibsPending++;
+                          pendingLibsNameArray.push(dependenciesArray[i]);
+                        }
+                      }
+
+                      libraryStorage['PendingLib'] = function(){
+                          numCalls++;
+                          return callback.apply(this, pendingLibsArray);
+                        }
+                      
+                    } else {
+
+                      libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+                    }
+
+                  } else {
+                    
+
+                      libraryStorage[libraryName] = callback(); 
+
+                      if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+                        numLibsPending--;
+                        
+                        if (pendingLibsNameArray.includes(libraryName)){
+                          var idx = pendingLibsNameArray.findIndex(function(el){
+                            return el === libraryName;
+                          });
+                          pendingLibsArray[idx] = callback();
+                        }
+                      }
+                  }
+                } else { 
+                  if (numLibsPending === 0) {
+
+                    libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+                    delete libraryStorage.PendingLib;
+                    numLibsPending = undefined;
+
+                    console.log("the number of calls is : ", numCalls);
+                    return libraryStorage[libraryName]; 
+
+                  } else {
+                    return libraryStorage[libraryName]; 
+                  }
+                }
+            }
+
+            window.librarySystem = librarySystem; 
+          })();  
+
+          librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+            return name + ' works at ' + company;
+          });
+
+          librarySystem('name', [], function() {
+            return 'Gordon';
+          });
+
+          librarySystem('company', [], function() {
+            return 'Watch and Code';
+          });
+
+          console.groupCollapsed('checks');
+          console.log("eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code') => ", eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code'));
+          console.groupEnd();
+        },
+
+        "only run once": function(){
+          var numCalls = 5;
+          (function createLibrarySystems(){
+            var libraryStorage = {};
+            var numLibsPending;
+            var pendingLibsNameArray = [];
+            var pendingLibsArray;
+            
+
+            function isDependencyString(obj){
+              return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+            }
+
+            function librarySystem(libraryName, dependenciesArray, callback){
+                if (arguments.length > 1){
+
+                  if (dependenciesArray.length > 0) {
+
+                    if (!isDependencyString(dependenciesArray[0])) {
+                      throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+                    }
+
+                    pendingLibsArray = dependenciesArray.map(function(dep){
+                      return libraryStorage[dep]; 
+                    });
+
+                    if (pendingLibsArray.includes(undefined)){
+                      numLibsPending = 0;
+                      
+                      for (i = 0; i < pendingLibsArray.length; i++){
+
+                        if (pendingLibsArray[i] === undefined){
+
+                          numLibsPending++;
+                          pendingLibsNameArray.push(dependenciesArray[i]);
+                        }
+                      }
+
+                      libraryStorage['PendingLib'] = function(){
+                          numCalls++;
+                          return callback.apply(this, pendingLibsArray);
+                        }
+                      
+                    } else {
+
+                      libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+                    }
+
+                  } else {
+                    
+
+                      libraryStorage[libraryName] = callback(); 
+
+                      if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+                        numLibsPending--;
+                        
+                        if (pendingLibsNameArray.includes(libraryName)){
+                          var idx = pendingLibsNameArray.findIndex(function(el){
+                            return el === libraryName;
+                          });
+                          pendingLibsArray[idx] = callback();
+                        }
+                      }
+                  }
+                } else { 
+                  if (numLibsPending === 0) {
+
+                    libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+                    delete libraryStorage.PendingLib;
+                    numLibsPending = undefined;
+
+                    console.log("the number of calls is : ", numCalls);
+                    return libraryStorage[libraryName]; 
+
+                  } else {
+                    return libraryStorage[libraryName]; 
+                  }
+                }
+            }
+
+            window.librarySystem = librarySystem; 
+          })();  
+
+          librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+            return name + ' works at ' + company;
+          });
+
+          librarySystem('name', [], function() {
+            return 'Gordon';
+          });
+
+          librarySystem('company', [], function() {
+            return 'Watch and Code';
+          });
+
+          console.groupCollapsed('checks');
+          console.log("eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code') => ", eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code'));
+          console.log("eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code') => ", eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code'));
+          console.log("librarySystem('workBlurb') runs twice, but the num of calls should stay at : 6 (as numCall is initialized at 5)", eq(6, numCalls));
+          console.groupEnd();
+        },
+
+        "pending error": function(){
+          (function createLibrarySystems(){
+            var libraryStorage = {};
+            var numLibsPending;
+            var pendingLibsNameArray = [];
+            var missingLibsArray = [];
+            var pendingTargetLib;
+            var pendingLibsArray;
+            var numCalls = 0;
+
+            function isDependencyString(obj){
+              return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
+            }
+
+            function librarySystem(libraryName, dependenciesArray, callback){
+                if (arguments.length > 1){
+
+                  if (dependenciesArray.length > 0) {
+
+                    if (!isDependencyString(dependenciesArray[0])) {
+                      throw new TypeError("dependenciesArray's elements must be non-empty strings.");
+                    }
+
+                    pendingLibsArray = dependenciesArray.map(function(dep){
+                      return libraryStorage[dep]; 
+                    });
+
+                    if (pendingLibsArray.includes(undefined)){
+                      numLibsPending = 0;
+                      pendingTargetLib = libraryName;
+                      
+                      for (i = 0; i < pendingLibsArray.length; i++){
+
+                        if (pendingLibsArray[i] === undefined){
+
+                          numLibsPending++;
+                          pendingLibsNameArray.push(dependenciesArray[i]);
+                          missingLibsArray.push(dependenciesArray[i]);
+                        }
+                      }
+
+                      libraryStorage['PendingLib'] = function(){
+                          numCalls++;
+                          return callback.apply(this, pendingLibsArray);
+                        }
+                      
+                    } else {
+
+                      libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+                    }
+
+                  } else {
+                    
+
+                      libraryStorage[libraryName] = callback(); 
+
+                      if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+                        numLibsPending--;
+                        
+                        if (pendingLibsNameArray.includes(libraryName)){
+                          var idx = pendingLibsNameArray.findIndex(function(el){
+                            return el === libraryName;
+                          });
+                          pendingLibsArray[idx] = callback();
+                          missingLibsArray = missingLibsArray.filter(function(el){
+                            return el !== libraryName;
+                          });
+                        }
+                      }
+                  }
+                } else { 
+                  if (pendingTargetLib === libraryName && numLibsPending === 0) {
+
+                    libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+                    delete libraryStorage.PendingLib;
+                    numLibsPending = undefined;
+
+                    console.log("the number of calls is : ", numCalls);
+                    return libraryStorage[libraryName]; 
+
+                  } else if (pendingTargetLib === libraryName && numLibsPending !== 0) {
+                    
+                    throw new Error("To load " + pendingTargetLib + ", must load the following libs : " + missingLibsArray);
+
+                  } else {
+                    return libraryStorage[libraryName]; 
+                  }
+                }
+            }
+
+            window.librarySystem = librarySystem; 
+          })();  
+
+          librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+            return name + ' works at ' + company;
+          });
+
+          console.groupCollapsed('checks');
+
+          try {
+            librarySystem('workBlurb');
+          }
+
+          catch(e){
+            console.log(e);
+          }
+
+          librarySystem('name', [], function() {
+            return 'Gordon';
+          });
+
+          
+          try {
+            librarySystem('workBlurb');
+          }
+
+          catch(e){
+            console.log(e);
+          }
+
+          librarySystem('company', [], function() {
+            return 'Watch and Code';
+          });
+
+          
+          console.log("eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code') => ", eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code'));
+          console.groupEnd();
+        },
+
+
+      });
+
+    </script>
+  </body>
+</html>

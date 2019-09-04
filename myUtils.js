@@ -1,6 +1,11 @@
-
 (function createLibrarySystems(){
   var libraryStorage = {};
+  var numLibsPending;
+  var pendingLibsNameArray = [];
+  var missingLibsArray = [];
+  var pendingTargetLib;
+  var pendingLibsArray;
+  var numCalls = 0;
 
   function isDependencyString(obj){
     return !!(obj !== '' && (obj && obj.charCodeAt && obj.substr));
@@ -15,42 +20,76 @@
             throw new TypeError("dependenciesArray's elements must be non-empty strings.");
           }
 
-          var dependencyLibs = dependenciesArray.map(function(dep){
+          pendingLibsArray = dependenciesArray.map(function(dep){
             return libraryStorage[dep]; 
-          })
-          libraryStorage[libraryName] = callback.apply(this, dependencyLibs);   
+          });
+
+          if (pendingLibsArray.includes(undefined)){
+            numLibsPending = 0;
+            pendingTargetLib = libraryName;
+            
+            for (i = 0; i < pendingLibsArray.length; i++){
+
+              if (pendingLibsArray[i] === undefined){
+
+                numLibsPending++;
+                pendingLibsNameArray.push(dependenciesArray[i]);
+                missingLibsArray.push(dependenciesArray[i]);
+              }
+            }
+
+            libraryStorage['PendingLib'] = function(){
+                numCalls++;
+                return callback.apply(this, pendingLibsArray);
+              }
+            
+          } else {
+
+            libraryStorage[libraryName] = callback.apply(this, pendingLibsArray);   
+          }
 
         } else {
+          
 
-          libraryStorage[libraryName] = callback(); 
+            libraryStorage[libraryName] = callback(); 
+
+            if (numLibsPending > 0 && pendingLibsNameArray.includes(libraryName) && libraryStorage[libraryName] !== undefined){
+              numLibsPending--;
+              
+              if (pendingLibsNameArray.includes(libraryName)){
+                var idx = pendingLibsNameArray.findIndex(function(el){
+                  return el === libraryName;
+                });
+                pendingLibsArray[idx] = callback();
+                missingLibsArray = missingLibsArray.filter(function(el){
+                  return el !== libraryName;
+                });
+              }
+            }
         }
       } else { 
-        return libraryStorage[libraryName]; 
+        if (pendingTargetLib === libraryName && numLibsPending === 0) {
+
+          libraryStorage[libraryName] = libraryStorage.PendingLib(); 
+
+          delete libraryStorage.PendingLib;
+          numLibsPending = undefined;
+
+          console.log("the number of calls is : ", numCalls);
+          return libraryStorage[libraryName]; 
+
+        } else if (pendingTargetLib === libraryName && numLibsPending !== 0) {
+          
+          throw new Error("To load " + pendingTargetLib + ", must load the following libs : " + missingLibsArray);
+
+        } else {
+          return libraryStorage[libraryName]; 
+        }
       }
   }
-  // debugger;
-
-  // librarySystem('name', [""], function() {
-  //   return 'Gordon';
-  // });
-
-  // librarySystem('name', [], function() {
-  //   return 'Gordon';
-  // });
-  
-  // librarySystem('company', [], function() {
-  //   return 'Watch and Code';
-  // });
-  
-  // librarySystem('workBlurb', ['name', 'company'], function(name, company) {
-  //   return name + ' works at ' + company;
-  // });
-  
-  // librarySystem('workBlurb'); // 'Gordon works at Watch and Code'
 
   window.myLibs = librarySystem; 
 })();  
-
 
 (function createMyDebugger(){
   function sayHi() {
@@ -84,7 +123,7 @@
 
   if (typeof myLibs !== undefined) {
 
-    myLibs("myDebugger", function(){
+    myLibs("myDebugger", [], function(){
       return runWithDebugger
     });
 
@@ -186,23 +225,23 @@
   
 
   if (myLibs !== undefined){
-    myLibs("fail", function(){
+    myLibs("fail", [], function(){
       return SimpleTest.fail;
     });
 
-    myLibs("eq", function(){
+    myLibs("eq", [], function(){
       return SimpleTest.assertStrictEquals;
     });
 
-    myLibs("arrayEq", function(){
+    myLibs("arrayEq", [], function(){
       return SimpleTest.arrayEquals;
     });
 
-    myLibs("objEq", function(){
+    myLibs("objEq", [], function(){
       return SimpleTest.objEquals;
     });
 
-    myLibs("tests", function(){
+    myLibs("tests", [], function(){
       return SimpleTest.run;
     });
 
@@ -216,6 +255,7 @@
   }
 })()
 
+var tests = myLibs("tests");
 var arrayEq = myLibs('arrayEq');
 var objEq = myLibs('objEq');
 var eq = myLibs('eq');
