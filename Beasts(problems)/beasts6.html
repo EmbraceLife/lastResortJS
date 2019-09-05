@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Beasts 6</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      function isPrototypeOf(dog, myDog){
+        var myDogProto = myDog.__proto__;
+        if (myDogProto === undefined) {
+          return false;
+        }
+        var myDogProtoKeysArray = Object.keys(myDogProto);
+        var dogKeysArray = Object.keys(dog);
+
+
+        for (key in myDogProtoKeysArray) {
+          var prop = myDogProtoKeysArray[key];
+          if (!dogKeysArray.includes(prop)) {
+            return isPrototypeOf(dog, myDogProto);
+          } else {
+            if (dog[prop] !== myDogProto[prop]){
+              return false;
+            }
+          }
+        }
+
+        if (dog.__proto__ !== myDogProto.__proto__){
+          return false;
+        }
+
+        return true;
+      }
+
+      var canine = {
+        bark: function() {
+          console.log('bark');
+        }
+      };
+
+      var dog = Object.create(canine);
+      dog.fetch = function() {
+        console.log('fetch');
+      };
+
+      var myDog = Object.create(dog);
+      var empty = Object.create(null);
+
+    
+      tests({
+        "isPrototypeOf(dog, myDog) === dog.isPrototypeOf(myDog) === true": function(){
+          eq(true, isPrototypeOf(dog, myDog));
+        },
+
+        "isPrototypeOf(dog, empty) === dog.isPrototypeOf(empty) === false": function(){
+          eq(false, isPrototypeOf(dog, empty));
+        },
+
+        "isPrototypeOf(Object.prototype, myDog) === Object.prototype.isPrototypeOf(myDog) === true": function(){
+          eq(true, isPrototypeOf(Object.prototype, myDog));
+        },
+
+        "isPrototypeOf(canine, myDog) === true": function(){
+          eq(true, isPrototypeOf(canine, myDog));
+        },
+
+        "isPrototypeOf(Object.prototype, canine) === true": function(){
+          eq(true, isPrototypeOf(Object.prototype, canine));
+        },
+      });
+    </script>
+  </body>
+</html>

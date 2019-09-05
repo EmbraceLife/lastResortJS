@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting all JS builtins</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      (function myJSBuiltins(){
+        // `RequireObjectCoercible` abstract operation
+        // https://tc39.github.io/ecma262/#sec-requireobjectcoercible
+        // objLike == undefined ===> objLike === undefined || objLike === null
+        function requireObjectCoercible(objLike) {
+          // if (objLike == undefined) throw TypeError("Can't call method on " + objLike);
+          if (objLike === undefined || objLike === null) throw TypeError("Can't call method on " + objLike);
+          return objLike;
+        };
+        // myDebugger(requireObjectCoercible, [null]);
+        // debugger;
+        // requireObjectCoercible(undefined); => TypeError
+        // requireObjectCoercible(NaN);=> NaN
+        
+
+        function toObject(objLike){
+          return Object(requireObjectCoercible(objLike));
+        }
+
+
+        // `ToInteger` abstract operation
+        // https://tc39.github.io/ecma262/#sec-tointeger
+        var ceil = Math.ceil;
+        var floor = Math.floor;
+        function toInteger(argument) {
+          return isNaN(argument = +argument) ? 0 : (argument > 0 ? floor : ceil)(argument);
+        };
+        // debugger;
+        // toInteger(3.95); /* => floor(3.95) => 3 */
+        // toInteger(-23.45); /* => ceil(-23.45) => -23 */
+        // toInteger(undefined);/*  +undefined === NaN (true) => toInteger(NaN) => 0 */
+        // toInteger(null);/*  => ceil(null) => 0 */
+
+
+        // `ToLength` abstract operation
+        // https://tc39.github.io/ecma262/#sec-tolength
+        /* turn arrayLength into an integer */
+        /* 2 ** 53 - 1 === 9007199254740991 === 0x1FFFFFFFFFFFFF */
+        var min = Math.min;
+        function toLength(arrayLength) {
+          return arrayLength > 0 ? min(toInteger(arrayLength), 0x1FFFFFFFFFFFFF) : 0; 
+        };
+        // debugger;
+        // toLength(-3); /* => 0 */
+        // toLength(10.345); /* => 10 */
+
+        // internals/fails
+        function fails(exec) {
+          try {
+            return !!exec();
+          } catch (error) {
+            return true;
+          }
+        };
+        
+        // internals/classof-raw
+        var toString = {}.toString;
+        function classof(it) {
+          return toString.call(it).slice(8, -1);
+        };
+
+
+        // internals/IndexedObject
+        var split = ''.split;
+        // fallback for non-array-like ES3 and non-enumerable old V8 strings
+        var IndexedObject = fails(function () {
+          // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
+          // eslint-disable-next-line no-prototype-builtins
+          return !Object('z').propertyIsEnumerable(0);
+        }) ? function (it) {
+          return classof(it) == 'String' ? split.call(it, '') : Object(it);
+        } : Object;
+        // debugger;
+        // IndexedObject("string"); /* => String {'string'} */
+        // IndexedObject([1,2,3]); /* => [1,2,3] */
+        // IndexedObject({}); /* => {} */
+        // IndexedObject(undefined); /* => {} */
+        // IndexedObject(null);  /* => {} */
+
+
+        // internals/sloppy-array-method
+        function sloppyArrayMethod(METHOD_NAME, argument) {
+          'use strict';
+          var method = [][METHOD_NAME];
+          return !method || !fails(function () {
+            // eslint-disable-next-line no-useless-call,no-throw-literal
+            method.call(null, argument || function () { throw 1; }, 1);
+            /* proper method can't call on null */
+          });
+        };
+        // debugger;
+        // sloppyArrayMethod('from'); /* []['from'] === undefined => true */
+        // sloppyArrayMethod('filter'); /* []['filter'] === f() => false */
+        // sloppyArrayMethod('map'); /* []['map'] === f() => false */
+
+        // internals/a-Function
+        function aFunction(it) {
+          if (typeof it != 'function') {
+            throw TypeError(String(it) + ' is not a function');
+          } return it;
+        };
+        // debugger;
+        // aFunction({});  /* => type error */
+        // aFunction([].filter); /* => [].filter */
+
+        // internals/bind
+        // optional / simple context binding
+        // var aFunction = require('../internals/a-function');
+        function bind(fn, that, length) {
+          aFunction(fn);
+          if (that === undefined) return fn;
+          switch (length) {
+            case 0: return function () {
+              return fn.call(that);
+            };
+            case 1: return function (a) {
+              return fn.call(that, a);
+            };
+            case 2: return function (a, b) {
+              return fn.call(that, a, b);
+            };
+            case 3: return function (a, b, c) {
+              return fn.call(that, a, b, c);
+            };
+          }
+          return function (/* ...args */) {
+            return fn.apply(that, arguments);
+          };
+        };
+
+
+        // internals/is-array
+        // var classof = require('../internals/classof-raw');
+        // `IsArray` abstract operation
+        // https://tc39.github.io/ecma262/#sec-isarray
+        var isArray = Array.isArray || function isArray(arg) {
+          return classof(arg) == 'Array';
+        };
+
+        // internals/is-object
+        function isObject(it) {
+          return typeof it === 'object' ? it !== null : typeof it === 'function';
+        };
+        // debugger;
+        // isObject(null); /* => false */
+        // isObject([].filter); /* => true */
+        // isObject(2);/*  => false */
+
+
+        // internals/global 
+        /* make sure to get the global/window object no matter which environment */
+        var O = 'object';
+        var check = function (it) {
+          return it && it.Math == Math && it;
+        };
+        // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+        var global =
+          // eslint-disable-next-line no-undef
+          check(typeof globalThis == O && globalThis) ||
+          check(typeof window == O && window) ||
+          check(typeof self == O && self) ||
+          check(typeof global == O && global) ||
+          // eslint-disable-next-line no-new-func
+          Function('return this')(); // return window
+
+
+        // To continue
+        // internals/hide
+        var DESCRIPTORS = require('../internals/descriptors');
+        var definePropertyModule = require('../internals/object-define-property');
+        var createPropertyDescriptor = require('../internals/create-property-descriptor');
+
+        var hide = DESCRIPTORS ? function (object, key, value) {
+          return definePropertyModule.f(object, key, createPropertyDescriptor(1, value));
+        } : function (object, key, value) {
+          object[key] = value;
+          return object;
+        };
+
+
+        // internals/set-global
+        // var global = require('../internals/global');
+        // var hide = require('../internals/hide');
+        function setGlobal(key, value) {
+          try {
+            hide(global, key, value);
+          } catch (error) {
+            global[key] = value;
+          } return value;
+        };
+
+        
+        // internals/shared
+        // var global = require('../internals/global');
+        // var setGlobal = require('../internals/set-global');
+        var IS_PURE = require('../internals/is-pure');
+
+        var SHARED = '__core-js_shared__';
+        var store = global[SHARED] || setGlobal(SHARED, {});
+
+        (function shared(key, value) {
+          return store[key] || (store[key] = value !== undefined ? value : {});
+        })('versions', []).push({
+          version: '3.2.1',
+          mode: IS_PURE ? 'pure' : 'global',
+          copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+        });
+
+
+        // var global = require('../internals/global');
+        // var shared = require('../internals/shared');
+        var uid = require('../internals/uid');
+        var NATIVE_SYMBOL = require('../internals/native-symbol');
+
+        var Symbol = global.Symbol;
+        var store = shared('wks');
+
+        // internals/well-known-symbol
+        function wellKnownSymbol(name) {
+          return store[name] || (store[name] = NATIVE_SYMBOL && Symbol[name]
+            || (NATIVE_SYMBOL ? Symbol : uid)('Symbol.' + name));
+        };
+
+
+        // internals/array-species-create
+        // var isObject = require('../internals/is-object');
+        // var isArray = require('../internals/is-array');
+        // var wellKnownSymbol = require('../internals/well-known-symbol');
+
+        var SPECIES = wellKnownSymbol('species');
+
+        // `ArraySpeciesCreate` abstract operation
+        // https://tc39.github.io/ecma262/#sec-arrayspeciescreate
+        function arraySpeciesCreate(originalArray, length) {
+          var C;
+          if (isArray(originalArray)) {
+            C = originalArray.constructor;
+            // cross-realm fallback
+            if (typeof C == 'function' && (C === Array || isArray(C.prototype))) C = undefined;
+            else if (isObject(C)) {
+              C = C[SPECIES];
+              if (C === null) C = undefined;
+            }
+          } return new (C === undefined ? Array : C)(length === 0 ? 0 : length);
+        };
+
+
+        // module/es.array.some.js 
+        // 'use strict';
+        // var $ = require('../internals/export');
+        // var $some = require('../internals/array-iteration').some;
+        // var sloppyArrayMethod = require('../internals/sloppy-array-method');
+        // `Array.prototype.some` method
+        // https://tc39.github.io/ecma262/#sec-array.prototype.some
+        // $({ target: 'Array', proto: true, forced: sloppyArrayMethod('some') }, {
+        //   some: function some(callbackfn /* , thisArg */) {
+        //     return $some(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+        //   }
+        // });
+
+        // internal array-iteration.js
+        // var bind = require('../internals/bind-context');
+        // var IndexedObject = require('../internals/indexed-object');
+        // var toObject = require('../internals/to-object');
+        // var toLength = require('../internals/to-length');
+        // var arraySpeciesCreate = require('../internals/array-species-create');
+
+        var push = [].push;
+
+        // `Array.prototype.{ forEach, map, filter, some, every, find, findIndex }` methods implementation
+        var createMethod = function (TYPE) {
+          var IS_MAP = TYPE == 1;
+          var IS_FILTER = TYPE == 2;
+          var IS_SOME = TYPE == 3;
+          var IS_EVERY = TYPE == 4;
+          var IS_FIND_INDEX = TYPE == 6;
+          var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+          return function ($this, callbackfn, that, specificCreate) {
+            var O = toObject($this);
+            var self = IndexedObject(O);
+            var boundFunction = bind(callbackfn, that, 3);
+            var length = toLength(self.length);
+            var index = 0;
+            var create = specificCreate || arraySpeciesCreate;
+            var target = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
+            var value, result;
+            for (;length > index; index++) if (NO_HOLES || index in self) {
+              value = self[index];
+              result = boundFunction(value, index, O);
+              if (TYPE) {
+                if (IS_MAP) target[index] = result; // map
+                else if (result) switch (TYPE) {
+                  case 3: return true;              // some
+                  case 5: return value;             // find
+                  case 6: return index;             // findIndex
+                  case 2: push.call(target, value); // filter
+                } else if (IS_EVERY) return false;  // every
+              }
+            }
+            return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : target;
+          };
+        };
+
+        module.exports = {
+          // `Array.prototype.forEach` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.foreach
+          forEach: createMethod(0),
+          // `Array.prototype.map` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.map
+          map: createMethod(1),
+          // `Array.prototype.filter` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.filter
+          filter: createMethod(2),
+          // `Array.prototype.some` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.some
+          some: createMethod(3),
+          // `Array.prototype.every` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.every
+          every: createMethod(4),
+          // `Array.prototype.find` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.find
+          find: createMethod(5),
+          // `Array.prototype.findIndex` method
+          // https://tc39.github.io/ecma262/#sec-array.prototype.findIndex
+          findIndex: createMethod(6)
+        };
+
+      })()
+    </script>
+  </body>
+</html>
+

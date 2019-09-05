@@ -243,6 +243,29 @@
           // eq(toFixed(2.345, -2.5),toFixed(2.345, 2.99));
           // eq(toFixed(2.345, -3.99),2.345.toFixed(4));
 
+          var toFixedByStringManipulation = lib.toFixedByStringManipulation = function(value, precision) {
+            precision = checkPrecision(precision, lib.settings.number.precision);
+
+            var valueString = "" + lib.unformat(value);
+            var splitByDotArray = valueString.split(".");
+            var moveDotRightByPrecisionSplit0 = splitByDotArray[1].substring(0, precision);
+            var moveDotRightByPrecisionSplit1 = splitByDotArray[1].substring(precision,);
+            var valuePrecisionWithoutPower = splitByDotArray[0] + moveDotRightByPrecisionSplit0 + "." + moveDotRightByPrecisionSplit1;
+            var roundValue = Math.round(valuePrecisionWithoutPower) + "";
+            var moveDotLeftByPrecisionSplit0 = roundValue.substring(0, roundValue.length-precision);
+            var moveDotLeftByPrecisionSplit1 = roundValue.substring( roundValue.length-precision,);
+            var valueDividePower = moveDotLeftByPrecisionSplit0 + "." + moveDotLeftByPrecisionSplit1;
+            return Number(valueDividePower).toFixed(precision);
+            // return (Math.round(valuePrecisionWithoutPower) / power).toFixed(precision);
+          };
+          // 0.615, 10.235, and 1.005
+          debugger;
+          toFixed(1.005, 2); 
+          toFixedByStringManipulation(1.005, 2); 
+          toFixed(10.235, 2.359);
+          toFixedByStringManipulation(10.235, 2.359);
+
+
           var formatNumber = lib.formatNumber = lib.format = function(number, precision, thousand, decimal) {
             // new pattern : recursion again
             if (isArray(number)) {
