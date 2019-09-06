@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.some</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      Array.prototype.mySome = function(callback){
+        if (typeof callback !== 'function'){
+          throw new TypeError(callback + " is not a function");
+        }
+
+        var array = this;
+        var len = array.length;
+        if (len === 0){
+          return false;
+        }
+
+        if (arguments.length > 1) {
+          var thisArg = arguments[1];
+        } else {
+          var thisArg = undefined;
+        }
+
+        callback = callback.bind(thisArg);
+
+        for (i = 0; i < len; i++){
+          if (array.hasOwnProperty(i) && callback(array[i], i, array)) {
+            return true
+          }
+        }
+        return false;
+      }
+
+
+      tests({
+        "[].some(function(){return true}) => false": function(){
+          var res = [].mySome(function(){
+            return true});
+          eq(false, res);
+        },
+
+        "[1,2,3].some() => TypeError on callback": function(){
+
+          console.groupCollapsed('checks');
+          
+          try{
+            [1,2,3].mySome();
+          } catch(e){
+            console.log("typeof e: ", typeof e);
+            console.log("String(e)", String(e));
+            eq(true, String(e).includes('TypeError'));
+          }
+
+          console.groupEnd();
+        }, 
+
+        "[1,2,3].some(function(el,idx,arr){return el>2}) => true (a boolean)": function(){
+          console.groupCollapsed('checks');
+          
+          var res = [1,2,3].mySome(function(el,idx,arr){
+            if (el > 2) {
+
+              console.log('the final invoking el should be 3 : ', eq(3, el));
+              console.log('the final invoking idx should be 2 : ', eq(2, idx));
+              console.log('the arr is the same : ', arrayEq([1,2,3], arr));
+            }
+            return el>2;
+          });
+
+          console.log('result should be a bool and true : '); eq(true, res);
+          console.groupEnd();
+        },
+
+        "[1,2,3].some(function(el){return el > this.num}, {num:0}) => true (only invoking element at idx 0": function(){
+
+          console.groupCollapsed('checks');
+          var thisArg = {num:0};
+          var res = [1,2,3].mySome(function(el){
+            
+            console.log('only el === 1 is invoked: ', eq(1, el));
+            console.log('this.num === thisArg.num: ', eq(thisArg.num, this.num));
+            return el > this.num;
+          }, thisArg);
+
+          console.groupEnd();
+
+        },
+        
+        "[1,2,,3].some(function(el,idx,arr){return el>2}) => true (numIters: 3 not 4, missing value won't invoke)": function(){
+          var numIters = 0;
+          var res = [1,2,,3].mySome(function(el){
+            numIters++;
+            return el>2;
+          });
+          eq(3, numIters);
+        },
+
+        "[1,2,3].some(function(el,idx,arr){arr.push(4); return el>3;}) => true (numIter: 4 not 3)": function(){
+          console.groupCollapsed('checks');
+          var numIters = 0;
+          var res = [1,2,3].mySome(function(el,idx,arr){
+            numIters++;
+            if (idx === 0){
+
+              arr.pop()
+              arr.push(4); 
+              arr.push(5); 
+              console.log('the length of mutated arr is no longer 3, but 4 : ', eq(4, arr.length));
+            }
+            return el>3;
+          });
+          console.log("res is true : ", eq(true, res));
+          console.log('the numIters is 3 not 4 : ', eq(3, numIters));
+
+          console.groupEnd();
+        },
+      })
+    </script>
+  </body>
+</html>
