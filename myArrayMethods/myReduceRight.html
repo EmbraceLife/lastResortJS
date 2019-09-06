@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.reduceRight</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      Array.prototype.myReduceRight = function(callback/* , initialValue */) {
+        var array = this;
+
+        var len = array.length;
+
+        if (typeof callback !== 'function') {
+          throw new TypeError(callback + " is not a function");
+        }
+        /* [1,2,3].reduceRight() => TypeError */
+
+        if (len === 0 && arguments.length === 1) {
+          throw new TypeError("array is empty and initialValue is not available.");
+        }
+        /* [].reduceRight(function(){}) => TypeError */
+
+        var indexBack = len - 1;
+        /* [1,2,3].reduceRight(function(initial, el, idx, arr){arr.unshift(3); return initial = initial - el;}, 0) => 0-3-1-3=-7 */
+        var accumulator; /* initialValue or first value of the array */
+        
+        if (arguments[1] !== undefined) {
+          // if arguments[1] === 0, then we can't use `if (arguments[1])`, and must use !== undefined
+          accumulator = arguments[1];
+          /* [].reduceRight(function(){}, 1) => 1 */
+
+        } else {
+
+          var idxValPresent = false;
+
+          while (!idxValPresent && indexBack >= 0) {
+            var indexBackStr = String(indexBack);
+            idxValPresent = array.hasOwnProperty(indexBackStr);
+
+            if (idxValPresent) {
+              accumulator = array[indexBackStr];
+            }
+            /* [,2,3].reduceRight(function(initial, el, idx, arr){return initial = initial + el;}) => 3 */
+
+            indexBack--;
+          }
+
+          if (!idxValPresent) {
+            throw new TypeError("array is full of holes/missing values")
+          }
+          /* [,,].reduceRight(function(){}) => TypeError on holes */
+        }
+
+        // continue moving towards left element
+        while(indexBack >= 0){
+          indexBackStr = String(indexBack);
+          idxValPresent = array.hasOwnProperty(indexBackStr);
+          if (idxValPresent) {
+            accumulator = callback.call(undefined, accumulator, array[indexBackStr], indexBack, array);
+          }
+          indexBack--;
+        }
+
+        return accumulator;
+        
+      }
+
+      tests({
+        '[1,2,3].reduceRight() => TypeError': function(){
+          console.groupCollapsed('checks');
+          try {
+
+            var res = [1,2,3].myReduceRight();
+          } catch(e){
+            console.log(String(e));
+            console.log('String(e).includes("TypeError")', eq(true, String(e).includes("TypeError")));;
+          }
+          console.groupEnd();
+        },
+
+        '[].reduceRigth(function(){}) => TypeError': function(){
+          console.groupCollapsed('checks');
+          try {
+
+            var res = [].myReduceRight(function(){});
+          } catch(e){
+            console.log(String(e));
+            console.log('String(e).includes("TypeError")', eq(true, String(e).includes("TypeError")));;
+          }
+          console.groupEnd();
+        },
+
+        '[].reduceRight(function(){}, 1) => 1': function(){
+          console.groupCollapsed('checks');
+
+          var res = [].myReduceRight(function(){}, 1);
+          console.log('the result should be 1 : ', eq(1, res));
+          console.groupEnd();
+        },
+
+        '[,,].reduceRight(function(){}) => TypeError on holes ': function(){
+          console.groupCollapsed('checks');
+          
+          try{
+
+            var res = [,,].myReduceRight(function(){});
+          } catch(e) {
+            console.log('e message : ', String(e));
+            console.log("this is error cause array full of holes : ", String(e).includes("full of holes"));  
+          }
+          console.groupEnd();
+        },
+
+        '[1,2,,].reduceRight(function(initial, el, idx, arr){return initial = initial + el;}) => 3': function(){
+          console.groupCollapsed('checks');
+          
+          var res = [1,2,,].myReduceRight(function(initial, el, idx, arr){
+            console.log('the initial value is arr[1] from the right: ', eq(initial, arr[1]));
+            console.log('the first el added with initial is arr[0], which is 1: ', eq(1, el));
+            return initial = initial + el;
+          });
+          console.log('the result is 2 + 1 = 3 : ', eq(3, res));
+          console.groupEnd();
+        },
+
+        '[1,2,3].reduceRight(function(initial, el, idx, arr){arr.unshift(3); return initial = initial - el;}, 0) => 0-3-1-3=-7': function(){
+          console.groupCollapsed('checks');
+          
+          var res = [1,2,3].myReduceRight(function(initial, el, idx, arr){
+            arr.unshift(3); 
+            return initial = initial - el;
+          }, 0);
+          console.log('the result should be 0 - 3 - 1 - 3 = -7 : ', eq(-7, res));
+          console.groupEnd();
+        },
+
+
+      });
+    </script>
+  </body>
+</html>

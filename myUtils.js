@@ -92,33 +92,12 @@
 })();  
 
 (function createMyDebugger(){
-  function sayHi() {
-    console.log('hello');
-  }
-  // runWithDebugger(sayHi); /* should start to debug on sayHi */
-    
-  function sayHiTo(name) {
-    console.log('hi ' + name);
-  }
-  // runWithDebugger(sayHiTo, ['Daniel']); /* should start to debug on sayHiTo */
-
-  function sayFullName(first, last) {
-    console.log(first + ' '  + last);
-  }
-  // runWithDebugger(sayFullName, ['Daniel', 'L']); /* should start to debug on sayFullName */
 
   function runWithDebugger(callback, argsArray, compare){
-    // var oldArgs = argsArray; /* a deep copy is needed */
+
     debugger;
     var res = callback.apply(this, argsArray);
-    console.groupCollapsed('checks');
-    // console.log("before execution the arguments are: ", argsArray);
-    console.log("returned value is : ", res);
-    console.log("arguments after the execution become: ", argsArray);
-    // if (Object.keys(compare)>0) {
-    //   console.log("the returned object and ")
-    // }
-    console.groupEnd();
+
   }
 
   if (typeof myLibs !== undefined) {
@@ -134,7 +113,7 @@
 
 })();
 
-(function createTests(){
+(function createTestingFramework(){
   var SimpleTest = {
 
     run: function(tests) {
@@ -163,11 +142,11 @@
         }, 0);
   
         function renderPage(successes, failures){
+          
           document.body.style.backgroundColor = (failures == 0 ? '#99ff99' : '#ff9999');
+          
           var updateText = (successes + failures) + " tests : " + successes + ((successes > 1) ? " successes, " : " success, ") + failures + ((failures > 1) ? " failures." : " failure.");
-          // var testSection = document.createElement("h1");
-          // testSection.innerText = msg;
-          // document.body.appendChild(testSection);
+          
           var updateEl = document.createElement("h1");
           updateEl.innerText = updateText;
           document.body.appendChild(updateEl);
