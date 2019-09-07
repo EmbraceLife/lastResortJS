@@ -40,7 +40,8 @@ jQuery(function ($) {
 
 	var App = {
 		init: function () {
-			this.todos = util.store('todos-jquery');
+      this.todos = util.store('todos-jquery');/* comment out util.store should not break App except can't remember previous input */
+      // this.todos = [];
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.bindEvents();
@@ -70,8 +71,15 @@ jQuery(function ($) {
 			$('.toggle-all').prop('checked', this.getActiveTodos().length === 0);
 			this.renderFooter();
 			$('.new-todo').focus();
-			util.store('todos-jquery', this.todos);
-		},
+      
+    },
+    
+    // separate render and store
+    renderAndSave: function () {
+			this.render(); 
+			util.store('todos-jquery', this.todos); 
+    },
+    
 		renderFooter: function () {
 			var todoCount = this.todos.length;
 			var activeTodoCount = this.getActiveTodos().length;
@@ -91,7 +99,7 @@ jQuery(function ($) {
 				todo.completed = isChecked;
 			});
 
-			this.render();
+			this.renderAndSave();
 		},
 		getActiveTodos: function () {
 			return this.todos.filter(function (todo) {
@@ -116,7 +124,7 @@ jQuery(function ($) {
 		},
 		destroyCompleted: function () {
 			this.todos = this.getActiveTodos();
-			this.render();
+			this.renderAndSave();
 		},
 		// accepts an element from inside the `.item` div and
 		// returns the corresponding index in the `todos` array
@@ -147,12 +155,12 @@ jQuery(function ($) {
 
 			$input.val('');
 
-			this.render();
+			this.renderAndSave();
 		},
 		toggle: function (e) {
 			var i = this.getIndexFromEl(e.target);
 			this.todos[i].completed = !this.todos[i].completed;
-			this.render();
+			this.renderAndSave();
 		},
 		editingMode: function (e) {
 			var $input = $(e.target).closest('li').addClass('editing').find('.edit');
@@ -185,13 +193,14 @@ jQuery(function ($) {
 				this.todos[this.getIndexFromEl(el)].title = val;
 			}
 
-			this.render();
+			this.renderAndSave();
 		},
 		destroy: function (e) {
 			this.todos.splice(this.getIndexFromEl(e.target), 1);
-			this.render();
+			this.renderAndSave();
 		}
 	};
 
 	App.init();
 });
+// fold level 1: jQuery(function($){...}) ?
