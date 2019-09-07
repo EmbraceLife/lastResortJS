@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.concat</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      Array.prototype.myConcat = function(/* array1, array2, ... */){
+        var array = Object(this);
+
+        var returnedArray = [];
+
+        var indexOfReturnedArray = 0;
+
+        var items = [];
+        items.length = 1 + arguments.length;
+        for (var i = 0; i < items.length; i++) {
+          items[i] = (i === 0) ? array : arguments[i - 1]
+        }
+        /* test source up to now: 
+        [1,2,3].myConcat(4,5) => items : [[1,2,3], 4,5]*/
+
+        while(items.length > 0) {
+          var currentFirstEl = items.shift();
+          
+          var currentFirstElIsArray = Array.isArray(currentFirstEl);
+
+          if (currentFirstElIsArray) {
+            var indexOfCurrentFirstEl = 0;
+            var lenOfCurrentFirstEl = currentFirstEl.length;
+
+            if (indexOfReturnedArray + lenOfCurrentFirstEl > 2**53 - 1) {
+              throw new TypeError("the length of current item array is way too large");
+            }
+
+            while(indexOfCurrentFirstEl < lenOfCurrentFirstEl) {
+              var indexStr = String(indexOfCurrentFirstEl);
+              var valueAtIndexIsNotMissing = currentFirstEl.hasOwnProperty(indexStr);
+              if (valueAtIndexIsNotMissing) {
+                var valueAtIndex = currentFirstEl[indexStr];
+                returnedArray[indexOfReturnedArray] = valueAtIndex;
+              }
+              indexOfReturnedArray++;
+              indexOfCurrentFirstEl++;
+            }
+
+          } else {
+
+            if (indexOfReturnedArray >= 2**53-1) {
+              throw new TypeError("returned array's length is >= 2**53-1");
+            }
+
+            returnedArray[String(indexOfReturnedArray)] = currentFirstEl;
+            indexOfReturnedArray++;
+
+          }
+        }
+        // in case the last value added to the returned array is empty
+        returnedArray.length = indexOfReturnedArray;
+        /* [1,2,3].concat([4,,]) => [1,2,3,4,,]*/
+
+        return returnedArray;
+      }
+
+      tests({
+        '[].concat() => []': function(){
+          console.groupCollapsed('checks');
+          var res = [].myConcat();
+          console.log('res should be [] : ', arrayEq([], res));
+          console.groupEnd();
+        },
+
+        '[,,,].concat() => []': function(){
+          console.groupCollapsed('checks');
+          var res = [,,,].myConcat();
+          console.log('res should be [,,,] : ', arrayEq([,,,], res));
+          console.groupEnd();
+        },
+
+        "[1,2,3].concat(); => [1,2,3]": function(){
+          console.groupCollapsed('checks');
+          var res = [1,2,3].myConcat();
+          console.log('returned array should be [1,2,3] : ', arrayEq([1,2,3], res));
+          console.groupEnd();
+        },
+        
+        "[1,2,3].concat(4,5); => [1,2,3,4,5]": function(){
+          console.groupCollapsed('checks');
+          var res = [1,2,3].myConcat(4,5);
+          console.log('returned array should be [1,2,3,4,5] : ', arrayEq([1,2,3,4,5], res));
+          console.groupEnd();
+        },
+
+        "[1,2,3].concat([4,5]); => [1,2,3,4,5]": function(){
+          console.groupCollapsed('checks');
+          var res = [1,2,3].myConcat([4,5]);
+          console.log('returned array should be [1,2,3,4,5] : ', arrayEq([1,2,3,4,5], res));
+          console.groupEnd();
+        },
+
+        "[1,2,3].concat([4,,]); => [1,2,3,4,,]": function(){
+          console.groupCollapsed('checks');
+          var res = [1,2,3].myConcat([4,,]);
+          console.log('returned array should be [1,2,3,4,,] : ', arrayEq([1,2,3,4,,], res));
+          console.groupEnd();
+        },
+      });
+    </script>
+  </body>
+</html>
