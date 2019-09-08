@@ -506,10 +506,29 @@ jQuery(function ($) {
      * 1. remove the targeted todo from this.todos
      * 2. render the page and update this.todos for localStorage
      */
-		destroy: function (e) {
-			this.todos.splice(this.getIndexFromEl(e.target), 1);
-			this.renderAndSave();
-		}
+		// destroy: function (e) {
+		// 	this.todos.splice(this.getIndexFromEl(e.target), 1);
+		// 	this.renderAndSave();
+    // }, 
+    
+    destroy: function(e) {
+      var indexArray = this.getIndexFromEl(e.target);
+      var searchTargetTodo = "";
+      for (var i = 0; i < indexArray.length; i++){
+        var index = indexArray[i];
+
+        if (i === indexArray.length - 1){
+
+          searchTargetTodo = searchTargetTodo + ".splice(" + index + ", 1)";
+        } else {
+
+          searchTargetTodo = searchTargetTodo + "[" + index + "]";
+        }
+      }
+      var removeTargetTodoStr = 'this.todos' + searchTargetTodo;
+      eval(removeTargetTodoStr);
+      this.renderAndSave();
+    }
 	};
 
 	App.init();
