@@ -8,7 +8,8 @@ jQuery(function ($) {
 	});
 
 	var ENTER_KEY = 13;
-	var ESCAPE_KEY = 27;
+  var ESCAPE_KEY = 27;
+  var SHIFT_KEY = 16;
 
 	var util = {
 		uuid: function () {
@@ -74,7 +75,7 @@ jQuery(function ($) {
      *  4.5 if sub-element with class destroy is triggered by click, run destroy method; 
      */
 		bindEvents: function () {
-			$('.new-todo').on('keyup', this.create.bind(this));
+			$('.new-todo').on('keyup', this.createASubtodo.bind(this)); 
 			$('.toggle-all').on('change', this.toggleAll.bind(this));
 			$('.footer').on('click', '.clear-completed', this.destroyCompleted.bind(this));
 			$('.todo-list')
@@ -94,13 +95,38 @@ jQuery(function ($) {
      * 6. let cursor active at element with class new-todo
      */
 		render: function () {
-			var todos = this.getFilteredTodos();
-			$('.todo-list').html(this.todoTemplate(todos));
-			$('.main').toggle(todos.length > 0);
+			var todosRender = this.getFilteredTodos();
+      // $('.todo-list').html(this.todoTemplate(todos));
+      $('.todo-list').html(this.renderNestedTodos(todosRender, "", ""));
+			$('.main').toggle(todosRender.length > 0);
 			$('.toggle-all').prop('checked', this.getActiveTodos().length === 0);
 			this.renderFooter();
 			$('.new-todo').focus();
       
+    },
+
+    /** todos
+     * 1. delete is not working properly for nested todos 
+     *  1. idea: it could be my added li without id?
+     */
+
+    /** renderNestedTodos
+     * 1. recursive on diving into the last element which is an array
+     * 2. build up left and right strings along the way
+     * 3. at the bottom, add all strings up
+     */
+    renderNestedTodos: function(todos, left, right){
+      if (Array.isArray(todos[todos.length-1])){
+        var part1 = this.todoTemplate(todos.slice(0, todos.length-1));
+        var leftLiUl = "<li><ul>";
+        var rightLiUl = "</ul></li>";
+        left = left + part1 + leftLiUl;
+        right = rightLiUl + right;
+        return this.renderNestedTodos(todos[todos.length-1], left, right);
+      } else {
+        part1 = this.todoTemplate(todos);
+        return left + part1 + right;
+      }
     },
     
     /** renderAndSave
@@ -244,6 +270,55 @@ jQuery(function ($) {
 			this.renderAndSave();
     },
     
+    /** create
+     * 1. get the target element
+     * 2. get the value (input text) of the element and trim it
+     * 3. if the key pressed at the target element is not enter key nor shift key nor the value (input text) is provided, then return nothing
+     * 4. run diveInArrayWithEnterOrShift to dive into the lowest array
+     *  4.1 if enter key is pressed, then push the typed todo onto the lowest array
+     *  4.2 if shift key is pressed, then push an array wrapped around the typed todo onto the lowest array
+     * 5. remove the text value of the target element
+     * 6. render the page and update this.todos for localStorage
+     */
+		createASubtodo: function (e) {
+			var $input = $(e.target);
+      var val = $input.val().trim();
+      
+      if (![ENTER_KEY+"", SHIFT_KEY+""].includes(e.which+"") || !val) {
+			// if (e.which !== ENTER_KEY && e.which !== SHIFT_KEY || !val) {
+				return;
+      }
+
+        function diveInArrayWithEnterOrShift(arr){
+
+          if (Array.isArray(arr[arr.length-1])){
+            return diveInArrayWithEnterOrShift(arr[arr.length-1]);
+            
+  
+          } else if (e.which === ENTER_KEY) {
+  
+            arr.push({
+              id: util.uuid(),
+              title: val,
+              completed: false
+            });
+          } else if (e.which === SHIFT_KEY){
+
+            arr.push([{
+              id: util.uuid(),
+              title: val,
+              completed: false
+            }]);
+          }
+        }
+
+      diveInArrayWithEnterOrShift(this.todos);
+
+			$input.val('');
+
+			this.renderAndSave();
+    },
+
     /** toggle
      * 1. get the index of todo which is at the target element
      * 2. reverse the value of 'completed' property of the todo which is at the target element 
@@ -293,7 +368,9 @@ jQuery(function ($) {
      * 2. make it a jQuery object
      * 3. trim the text value of the target
      * 4. if the target's property 'abort' is true, then set it false
-     * 5. if the target text value is 
+     * 5. if the target text value is empty, then run destroy on the target element
+     * 6. otherwise, assign the input value to the title of the targeted todo 
+     * 7. render the page and update this.todos for localStorage
      */
 		update: function (e) {
 			var el = e.target;
@@ -310,7 +387,12 @@ jQuery(function ($) {
 			}
 
 			this.renderAndSave();
-		},
+    },
+    
+    /** destroy
+     * 1. remove the targeted todo from this.todos
+     * 2. render the page and update this.todos for localStorage
+     */
 		destroy: function (e) {
 			this.todos.splice(this.getIndexFromEl(e.target), 1);
 			this.renderAndSave();
