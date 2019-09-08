@@ -527,6 +527,22 @@ jQuery(function ($) {
       }
       var removeTargetTodoStr = 'this.todos' + searchTargetTodo;
       eval(removeTargetTodoStr);
+
+      function diveInRemoveEmptyArray(todos){
+
+        for (var i = 0; i < todos.length; i++) {
+
+          if (Array.isArray(todos[i]) && todos[i].length === 0) {
+            todos.splice(i, 1)
+
+          } else if (Array.isArray(todos[i]) && todos[i].length > 0){
+            
+            diveInRemoveEmptyArray(todos[i]);
+          }
+        }
+      }
+      diveInRemoveEmptyArray(this.todos);
+
       this.renderAndSave();
     }
 	};
