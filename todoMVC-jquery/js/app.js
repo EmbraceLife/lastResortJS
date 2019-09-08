@@ -58,7 +58,7 @@ jQuery(function ($) {
 			new Router({
 				'/:filter': function (filter) {
 					this.filter = filter;
-					this.render();
+					this.render(); // no update to the localStorage
 				}.bind(this)
 			}).init('/all');
     },
@@ -147,19 +147,46 @@ jQuery(function ($) {
      *  3.3 count of completed todos
      *  3.4 the value of filter
      */
-		renderFooter: function () {
-			var todoCount = this.todos.length;
-			var activeTodoCount = this.getActiveTodos().length;
+		// renderFooter: function () {
+
+		// 	var todoCount = this.todos.length;
+		// 	var activeTodoCount = this.getActiveTodos().length;
+		// 	var template = this.footerTemplate({
+		// 		activeTodoCount: activeTodoCount,
+		// 		activeTodoWord: util.pluralize(activeTodoCount, 'item'),
+		// 		completedTodos: todoCount - activeTodoCount,
+		// 		filter: this.filter
+		// 	});
+
+    //   $('.footer').toggle(todoCount > 0).html(template);
+    // },
+    
+    renderFooter: function () {
+      var totalCount = 0;
+      function countTodos(todos){
+        for (var i = 0; i < todos.length; i++){
+          if (!Array.isArray(todos[i])){
+            totalCount++;
+          } else {
+            countTodos(todos[i]);
+          }
+        }
+      }
+      countTodos(this.todos);
+
+      var completedTodoCount = this.getCompletedTodos(this.todos).length;
+
 			var template = this.footerTemplate({
-				activeTodoCount: activeTodoCount,
-				activeTodoWord: util.pluralize(activeTodoCount, 'item'),
-				completedTodos: todoCount - activeTodoCount,
+				completedTodos: completedTodoCount,
+				activeTodoCount: totalCount - completedTodoCount,
+				activeTodoWord: util.pluralize(totalCount - completedTodoCount, 'item'),
 				filter: this.filter
 			});
 
-			$('.footer').toggle(todoCount > 0).html(template);
+      $('.footer').toggle(totalCount > 0).html(template);
     },
-    
+
+
     /** toggleAll: 
      * 1. get the value of the property 'checked' for the target element
      * 2. assign the value to the property 'completed' of each todo
@@ -178,21 +205,54 @@ jQuery(function ($) {
     /** getActiveTodos
      * 1. filter out (return) the todos whose value of `completed` is false
      */
-		getActiveTodos: function () {
-			return this.todos.filter(function (todo) {
-				return !todo.completed;
-			});
+		// getActiveTodos: function () {
+		// 	return this.todos.filter(function (todo) {
+		// 		return !todo.completed;
+		// 	});
+    // },
+
+    getActiveTodos: function () {
+      var activeTodos = [];
+
+      function diveIn(todos, activeTodos){
+        for (var i = 0; i <todos.length; i++){
+          if (todos[i].completed === false) {
+            activeTodos.push(todos[i])
+          } else if (Array.isArray(todos[i])) {
+            activeTodos.push([]);
+            return diveIn(todos[i], activeTodos[activeTodos.length-1]);
+          }
+        }
+      }
+      diveIn(this.todos, activeTodos);
+      return activeTodos;
     },
     
     /** getCompletedTodos
      * 1. filter out and return the todos whose `completed` value is true
      */
-		getCompletedTodos: function () {
-			return this.todos.filter(function (todo) {
-				return todo.completed;
-			});
-    },
+		// getCompletedTodos: function () {
+		// 	return this.todos.filter(function (todo) {
+		// 		return todo.completed;
+		// 	});
+    // },
     
+    getCompletedTodos: function () {
+      var completedTodos = [];
+
+      function diveIn(todos){
+        for (var i = 0; i <todos.length; i++){
+          if (todos[i].completed) {
+            completedTodos.push(todos[i])
+          } else if (Array.isArray(todos[i])) {
+            return diveIn(todos[i]);
+          }
+        }
+      }
+      diveIn(this.todos);
+      return completedTodos;
+    },
+
     /** getFilteredTodos
      * 1. if `this.filter` is 'active', return active todos
      * 2. if `this.filter` is 'completed', return completed todos
@@ -228,16 +288,50 @@ jQuery(function ($) {
      * 3. get the count of todos
      * 4. loop through the todos to find the index of the todo whose id matches the id value above
      */
+    // getIndexFromEl: function (el) {
+		// 	var id = $(el).closest('li').data('id');
+		// 	var todos = this.todos;
+		// 	var i = todos.length;
+
+		// 	while (i--) {
+		// 		if (todos[i].id === id) {
+		// 			return i;
+		// 		}
+		// 	}
+    // },
+
+    /** idea: use id instead of idx to find the todo */
     getIndexFromEl: function (el) {
 			var id = $(el).closest('li').data('id');
 			var todos = this.todos;
-			var i = todos.length;
+      var todosLen = todos.length;
+      var indexArray = [];
 
-			while (i--) {
-				if (todos[i].id === id) {
-					return i;
-				}
-			}
+      function diveIn(arr, arrLen){
+        for (var i = 0; i < arrLen; i++) {
+          if (!Array.isArray(arr[i]) && arr[i].id === id) {
+            indexArray.push(i)
+            return indexArray;
+          } else if (Array.isArray(arr[i])) {
+            indexArray.push(i);
+            return diveIn(arr[i], arr[i].length)
+          }
+        }
+      }
+      
+      return diveIn(todos, todosLen);
+    },
+
+    getTodoFromIndexArray: function(indexArray){
+      var numlevels = indexArray.length;
+      var searchTodoStr = "this.todos";
+
+      for (var i = 0; i < numlevels; i++) {
+        // evalStr = evalStr+"[]";
+        searchTodoStr = searchTodoStr + "[" + indexArray[i] + "]";
+      }
+
+      return eval(searchTodoStr);
     },
     
     /** create
@@ -324,12 +418,21 @@ jQuery(function ($) {
      * 2. reverse the value of 'completed' property of the todo which is at the target element 
      * 3. render the page and update this.todos for localStorage
      */
-		toggle: function (e) {
-			var i = this.getIndexFromEl(e.target);
-			this.todos[i].completed = !this.todos[i].completed;
+		// toggle: function (e) {
+    //   var i = this.getIndexFromEl(e.target);      
+		// 	this.todos[i].completed = !this.todos[i].completed;
+		// 	this.renderAndSave();
+    // },
+    
+    /** toggleWithTargetedTodo */
+    toggle: function (e) {
+      var i = this.getIndexFromEl(e.target);
+      var targetedTodo = this.getTodoFromIndexArray(i);
+      targetedTodo.completed = !targetedTodo.completed;
+			// this.todos[i].completed = !this.todos[i].completed;
 			this.renderAndSave();
     },
-    
+
     /** editingMode
      * 1. get the target element's closest li element
      *  1.1 then add class editing to it
@@ -383,7 +486,10 @@ jQuery(function ($) {
 				this.destroy(e);
 				return;
 			} else {
-				this.todos[this.getIndexFromEl(el)].title = val;
+        var indexArrayTarget = this.getIndexFromEl(el)
+        var targetedTodo = this.getTodoFromIndexArray(indexArrayTarget);
+        targetedTodo.title = val;
+				// this.todos[this.getIndexFromEl(el)].title = val;
 			}
 
 			this.renderAndSave();
