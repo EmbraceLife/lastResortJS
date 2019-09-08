@@ -218,10 +218,17 @@ jQuery(function ($) {
         for (var i = 0; i <todos.length; i++){
           if (todos[i].completed === false) {
             activeTodos.push(todos[i])
-          } else if (Array.isArray(todos[i])) {
+          } else if (Array.isArray(todos[i]) && todos[i].length === 0) {
+          
+          } else if (Array.isArray(todos[i]) && todos[i].length > 0) {
             activeTodos.push([]);
-            return diveIn(todos[i], activeTodos[activeTodos.length-1]);
+            diveIn(todos[i], activeTodos[activeTodos.length-1]);
           }
+        }
+
+        console.log(activeTodos);
+        if (Array.isArray(activeTodos[activeTodos.length-1]) && activeTodos[activeTodos.length-1].length === 0){
+          activeTodos.length = activeTodos.length - 1;
         }
       }
       diveIn(this.todos, activeTodos);
