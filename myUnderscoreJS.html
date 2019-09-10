@@ -56,21 +56,25 @@
       /* surrogate prototype methods, see later usages */
       var Ctor = function(){};
 
-      // Create a safe reference to the Underscore object for use below.
+      /** _(obj) => return _ as an object with a property `_wrapped: obj`
+       * 1. if obj is an object of _, return obj
+       * 2. if this is not an object of _, run new_(obj)
+       * 3. recursion step in
+       */ 
       var _ = function(obj) {
         if (obj instanceof _) return obj;
         if (!(this instanceof _)) return new _(obj);
         this._wrapped = obj;
       };
-      /** save obj into an object under the name _
+      
+      /** tests
        * debugger;
-       * myDebugger(_, ['a string']);/*  => object with name _ {_wrapped: 'a string'}
-       * myDebugger(_, [Ctor]); /* => object with name _ {_wrapped: Ctor} 
+       * _('a string');
        */
 
-      //
 
-      /** official 
+
+      /** official doc
        * Export the Underscore object for **Node.js**, with
        * backwards-compatibility for their old module API. If we're in
        * the browser, add `_` as a global object.
@@ -92,12 +96,24 @@
       // Current version.
       _.VERSION = '1.9.1';
 
-      // Internal function that returns an efficient (for current engines) version
-      // of the passed-in callback, to be repeatedly applied in other Underscore
-      // functions.
+      /** official
+       * Internal function that returns an efficient (for current engines) version
+       * of the passed-in callback, to be repeatedly applied in other Underscore
+       * functions. 
+      */
+
+      /** call func with different context and args
+        * return func if context undefined
+        * return a function to call func with context and one arg
+        * return a function to call func with context and el, idx, collection
+        * return a function to call func with context and accumulator, el, idx, collection
+        * return a function to apply func with context and arguments (array)
+      */ 
       var optimizeCb = function(func, context, argCount) {
         if (context === void 0) return func;
+        // void 0 === undefined => true https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void#Description
         switch (argCount == null ? 3 : argCount) {
+          // null == null => true; undefined == null => true
           case 1: return function(value) {
             return func.call(context, value);
           };
@@ -109,39 +125,88 @@
             return func.call(context, accumulator, value, index, collection);
           };
         }
+        // when argCount is > 4, return this function below
         return function() {
           return func.apply(context, arguments);
         };
       };
+      
+      /** tests
+       * // debugger;
+       * optimizeCb(function(){}, undefined) => function(){}
+       * optimizeCb(function(){}, {context: "A"}) => return function at case 3
+       * optimizeCb(function(){}, {context: "A"}, 4) => return case 4 function
+       * optimizeCb(function(){}, {context: "A"}, 1) => return case 1 function
+       * optimizeCb(function(){}, {context: "A"}, 5) => return the function in the end
+       */
 
       var builtinIteratee;
 
-      // An internal function to generate callbacks that can be applied to each
-      // element in a collection, returning the desired result — either `identity`,
-      // an arbitrary callback, a property matcher, or a property accessor.
-      var cb = function(value, context, argCount) {
+      /** OFFICIAL
+       // An internal function to generate callbacks that can be applied to each
+       // element in a collection, returning the desired result — either `identity`,
+       // an arbitrary callback, a property matcher, or a property accessor.
+       * 
+       */ 
+      
+
+      /** cb(value, context, argCount)
+       * 1. property accessor: if value is not undefined, null, function, object, the run _.property to get either obj[value] or obj[value[0]][value[1]][value[2]]...
+       * 2. run callback: if value is a function, then run optimizeCb(value, context, argCount)
+       * 3. identity function: if value is undefined or null, run _.identity(val) to return val
+       * 4. property matcher: if value is no array but is object, run _.matcher(value) to return a func which when you run func(obj) it checks whether obj and value match or not
+       * 5. if builtinIteratee is undefined, assign cb to it and make Infinity as default argCount
+       */ 
+       var cb = function(value, context, argCount) {
         if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
         if (value == null) return _.identity;
         if (_.isFunction(value)) return optimizeCb(value, context, argCount);
         if (_.isObject(value) && !_.isArray(value)) return _.matcher(value);
         return _.property(value);
       };
+      
+      
+      /** tests: run them at the bottom of the library
+        debugger;
+        cb(1, {num:1}, 1);
+       */ 
 
-      // External wrapper for our callback generator. Users may customize
-      // `_.iteratee` if they want additional predicate/iteratee shorthand styles.
-      // This abstraction hides the internal-only argCount argument.
+      /** OFFICIAL
+       * External wrapper for our callback generator. Users may customize
+       * `_.iteratee` if they want additional predicate/iteratee shorthand styles.
+       * This abstraction hides the internal-only argCount argument.
+      */
+      /** _iteratee: call cb(value, context) hiding argument argCount
+       * argCount is assigned with Infinity
+       * optimizeCb(value, context, argCount>4) case is applied, 
+       * of course, value here has to be a func
+      */ 
       _.iteratee = builtinIteratee = function(value, context) {
         return cb(value, context, Infinity);
       };
-
-      // Some functions take a variable number of arguments, or a few expected
-      // arguments at the beginning and then a variable number of values to operate
-      // on. This helper accumulates all remaining arguments past the function’s
-      // argument length (or an explicit `startIndex`), into an array that becomes
-      // the last argument. Similar to ES6’s "rest parameter".
+      /** tests
+       // debugger; run it at the bottom of the library
+       * _.iteratee(1, {num:1}) => _.property(1, {num:1})
+       * _.iteratee(function(){}, {num:1}) => optimizedCb(function(){}, {num:1}, Infinity)
+       */ 
+      
+      /** OFFICAL
+       Some functions take a variable number of arguments, or a few expected
+       arguments at the beginning and then a variable number of values to operate
+       on. This helper accumulates all remaining arguments past the function’s
+       argument length (or an explicit `startIndex`), into an array that becomes
+       the last argument. Similar to ES6’s "rest parameter".
+       */ 
+      /** restArguments: call func with unlimited args
+       * 1. startIndex is to separate specified args and unspecified unlimited args
+       * 2. startIndex count from the first unlimited unspecified arg index
+       */ 
       var restArguments = function(func, startIndex) {
         startIndex = startIndex == null ? func.length - 1 : +startIndex;
-        return function() {
+        // use of + here: convert string to number
+        // https://javascript.info/operators#numeric-conversion-unary
+        // func.length === num of args of func
+        return function() { // user input args are given into the () in this function, see tests below
           var length = Math.max(arguments.length - startIndex, 0),
               rest = Array(length),
               index = 0;
@@ -153,6 +218,7 @@
             case 1: return func.call(this, arguments[0], rest);
             case 2: return func.call(this, arguments[0], arguments[1], rest);
           }
+          // once func.length > 3, we take all args of func into a single array args, so we will use apply instead of call
           var args = Array(startIndex + 1);
           for (index = 0; index < startIndex; index++) {
             args[index] = arguments[index];
@@ -161,6 +227,15 @@
           return func.apply(this, args);
         };
       };
+      // debugger;
+      // _.union = restArguments(func(arrays){...}) => startIndex = 0
+      // _.union([1,2], [3,4]) => rest = [[1,2], [3,4]]
+      // debugger;
+      // _.without = restArguments(function(array, otherArrays) {}) => startIndex = 1
+      // _.without([1,2,3,4], 2,4); => args: 2,4 => rest: [2,4]
+      /** tests
+       * restArguments(function(a,b,c){return a+b+c}, 0) =>func.call(this, [a,b,c])
+       */ 
 
       // An internal function for creating a new object that inherits from another.
       var baseCreate = function(prototype) {
@@ -186,7 +261,7 @@
         var length = path.length;
         for (var i = 0; i < length; i++) {
           if (obj == null) return void 0;
-          obj = obj[path[i]];
+          obj = obj[path[i]]; // very similar to recursion
         }
         return length ? obj : void 0;
       };
@@ -590,6 +665,8 @@
       _.without = restArguments(function(array, otherArrays) {
         return _.difference(array, otherArrays);
       });
+      // debugger;
+      // _.without([1,2,3,4], 2,4);
 
       // Produce a duplicate-free version of the array. If the array has already
       // been sorted, you have the option of using a faster algorithm.
@@ -630,6 +707,10 @@
         return _.uniq(flatten(arrays, true, true));
       });
 
+      /** tests
+         // debugger;
+        // _.union([1,2],[3,4]);
+       */ 
       // Produce an array that contains every item shared between all the
       // passed-in arrays.
       _.intersection = function(array) {
@@ -1471,6 +1552,10 @@
           return _.isMatch(obj, attrs);
         };
       };
+      /** tests
+       // debugger;
+       * _.matcher({num: 1})({num:1}) => true
+       */ 
 
       // Run a function **n** times.
       _.times = function(n, iteratee, context) {
@@ -1707,6 +1792,8 @@
         return String(this._wrapped);
       };
 
+      
+      
       // AMD registration happens at the end for compatibility with AMD loaders
       // that may not enforce next-turn semantics on modules. Even though general
       // practice for AMD registration is to be anonymous, underscore registers
