@@ -103,11 +103,11 @@
       */
 
       /** call func with different context and args
-        * return func if context undefined
-        * return a function to call func with context and one arg
-        * return a function to call func with context and el, idx, collection
-        * return a function to call func with context and accumulator, el, idx, collection
-        * return a function to apply func with context and arguments (array)
+        * var a = optimizeCb(func, context, argCount) => if context undefined => a === func
+        * var a = optimizeCb(func, context, argCount) => if argCount:1 => a(value) === func.call(context, value)
+        * var a = optimizeCb(func, context, argCount) => if argCount:3 => a(value, index, collection) === func.call(context, value, index, collection)
+        * var a = optimizeCb(func, context, argCount) => if argCount:4 => a(accumulator, value, index, collection) === func.call(context, accumulator, value, index, collection)
+        * var a = optimizeCb(func, context, argCount) => if argCount > 4 => a() === func.apply(context, arguments) => arguments === ... in a(...)
       */ 
       var optimizeCb = function(func, context, argCount) {
         if (context === void 0) return func;
@@ -146,16 +146,14 @@
        // An internal function to generate callbacks that can be applied to each
        // element in a collection, returning the desired result — either `identity`,
        // an arbitrary callback, a property matcher, or a property accessor.
-       * 
        */ 
-      
 
-      /** cb(value, context, argCount)
+      /** cb(value, context, argCount): recursion + choose a callback based typeof `value`
        * 1. property accessor: if value is not undefined, null, function, object, the run _.property to get either obj[value] or obj[value[0]][value[1]][value[2]]...
        * 2. run callback: if value is a function, then run optimizeCb(value, context, argCount)
        * 3. identity function: if value is undefined or null, run _.identity(val) to return val
        * 4. property matcher: if value is no array but is object, run _.matcher(value) to return a func which when you run func(obj) it checks whether obj and value match or not
-       * 5. if builtinIteratee is undefined, assign cb to it and make Infinity as default argCount
+       * 5. if builtinIteratee is undefined, run _.iteratee(value, context) => cb(value, context, infinity)
        */ 
        var cb = function(value, context, argCount) {
         if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
@@ -164,31 +162,24 @@
         if (_.isObject(value) && !_.isArray(value)) return _.matcher(value);
         return _.property(value);
       };
-      
-      
-      /** tests: run them at the bottom of the library
-        debugger;
-        cb(1, {num:1}, 1);
-       */ 
 
       /** OFFICIAL
        * External wrapper for our callback generator. Users may customize
        * `_.iteratee` if they want additional predicate/iteratee shorthand styles.
        * This abstraction hides the internal-only argCount argument.
       */
-      /** _iteratee: call cb(value, context) hiding argument argCount
-       * argCount is assigned with Infinity
-       * optimizeCb(value, context, argCount>4) case is applied, 
-       * of course, value here has to be a func
+      /** _iteratee: indirectly make cb and optimizeCb accessible under _.
+       * _iteratee(value, context) === cb(value, context, Infinity)
+       * _.iteratee() => _.identity(); 
+       * _.iteratee(function(n) { return n * 2; }) => function(n) { return n * 2; }
+       * _.iteratee({firstName: 'Chelsea'}) => _.matcher({firstName: 'Chelsea'});
+       * _.iteratee('firstName') => _.property('firstName');
+       * * https://underscorejs.org/#iteratee see more usage
       */ 
       _.iteratee = builtinIteratee = function(value, context) {
         return cb(value, context, Infinity);
       };
-      /** tests
-       // debugger; run it at the bottom of the library
-       * _.iteratee(1, {num:1}) => _.property(1, {num:1})
-       * _.iteratee(function(){}, {num:1}) => optimizedCb(function(){}, {num:1}, Infinity)
-       */ 
+
       
       /** OFFICAL
        Some functions take a variable number of arguments, or a few expected
@@ -197,9 +188,11 @@
        argument length (or an explicit `startIndex`), into an array that becomes
        the last argument. Similar to ES6’s "rest parameter".
        */ 
-      /** restArguments: call func with unlimited args
-       * 1. startIndex is to separate specified args and unspecified unlimited args
-       * 2. startIndex count from the first unlimited unspecified arg index
+      /** restArguments: 
+       // _.union(arrays) => restArgument =>  _.union([1,2], [3,4], ...) => rest: [[1,2],[3,4],...]
+       // _.without(array, otherArrays) => restArgument => _.without([1,2,3,4], 2,4,...) => rest: [2,4,...]
+       // var log = _.bind(console.log, console);
+       // _.delay(func, wait, args) => restArgument => _.delay(log, 1000, 'logged later', 'and more', 'and less')
        */ 
       var restArguments = function(func, startIndex) {
         startIndex = startIndex == null ? func.length - 1 : +startIndex;
@@ -227,36 +220,52 @@
           return func.apply(this, args);
         };
       };
-      // debugger;
-      // _.union = restArguments(func(arrays){...}) => startIndex = 0
-      // _.union([1,2], [3,4]) => rest = [[1,2], [3,4]]
-      // debugger;
-      // _.without = restArguments(function(array, otherArrays) {}) => startIndex = 1
-      // _.without([1,2,3,4], 2,4); => args: 2,4 => rest: [2,4]
-      /** tests
-       * restArguments(function(a,b,c){return a+b+c}, 0) =>func.call(this, [a,b,c])
-       */ 
 
-      // An internal function for creating a new object that inherits from another.
+
+      // OFFICIAL: An internal function for creating a new object that inherits from another.
+      /** create a new empty object whose __proto__ is the arg `prototype` 
+       * debugger;
+       * var prototypeTest = {num: 1};
+       * baseCreate(prototypeTest); => {}.__proto__ === {num:1}
+       * baseCreate(3) => {}
+       */ 
       var baseCreate = function(prototype) {
         if (!_.isObject(prototype)) return {};
         if (nativeCreate) return nativeCreate(prototype);
         Ctor.prototype = prototype;
-        var result = new Ctor;
-        Ctor.prototype = null;
+        var result = new Ctor;  /* `new` enables `Ctor` to returns an object */
+        Ctor.prototype = null;  /* put `Ctor` back to its original state */
         return result;
       };
-
+      
+      /** shallowProperty(key): access an array or object with key
+       * var a = shallowProperty(2); ==> a([1,2,3]) === 3
+       * var a = shallowProperty(2); ==> a() === undefined
+       * var a = shallowProperty('num'); ==> a({num: 3}) === 3
+       * run the two lines at the end of the library
+       */ 
       var shallowProperty = function(key) {
         return function(obj) {
           return obj == null ? void 0 : obj[key];
         };
       };
 
+      /** has(obj, path): check whether obj/array/?? has a property value with the key under `path`
+       * has([1,2,3], 0) => true
+       * has([,,2,3], 0) => false
+       * has({num: 1}, 'num') => true
+       * has({num: 1}, 'nu') => false
+       */ 
       var has = function(obj, path) {
         return obj != null && hasOwnProperty.call(obj, path);
       }
 
+      /** deepGet(obj, path): recursively dive into `obj` with the index array `path`, to get a value
+       * if obj is undefined or null, return undefined; 
+       * otherwise keep dive into obj with the index array
+       * deepGet([[[5]]], [0,0,0]) => 5
+       * deepGet({num:{str:{obj:5}}}, ['num', 'str', 'obj']) => 5
+       */ 
       var deepGet = function(obj, path) {
         var length = path.length;
         for (var i = 0; i < length; i++) {
@@ -270,6 +279,10 @@
       // should be iterated as an array or as an object.
       // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
       // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
+      /** isArrayLike(collection): arraylike include array and object with numeric property of length
+       * isArrayLike([1,2,3]) => true
+       * isArrayLike({length:1}) => true
+       */ 
       var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
       var getLength = shallowProperty('length');
       var isArrayLike = function(collection) {
@@ -1792,7 +1805,10 @@
         return String(this._wrapped);
       };
 
+      // Places for debugging
+      // debugger;
       
+      //
       
       // AMD registration happens at the end for compatibility with AMD loaders
       // that may not enforce next-turn semantics on modules. Even though general
