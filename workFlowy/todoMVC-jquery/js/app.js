@@ -1,4 +1,5 @@
 /*global jQuery, Handlebars, Router */
+// https://github.com/gordonmzhu/beasts/issues/11 to learn from the others
 jQuery(function ($) {
 	'use strict';
 

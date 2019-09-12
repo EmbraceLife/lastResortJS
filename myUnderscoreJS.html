@@ -17,10 +17,15 @@
       // Baseline setup
       // --------------
 
-      // Establish the root object, `window` (`self`) in the browser, `global`
-      // on the server, or `this` in some virtual machines. We use `self`
-      // instead of `window` for `WebWorker` support.
-      // self -> global -> this -> {}
+      /** OFFICIAL
+       // Establish the root object, `window` (`self`) in the browser, `global`
+       // on the server, or `this` in some virtual machines. We use `self`
+       // instead of `window` for `WebWorker` support.
+       * 
+       */ 
+      /** root: can be either self, global, this, or {}
+       *  assign self -> global -> this -> {} to root
+       */ 
       var root = typeof self == 'object' && self.self === self && self ||
                 typeof global == 'object' && global.global === global && global ||
                 this ||
@@ -51,37 +56,34 @@
           nativeKeys = Object.keys,
           nativeCreate = Object.create;
 
-      //
-      // Naked function reference for surrogate-prototype-swapping.
-      /* surrogate prototype methods, see later usages */
+      // OFFICIAL: Naked function reference for surrogate-prototype-swapping.
+      /** Ctor: an empty function to create other functions with different prototype
+       * peek references to see its usages
+       */ 
       var Ctor = function(){};
 
-      /** _(obj) => return _ as an object with a property `_wrapped: obj`
+      /** _(obj) => return an object under name '_' with a property `_wrapped: obj`
+       * _('a string'); => _ {_wrapped: "a string"}
        * 1. if obj is an object of _, return obj
-       * 2. if this is not an object of _, run new_(obj)
+       * 2. if this is not an object of _, run new _(obj)
        * 3. recursion step in
        */ 
       var _ = function(obj) {
         if (obj instanceof _) return obj;
-        if (!(this instanceof _)) return new _(obj);
+        if (!(this instanceof _)) return new _(obj); 
+        // `new` will keep _ as the object name
         this._wrapped = obj;
       };
-      
-      /** tests
-       * debugger;
-       * _('a string');
-       */
 
 
-
-      /** official doc
+      /** OFFICIAL
        * Export the Underscore object for **Node.js**, with
        * backwards-compatibility for their old module API. If we're in
        * the browser, add `_` as a global object.
        * (`nodeType` is checked to ensure that `module`
        * and `exports` are not HTML elements.)
       */
-      /** export _ for current node, old node, and browser root
+      /** export `_` to environments like old node, current node, or just browser
        * debugger;
       */
        if (typeof exports != 'undefined' && !exports.nodeType) {
@@ -96,13 +98,12 @@
       // Current version.
       _.VERSION = '1.9.1';
 
-      /** official
+      /** OFFICIAL
        * Internal function that returns an efficient (for current engines) version
        * of the passed-in callback, to be repeatedly applied in other Underscore
        * functions. 
       */
-
-      /** call func with different context and args
+      /** optimizeCb(func, context, argCount): call func with different context and args
         * var a = optimizeCb(func, context, argCount) => if context undefined => a === func
         * var a = optimizeCb(func, context, argCount) => if argCount:1 => a(value) === func.call(context, value)
         * var a = optimizeCb(func, context, argCount) => if argCount:3 => a(value, index, collection) === func.call(context, value, index, collection)
@@ -148,14 +149,14 @@
        // an arbitrary callback, a property matcher, or a property accessor.
        */ 
 
-      /** cb(value, context, argCount): recursion + choose a callback based typeof `value`
+      /** cb(value, context, argCount): recursion? + choose a callback based typeof `value`
        * 1. property accessor: if value is not undefined, null, function, object, the run _.property to get either obj[value] or obj[value[0]][value[1]][value[2]]...
        * 2. run callback: if value is a function, then run optimizeCb(value, context, argCount)
        * 3. identity function: if value is undefined or null, run _.identity(val) to return val
        * 4. property matcher: if value is no array but is object, run _.matcher(value) to return a func which when you run func(obj) it checks whether obj and value match or not
        * 5. if builtinIteratee is undefined, run _.iteratee(value, context) => cb(value, context, infinity)
        */ 
-       var cb = function(value, context, argCount) {
+      var cb = function(value, context, argCount) {
         if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
         if (value == null) return _.identity;
         if (_.isFunction(value)) return optimizeCb(value, context, argCount);
@@ -168,7 +169,7 @@
        * `_.iteratee` if they want additional predicate/iteratee shorthand styles.
        * This abstraction hides the internal-only argCount argument.
       */
-      /** _iteratee: indirectly make cb and optimizeCb accessible under _.
+      /** _iteratee(value, context): indirectly make cb and optimizeCb accessible under _. and can also call either _.identity, _.matcher, _.property 
        * _iteratee(value, context) === cb(value, context, Infinity)
        * _.iteratee() => _.identity(); 
        * _.iteratee(function(n) { return n * 2; }) => function(n) { return n * 2; }
@@ -188,7 +189,7 @@
        argument length (or an explicit `startIndex`), into an array that becomes
        the last argument. Similar to ES6’s "rest parameter".
        */ 
-      /** restArguments: 
+      /** restArguments(func, startIndex): func(arg1, [args]) => func(arg1, arg2, ...) 
        // _.union(arrays) => restArgument =>  _.union([1,2], [3,4], ...) => rest: [[1,2],[3,4],...]
        // _.without(array, otherArrays) => restArgument => _.without([1,2,3,4], 2,4,...) => rest: [2,4,...]
        // var log = _.bind(console.log, console);
@@ -223,7 +224,7 @@
 
 
       // OFFICIAL: An internal function for creating a new object that inherits from another.
-      /** create a new empty object whose __proto__ is the arg `prototype` 
+      /** baseCreate(prototype): create a new empty object whose __proto__ is the arg `prototype` 
        * debugger;
        * var prototypeTest = {num: 1};
        * baseCreate(prototypeTest); => {}.__proto__ === {num:1}
@@ -293,13 +294,31 @@
       // Collection Functions
       // --------------------
 
-      // The cornerstone, an `each` implementation, aka `forEach`.
-      // Handles raw objects in addition to array-likes. Treats all
-      // sparse array-likes as if they were dense.
-      _.each = _.forEach = function(obj, iteratee, context) {
-        iteratee = optimizeCb(iteratee, context);
+      /** OFFICIAL
+       // The cornerstone, an `each` implementation, aka `forEach`.
+       // Handles raw objects in addition to array-likes. Treats all
+       // sparse array-likes as if they were dense.
+       */ 
+      /** _.each do sth on obj (arrayLike or object), but return obj
+        _.each([1,2,3], function(el){console.log(el+this.num)}, {num: 2}) => log[3,4,5] return [1,2,3]
+        _.each([1,2,3], function(el,idx,arr){arr.push(4); console.log(el+2)}) => log [3,4,5], return [1,2,3,4,4,4]
+        _.each({one: 1, two: 2, three: 3}, function(el){console.log(el)}) =>  log [1,2,3], return {one: 1, two: 2, three: 3}
+        _.each({length: 1, num: 2, num1: 3}, function(el){console.log(el)}) => fake isArrayLike, log undefined, return {length: 1, num: 2, num1: 3}
+        _.each([1,,3], function(el){console.log(el)}) => log [1,undefined,3], return [1,,3]
+        _.each(null, function(){}); => no loop actually run, return null
+        _.each([true, false, 'yes', '', 0, 1, {}], function(context) {
+          _.each([1], function() {
+            eq(typeof this, 'object', 'context is a wrapped primitive');
+            eq(this.valueOf(), context, 'the unwrapped context is the specified primitive');
+            eq(this, context, 'context can be coerced to the specified primitive');
+          }, context);
+        });
+       * Collection functions work on arrays, objects, and array-like objects such as arguments, NodeList and similar. But it works by duck-typing, so avoid passing objects with a numeric length property.
+       */ 
+      _.each = _.forEach = function(obj, iteratee, context) {/* iteratee: callback */
+        iteratee = optimizeCb(iteratee, context); /* no argCount, default to 3 args for callback */
         var i, length;
-        if (isArrayLike(obj)) {
+        if (isArrayLike(obj)) { /* {length: 1, num: 2, num1: 3} such object is not really isArrayLike, but can fake it here */
           for (i = 0, length = obj.length; i < length; i++) {
             iteratee(obj[i], i, obj);
           }
@@ -1808,7 +1827,7 @@
       // Places for debugging
       // debugger;
       
-      //
+      
       
       // AMD registration happens at the end for compatibility with AMD loaders
       // that may not enforce next-turn semantics on modules. Even though general
