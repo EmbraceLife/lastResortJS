@@ -12,6 +12,12 @@
       //     (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
       //     Underscore may be freely distributed under the MIT license.
 
+      /** General Learning Points
+       * 1. swiftLike naming convention at 13:30-17:00 https://watchandcode.com/courses/77710/lectures/10848372 is highly encouraged, so add clear naming into the source
+       * 2. avoid googling, solely replying on playing around inside console to find out the source lines mean 5:00- https://watchandcode.com/courses/77710/lectures/11250330
+       * 3. rewrite the source code, e.g., rewrite isArrayLike into a single function without using other underscore internal functions 14:00~ https://watchandcode.com/courses/77710/lectures/11250330
+       */ 
+
       (function() {
 
       // Baseline setup
@@ -276,13 +282,21 @@
         return length ? obj : void 0;
       };
 
-      // Helper for collection methods to determine whether a collection
-      // should be iterated as an array or as an object.
-      // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
-      // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
-      /** isArrayLike(collection): arraylike include array and object with numeric property of length
+      /** OFFICIAL
+       // Helper for collection methods to determine whether a collection
+       // should be iterated as an array or as an object.
+       // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
+       // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
+       */ 
+      /** isArrayLike(collection): check an arrayLike object
+       * collection: must have a property 'length'
+       * collection.length: must be a number >= 0 and smaller than 2**53-1
+       * collection can be : array, object with property length
+       * non arrayLike: any object without property length
        * isArrayLike([1,2,3]) => true
        * isArrayLike({length:1}) => true
+       * checkArrayLike([1,2,3]) => true
+       * checkArrayLike({length:1}) => true
        */ 
       var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
       var getLength = shallowProperty('length');
@@ -291,10 +305,22 @@
         return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
       };
 
+      var checkArrayLike = function(collection) {
+        var returnFuncToGetValueFromKey = function(key) {
+          return function(arrayOrObject) {
+            return arrayOrObject == null ? void 0 : arrayOrObject[key];
+          };
+        };
+        var getLengthFromObjectInGeneral = returnFuncToGetValueFromKey(key='length');
+        var length = getLengthFromObjectInGeneral(arrayOrObject=collection);
+        return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
+      }
+      // debugger;
+
       // Collection Functions
       // --------------------
 
-      /** OFFICIAL
+      /** OFFICIAL: https://underscorejs.org/#each
        // The cornerstone, an `each` implementation, aka `forEach`.
        // Handles raw objects in addition to array-likes. Treats all
        // sparse array-likes as if they were dense.
@@ -331,7 +357,21 @@
         return obj;
       };
 
-      // Return the results of applying the iteratee to each element.
+      /** OFFICIAL: https://underscorejs.org/#map
+       *  Return the results of applying the iteratee to each element.
+       */ 
+      /** _.map(list, iteratee [, context]) => return a list in which elements are transformed by iteratee
+       * list: arrayLike or objects
+       * iteratee: callback requires 3 args (el, idx, arr) or (value, key, object)
+       * context: if `this` used in iteratee, `this` refers to context
+       * iteratee: cb(iterate, context) => optimizeCb(iteratee, context, 3) => iteratee.call(context, el, idx, arr)
+       * _.map([1, 2, 3], function(num){ return num * 3; }); => [3, 6, 9]
+       * _.map({one: 1, two: 2, three: 3}, function(num){ return num * 3; }); => [3, 6, 9]
+       * _.map([[1, 2], [3, 4]], function(el){return el[0]}); => [1,3]
+       * _.map([]) => []
+       * _.map({}) => []
+       * _.map(undefined); => []
+       */
       _.map = _.collect = function(obj, iteratee, context) {
         iteratee = cb(iteratee, context);
         var keys = !isArrayLike(obj) && _.keys(obj),
@@ -1135,11 +1175,18 @@
         }
       };
 
-      // Retrieve the names of an object's own properties.
-      // Delegates to **ECMAScript 5**'s native `Object.keys`.
+      /** OFFICIAL
+       Retrieve the names of an object's own properties.
+       Delegates to **ECMAScript 5**'s native `Object.keys`.
+      */
+      /** _.keys(obj): return [] or [key1, key2, ...] 
+       * obj: arrayLike or objects
+       */ 
       _.keys = function(obj) {
         if (!_.isObject(obj)) return [];
+        // get keys for objects
         if (nativeKeys) return nativeKeys(obj);
+        // get keys for arrays
         var keys = [];
         for (var key in obj) if (has(obj, key)) keys.push(key);
         // Ahem, IE < 9.
@@ -1455,11 +1502,17 @@
 
       // Is a given value an array?
       // Delegates to ECMA5's native Array.isArray
+      /** _.isArray(obj): check whether an array or not
+       * use Array.isArray or toString.call(obj)
+       */ 
       _.isArray = nativeIsArray || function(obj) {
         return toString.call(obj) === '[object Array]';
       };
 
-      // Is a given variable an object?
+      // OFFICIAL: Is a given variable an object?
+      /** _.isObject(obj): check whether an obj is of type 'function' or 'object'
+       * obj: must not be undefined, null, NaN
+       */ 
       _.isObject = function(obj) {
         var type = typeof obj;
         return type === 'function' || type === 'object' && !!obj;
@@ -1826,6 +1879,9 @@
 
       // Places for debugging
       // debugger;
+      
+      
+
       
       
       

@@ -6,9 +6,59 @@
   <body>
     <script src="../myUtils.js"></script>
     <script>
-      Array.prototype.myIncludes = function(){
+      Array.prototype.myIncludes = function(searchElement){
+        var array = this;
         
+        var len = array.length;
+
+        if (len === 0) {
+          return false
+        }
+
+        var fromIndex = (arguments[1]) ? arguments[1] : 0;
+
+        var fromIndexInteger = isNaN(fromIndex) ? 0 : (fromIndex > 0 ? Math.floor : Math.ceil)(fromIndex);
+
+        if (fromIndexInteger >= 0){
+          var actualFromIndex = fromIndexInteger;
+        } else {
+          var actualFromIndex = len + fromIndexInteger;
+          if (actualFromIndex < 0) {
+            actualFromIndex = 0;
+          }
+        }
+
+        while (actualFromIndex < len){
+          if (array[String(actualFromIndex)] === searchElement) {
+            return true;
+          }
+          actualFromIndex++;
+        }
+
+        return false;
       }
+
+      tests({
+        '[].includes(undefined) => false': function(){
+          eq(false, [].myIncludes(undefined));
+        },
+
+        '[,,].includes(undefined) => true': function(){
+          eq(true, [,,].myIncludes(undefined));
+        },
+
+        '[1,2,3].includes(3, 2) => true': function(){
+          eq(true, [1,2,3].myIncludes(3, 2));
+        },
+
+        '[1,2,3].includes(3, -1) => [1,2,3].includes(3, 2) => true': function(){
+          eq(true, [1,2,3].myIncludes(3, 2));
+        },
+
+        '[1,2,3].includes(3, -4) => [1,2,3].includes(3, 0) => true': function(){
+          eq(true, [1,2,3].myIncludes(3, 0));
+        },
+      })
     </script>
   </body>
 </html>
