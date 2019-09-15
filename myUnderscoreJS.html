@@ -4,7 +4,8 @@
     <title>Reading underscoreJS</title>
   </head>
   <body>
-    <script src="../../myUtils.js"></script>
+    <script src="./myUtils.js"></script>
+    <script src="./underscoreJS/underscore__.js"></script>
     <script>
       //     Underscore.js 1.9.1
       //     http://underscorejs.org
@@ -15,7 +16,9 @@
       /** General Learning Points
        * 1. swiftLike naming convention at 13:30-17:00 https://watchandcode.com/courses/77710/lectures/10848372 is highly encouraged, so add clear naming into the source
        * 2. avoid googling, solely replying on playing around inside console to find out the source lines mean 5:00- https://watchandcode.com/courses/77710/lectures/11250330
-       * 3. rewrite the source code, e.g., rewrite isArrayLike into a single function without using other underscore internal functions 14:00~ https://watchandcode.com/courses/77710/lectures/11250330
+       * 3. bring all nested funciton definitions into a single function to make it easier to read and understand, e.g., bring shallowProperty, getLength to isArrayLike 14:00~ https://watchandcode.com/courses/77710/lectures/11250330
+       * 4. rewrite the function by focusing on the core logic as a result to remove all nested functions at 27:00~ https://watchandcode.com/courses/77710/lectures/11265427
+       * 5. use docs and tests as your own tests
        */ 
 
       (function() {
@@ -162,7 +165,7 @@
        * 4. property matcher: if value is no array but is object, run _.matcher(value) to return a func which when you run func(obj) it checks whether obj and value match or not
        * 5. if builtinIteratee is undefined, run _.iteratee(value, context) => cb(value, context, infinity)
        */ 
-      var cb = function(value, context, argCount) {
+      var cb = chooseCallbackAccordingToValue = function(value, context, argCount) {
         if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
         if (value == null) return _.identity;
         if (_.isFunction(value)) return optimizeCb(value, context, argCount);
@@ -304,6 +307,12 @@
         var length = getLength(collection);
         return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
       };
+      /** tests
+         // debugger;
+        // root.eq(true, __.isArrayLike([1,2,3]));
+        // root.eq(true, __.isArrayLike({1:"one", 2:"two", 3:"three", "length":3}));
+        // root.eq(false, __.isArrayLike({1:"one", 2:"two", 3:"three"}));
+       */ 
 
       var checkArrayLike = function(collection) {
         var returnFuncToGetValueFromKey = function(key) {
@@ -315,9 +324,42 @@
         var length = getLengthFromObjectInGeneral(arrayOrObject=collection);
         return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
       }
-      // debugger;
+      /** tests
+       // debugger;
+       // root.eq(true, checkArrayLike([1,2,3]));
+       // root.eq(true, checkArrayLike({1:"one", 2:"two", 3:"three", "length":3}));
+       // root.eq(false, checkArrayLike({1:"one", 2:"two", 3:"three"}));
+       */ 
 
-      // Collection Functions
+      var checkArrayLikeSimplified = function(collection) {
+        var length;
+        if ([undefined, null].includes(collection)) {
+          length = undefined; 
+          /* as undefined.length, null.length cause TypeError, but NaN.length === undefined */
+        } else {
+          length = collection['length'];
+        }
+
+        return typeof length === 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
+      }
+      /** tests
+       // debugger;
+       // root.eq(true, checkArrayLikeSimplified([1,2,3]));
+       // root.eq(true, checkArrayLikeSimplified({1:"one", 2:"two", 3:"three", "length":3}));
+       // root.eq(false, checkArrayLikeSimplified({1:"one", 2:"two", 3:"three"}));
+       */ 
+
+      var argumentsAsArrayLike = function(){
+        return arguments;
+      }
+      /** test
+       // debugger;
+       // root.eq(true, __.isArrayLike(argumentsAsArrayLike(1,2,3)));
+       */ 
+
+      
+      
+       // Collection Functions
       // --------------------
 
       /** OFFICIAL: https://underscorejs.org/#each
@@ -356,6 +398,87 @@
         }
         return obj;
       };
+      // debugger;
+
+      _.each([1,2,3], function(el,idx,arr){
+        if (idx === 2) {
+          console.log(root.eq(3, arr[idx]));
+        }
+      });
+      _.each({'0':1, '1':2, '2':3, 'length':3}, function(el,idx,arr){
+        if (idx === 2) {
+          console.log(root.eq(3, arr[idx]));
+        }
+      });
+      _.each({'num1':1, 'num2':2, 'num3':3}, function(el,idx,arr){
+        if (idx === 'num3') {
+          console.log(root.eq(3, arr[idx]));
+        }
+      });
+
+      
+      _.each_doSthOnEachElementAndReturnOriginalObject = function(obj, iteratee, context) {/* iteratee: callback */
+        var optimizeCb = function(func, context, argCount) {
+          if (context === void 0) return func;
+          // void 0 === undefined => true https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void#Description
+          switch (argCount == null ? 3 : argCount) {
+            // null == null => true; undefined == null => true
+            case 1: return function(value) {
+              return func.call(context, value);
+            };
+            // The 2-argument case is omitted because we’re not using it.
+            case 3: return function(value, index, collection) {
+              return func.call(context, value, index, collection);
+            };
+            case 4: return function(accumulator, value, index, collection) {
+              return func.call(context, accumulator, value, index, collection);
+            };
+          }
+          // when argCount is > 4, return this function below
+          return function() {
+            return func.apply(context, arguments);
+          };
+        };
+
+        iteratee = optimizeCb(iteratee, context); /* no argCount, default to 3 args for callback */
+        var i, length;
+        if (isArrayLike(obj)) { /* {length: 1, num: 2, num1: 3} such object is not really isArrayLike, but can fake it here */
+          for (i = 0, length = obj.length; i < length; i++) {
+            iteratee(obj[i], i, obj);
+          }
+        } else {
+          var keys = _.keys(obj);
+          for (i = 0, length = keys.length; i < length; i++) {
+            iteratee(obj[keys[i]], keys[i], obj);
+          }
+        }
+        return obj;
+      };
+
+      _.eachSimplified_doSthOnEachElementAndReturnOriginalObject = function(obj, iteratee, context) {
+        
+        if (context === undefined) {
+          iteratee = iteratee;
+        } else {
+          iteratee = iteratee.bind(context);
+        }
+
+        var i, length;
+        if (checkArrayLike(obj)) { 
+
+          for (i = 0, length = obj.length; i < length; i++) {
+            iteratee(obj[i], i, obj);
+          }
+
+        } else {
+          var keys = _.keys(obj);
+          for (i = 0, length = keys.length; i < length; i++) {
+            iteratee(obj[keys[i]], keys[i], obj);
+          }
+        }
+        return obj;
+      };
+      
 
       /** OFFICIAL: https://underscorejs.org/#map
        *  Return the results of applying the iteratee to each element.

@@ -1,5 +1,5 @@
 (function() {
-  var _ = typeof require == 'function' ? require('..') : window._;
+  var _ = typeof require == 'function' ? require('..') : window.__;
 
   QUnit.module('Functions');
   QUnit.config.asyncRetries = 3;

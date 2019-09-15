@@ -9,7 +9,7 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/myUtils.js"
+      "program": "${workspaceFolder}/underscoreJS/test/index.html"
     }
   ]
 }
