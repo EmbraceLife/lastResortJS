@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.push</title>
+
+  </head>
+  <body>
+    <script src="/myUtils.js"></script>
+    <script>
+      Array.prototype.myPush = function(/* item1, item2, item3... */) {
+        var array = this;
+
+        var len = array.length;
+
+        var items = arguments;
+
+        var argCount = items.length;
+
+        if (len + argCount > 2**53 - 1) {
+          throw new TypeError("the new array has too many elements.")
+        }
+
+        while (items.length > 0){
+          var elementPushed = Array.prototype.shift.call(items);
+          array[String(len)] = elementPushed;
+          len++;
+        }
+
+        array.length = len;
+        return len;
+      }
+
+
+      tests({
+        '[1,2,3].push(4,5,6) => [1,2,3,4,5,6]': function(){
+          var testArray = [1,2,3];
+          testArray.myPush(4,5,6);
+          eq(testArray.length, 6);
+          arrayEq(testArray, [1,2,3,4,5,6]);
+        },
+
+        '[1,2,3].push() => [1,2,3]': function(){
+          var testArray = [1,2,3];
+          testArray.myPush();
+          eq(testArray.length, 3);
+          arrayEq(testArray, [1,2,3]);
+        },
+
+        '[].push() => []': function(){
+          var testArray = [];
+          testArray.myPush();
+          eq(testArray.length, 0);
+          arrayEq(testArray, []);
+        },
+      })
+    </script>
+
+
+  </body>
+</html>

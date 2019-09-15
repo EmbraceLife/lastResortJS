@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.shift</title>
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      Array.prototype.myShift = function(){
+        var array = this;
+
+        var len = array.length;
+
+        if (len === 0) return undefined;
+
+        var first = array['0'];
+
+        var index = 1;
+
+        while (index < len) {
+          var from = String(index);
+          var to = String(index - 1);
+          var fromPresent = array.hasOwnProperty(from);
+          if (fromPresent) {
+            var fromVal = array[from];
+            array[to] = fromVal;
+          } else {
+            delete array[to];
+          }
+          index++;
+        }
+        delete array[len-1];
+        array.length = len-1;
+        return first;
+      }
+
+      tests({
+        "[].shift() => undefined": function(){
+          eq(undefined, [].myShift());
+        },
+
+        "[1,2,3].shift() => 1": function(){
+          var testArray = [1,2,3];
+          eq(1, testArray.myShift());
+          arrayEq([2,3], testArray);
+        },
+
+        "[1,,3].shift() => 1": function(){
+          var testArray = [1,,3];
+          eq(1, testArray.myShift());
+          arrayEq([,3], testArray);
+        },
+        
+        "[,,3].shift() => undefined": function(){
+          var testArray = [,,3];
+          eq(undefined, testArray.myShift());
+          arrayEq([,3], testArray);
+        },
+      });
+    </script>
+  </body>
+</html>
