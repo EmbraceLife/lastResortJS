@@ -1,4 +1,4 @@
-/*! p5.js v0.9.0 July 01, 2019 */
+/*! p5.js v0.9.0 July 01, 2019 https://github.com/processing/p5.js/releases */
 (function(f) {
   if (typeof exports === 'object' && typeof module !== 'undefined') {
     module.exports = f();
