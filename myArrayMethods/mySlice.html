@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rewriting Array.prototype.slice</title>
+
+  </head>
+  <body>
+    <script src="../myUtils.js"></script>
+    <script>
+      Array.prototype.mySlice = function(start, end){
+        
+        var array = Object(this);
+        
+        var len = array.length;
+        
+        var relativeStart = isNaN(start) ? 0 : (start > 0 ? Math.floor : Math.ceil)(start);
+
+        if (relativeStart < 0) {
+          var actualStart = Math.max(len+relativeStart, 0);
+        } else {
+          var actualStart = Math.min(relativeStart, len);
+        }
+
+        if (end === undefined) {
+          var relativeEnd = len;
+        } else {
+          var relativeEnd = isNaN(end) ? 0 : (end > 0 ? Math.floor : Math.ceil)(end);
+        }
+
+        if (relativeEnd < 0) {
+          var actualEnd = Math.max(len+relativeEnd, 0)
+        } else {
+          var actualEnd = Math.min(relativeEnd, len);
+        }
+
+        var count = Math.max(actualEnd - actualStart, 0);
+
+        var returnedArray = new Array(count);
+
+        var index = 0;
+        while (actualStart < actualEnd) {
+          var currentIndex = String(actualStart);
+
+          var currentValueNotMissing = array.hasOwnProperty(currentIndex);
+
+          if (currentValueNotMissing) {
+            var currentValue = array[currentIndex];
+            returnedArray[index] = currentValue;
+          }
+
+          actualStart++;
+          index++;
+        }
+
+        returnedArray.length = index;
+        return returnedArray;
+      }
+
+      tests({
+        '[1,2,3].slice(0,2) => [1,2]': function(){
+          arrayEq([1,2], [1,2,3].mySlice(0,2));
+        },
+
+        '[1,2,3].slice(-3,2) => [1,2]': function(){
+          arrayEq([1,2], [1,2,3].mySlice(-3,2));
+        },
+
+        '[1,2,3].slice(-3,-1) => [1,2]': function(){
+          arrayEq([1,2], [1,2,3].mySlice(-3,-1));
+        },
+
+        '[1,2,3].slice(-4,-1) => [1,2]': function(){
+          arrayEq([1,2], [1,2,3].mySlice(-4,-1));
+        },
+
+        '[1,2,3].slice(-4,4) => [1,2,3]': function(){
+          arrayEq([1,2,3], [1,2,3].mySlice(-4,4));
+        },
+
+        '[1,2,3].slice(-4,-3) => []': function(){
+          arrayEq([], [1,2,3].mySlice(-4,-3));
+        },
+      })
+    </script>
+  </body>
+</html>

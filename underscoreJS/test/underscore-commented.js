@@ -50,7 +50,6 @@
       nativeIsArray (Array.isArray)
       nativeKeys (Object.keys)
       nativeCreate (Object.create)
-      
 
     internal functions made public by me
       _.has
@@ -63,6 +62,7 @@
       _.property
       _.each
       _.keys
+      _.map
 
     todo: tests for internal functions made public are needed
      
@@ -136,7 +136,7 @@
   /** export `_` to environments like old node, current node, or just browser
    * debugger;
   */
-    if (typeof exports != 'undefined' && !exports.nodeType) {
+  if (typeof exports != 'undefined' && !exports.nodeType) {
     if (typeof module != 'undefined' && !module.nodeType && module.exports) {
       exports = module.exports = _;
     }
@@ -198,12 +198,12 @@
     return _.property(value);
   };
 
-  /** OFFICIAL
+  /** OFFICIAL: 
    * External wrapper for our callback generator. Users may customize
    * `_.iteratee` if they want additional predicate/iteratee shorthand styles.
    * This abstraction hides the internal-only argCount argument.
   */
-  
+  /* [not sure how often I will use it] customize _.iteratee, see usage at test/functions.js */
   _.iteratee = builtinIteratee = function(value, context) {
     return cb(value, context, Infinity);
   };
@@ -340,9 +340,11 @@
    */
     
   /* tests
+   * try Array.isArray for difference
    * isArrayLike([1,2,3]) => true
    * isArrayLike({length:1}) => true but misleading
-   * isArrayLike(function(1,2,3){return arguments}()) => true on arguments
+   * Array.isArray((function(){return arguments})(1,2,3)) => false
+   * _.isArrayLike((function(){return arguments})(1,2,3)) => true on arguments
    * _.isArrayLike(document.getElementsByTagName('div')) => true on NodeList
    */ 
   var isArrayLike = _.isArrayLike = function(collection) {
@@ -387,6 +389,46 @@
    * @param context thisArg
    * @returns obj
    */
+  /* length and for loop made sure Array.prototype.forEach 
+    can only work on array and arrayLike
+    but not only objects */
+  /* tests
+    _.each([1, 2, 3], function(num, i) {
+      root.eq(num, i + 1);
+    });
+
+    var answers = [];
+    _.each([1, 2, 3], function(num){ answers.push(num * this.multiplier); }, {multiplier: 5});
+    root.arrayEq(answers, [5, 10, 15]);
+
+    answers = [];
+    _.each([1, 2, 3], function(num){ answers.push(num); });
+    arrayEq(answers, [1, 2, 3]);
+
+    answers = [];
+    var obj = {one: 1, two: 2, three: 3};
+    obj.constructor.prototype.four = 4; (eq to obj.__proto__.four = 4)
+    _.each(obj, function(value, key){ answers.push(key); });
+    arrayEq(answers, ['one', 'two', 'three']);
+    delete obj.constructor.prototype.four;
+
+    // ensure the each function is JITed
+    _(1000).times(function() { _.each([], function(){}); }); (???)
+
+    var count = 0;
+    obj = {1: 'foo', 2: 'bar', 3: 'baz'};
+    _.each(obj, function(){ count++; });
+    root.eq(count, 3);
+
+    var answer = null;
+    _.each([1, 2, 3], function(num, index, arr){ if (_.include(arr, num)) answer = true; });
+    
+    answers = 0;
+    _.each(null, function(){ ++answers; });
+    root.eq(answers, 0);
+
+    _.each(false, function(){});  
+  */
   _.each = _.forEach = function(obj, iteratee, context) {
     // Given equal readability, I prefer ternary over if-else due to performance  http://jsben.ch/OmGCb
     // void 0 is for the user who assign different values to `undefined` 
@@ -424,16 +466,35 @@
     }
     return results;
   }; */
-
+  
   /** run callback on each element of array, arrayLike or other object, return an array with each result in it
    * @param obj array, arrayLike or other object
    * @param iteratee callback function
    * @param context thisArg, usually an object
    * @returns `obj`
    */
+  /* tests
+    _.map([1, 2, 3], function(num){ return num * 2; }) => [2,4,6]
+
+    _.map([1, 2, 3], function(num){ return num * this.multiplier; }, {multiplier: 3}) => [3,6,9]
+
+    _.map({length: 2, 0: {id: '1'}, 1: {id: '2'}}, function(n){
+      return n.id; }); => ['1','2']
+
+    _.map(null, _.noop) => []
+
+    _.map([1], function() { return this.length;}, [5]) => [1]
+
+    var people = [{name: 'moe', age: 30}, {name: 'curly', age: 50}];
+    _.map(people, 'name') => ['moe', 'curly']
+    _.map(people, function(value){ return _.property('name')(value)}) => ['moe', 'curly']
+  */
+  
   _.map = _.collect = function(obj, iteratee, context) {
     // iteratee = cb(iteratee, context);
     iteratee = (context === void 0) ? iteratee : iteratee.bind(context);
+
+    /* special usage: _.map(obj, "keyName") to return an array of values with the keyName */
     if (typeof iteratee !== 'function') iteratee = _.property(iteratee);
 
     /* keys: general object's keys, not for array or arrayLike */
@@ -451,7 +512,7 @@
   };
 
   
-  // Create a reducing function iterating left or right.
+  /* // Create a reducing function iterating left or right.
   var createReduce = function(dir) {
     // Wrap code that reassigns argument variables in a separate function than
     // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
@@ -474,8 +535,71 @@
       var initial = arguments.length >= 3;
       return reducer(obj, optimizeCb(iteratee, context, 4), memo, initial);
     };
-  };
+  }; */
 
+  /** createReduce(dir)(obj, iteratee, memo, context)
+   * @param {*} dir 1 or -1 for starting left or right
+   * @param obj array, arrayLike, or other object
+   * @param iteratee callback(memo, value, idx, obj)
+   * @param memo variable to accumulate values
+   * @param context thisArg
+   * @return memo 
+   */
+  /* tests
+    _.reduce([1, 2, 3], function(memo, num){ return memo + num; }, 0); => 6
+    
+    var context = {multiplier: 3};
+    sum = _.reduce([1, 2, 3], function(memo, num){ return memo + num * this.multiplier; }, 0, context); => 18
+  */
+  var createReduce = _.reduceLeftRight = function(dir) {
+    // Wrap code that reassigns argument variables in a separate function than
+    // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
+    var reducer = function(obj, iteratee, memo, initial) {
+
+      /* get keys from obj */
+      var keys = !isArrayLike(obj) && _.keys(obj);
+      /* get length from object's keys.length or array.length or arrayLike.length */
+      var length = (keys || obj).length;
+      /* set reduce direction 1 from left to right, -1 reverse director
+        1: index start from 0;
+        -1: index start from length-1 */
+      var index = dir > 0 ? 0 : length - 1;
+
+      /* if initial value not provided, accumulator starts from obj[index] */
+      if (!initial) {
+        memo = obj[keys ? keys[index] : index];
+        index += dir;
+      }
+
+      /* loop each remaining element to invoke iteratee and assign result ot memo  */
+      for (; index >= 0 && index < length; index += dir) {
+        var currentKey = keys ? keys[index] : index;
+        memo = iteratee(memo, obj[currentKey], currentKey, obj);
+      }
+
+      /* return the final memo value */
+      return memo;
+    };
+
+    /* actual _.reduce takes four args _.reduce(obj, iteratee, memo, context)  */
+    return function(obj, iteratee, memo, context) {
+      /* get initial value: a bool */
+      var initial = arguments.length >= 3;
+
+      // var callback = (context === undefined) ? iteratee : iteratee.bind(context);
+      /* for simplicity */
+
+      /* prepare the callback */
+      var callback = (context === undefined) ? iteratee : function(accumulator, value, index, collection) {
+        return iteratee.call(context, accumulator, value, index, collection);
+      };
+      /* to use .call for performance */
+      
+
+      return reducer(obj, callback, memo, initial);
+    };
+  };
+  
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
   _.reduce = _.foldl = _.inject = createReduce(1);
