@@ -63,6 +63,7 @@
       _.each
       _.keys
       _.map
+      _.reduce (createReduce, _.reduceRight)
 
     todo: tests for internal functions made public are needed
      
@@ -538,70 +539,149 @@
   }; */
 
   /** createReduce(dir)(obj, iteratee, memo, context)
-   * @param {*} dir 1 or -1 for starting left or right
+   * @param {*} dir 1 or -1, for starting left or right
    * @param obj array, arrayLike, or other object
-   * @param iteratee callback(memo, value, idx, obj)
-   * @param memo variable to accumulate values
-   * @param context thisArg
-   * @return memo 
+   * @param iteratee a function, callback(memo, value, idx, obj)
+   * @param memo a number, variable to accumulate values
+   * @param context an object, thisArg
+   * @return a value, memo
    */
   /* tests
     _.reduce([1, 2, 3], function(memo, num){ return memo + num; }, 0); => 6
     
     var context = {multiplier: 3};
     sum = _.reduce([1, 2, 3], function(memo, num){ return memo + num * this.multiplier; }, 0, context); => 18
+
+    _([1, 2, 3]).reduce(function(memo, num){ return memo + num; }, 0); => 6
+
+    _.reduce([1, 2, 3], function(memo, num){ return memo + num; }); => 6
+
+    _.reduce([1, 2, 3, 4], function(memo, num){ return memo * num; }); => 24
+
+    _.reduce(null, _.noop, 138) => 138
+
+    _.reduce([], _.noop, void 0) => undefined
+
+    _.reduce([_], _.noop) => _
+
+    _.reduce([], _.noop) => undefined
   */
   var createReduce = _.reduceLeftRight = function(dir) {
     // Wrap code that reassigns argument variables in a separate function than
     // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
+
+    /*  reducer(...) does the actual reduction work */
+    /** reducer(obj, iteratee, memo, initial) => memo
+     * @param obj array, or arrayLike, or object 
+     * @param iteratee a function, callback(accumulator, value, idx, obj)
+     * @param memo a number, accumulator or initial value
+     * @param initial a bool, whether the initial memo is provided by the user
+     */ 
     var reducer = function(obj, iteratee, memo, initial) {
 
-      /* get keys from obj */
+      /* why need keys?
+        to access values of obj
+        0. we need indexes for arrayLike 
+        1. we need keys for objects
+        2. _.keys(obj) handles keys (not on prototype) for objects, undefined and null 
+      */
       var keys = !isArrayLike(obj) && _.keys(obj);
-      /* get length from object's keys.length or array.length or arrayLike.length */
+
+      /* why need length?
+        to loop obj, usually length is very handy
+
+        0. for arrayLike, arrayLike.length is handy
+        1. for object, keys.length does the same
+      */
       var length = (keys || obj).length;
-      /* set reduce direction 1 from left to right, -1 reverse director
-        1: index start from 0;
-        -1: index start from length-1 */
+
+      /* why index?
+        index can capture whether reducer(...) works from left or right
+
+        0. dir: 1 left, -1 right
+        1. if dir > 0, start from left, set index 0
+        2. if dir < 0, start from right, set index length-1
+      */
       var index = dir > 0 ? 0 : length - 1;
 
-      /* if initial value not provided, accumulator starts from obj[index] */
+      /* why need initial?
+        to decide which value should memo be initially
+
+        0. if user provided initial value, memo should use it for initial value
+        1. if not provided, memo should use the starting value of obj
+        2. if initial value is not given, both memo and index should be updated for the later loop
+      */
       if (!initial) {
         memo = obj[keys ? keys[index] : index];
         index += dir;
       }
 
-      /* loop each remaining element to invoke iteratee and assign result ot memo  */
+      /* why loop here?
+        use loop + iteratee + memo to reduce all values into a single value
+
+        0. use updated index, dir to start looping at the right position in the right direction
+        1. loop through each value through index or key, according to obj (arrayLike or object)
+        2. invoke iteratee to update memo with current memo and current element value
+        3. keep iterating
+      */
       for (; index >= 0 && index < length; index += dir) {
         var currentKey = keys ? keys[index] : index;
         memo = iteratee(memo, obj[currentKey], currentKey, obj);
       }
 
-      /* return the final memo value */
+      /* why return memo
+        all values in obj are reduced into the final state of memo
+      */
       return memo;
     };
 
-    /* actual _.reduce takes four args _.reduce(obj, iteratee, memo, context)  */
-    return function(obj, iteratee, memo, context) {
-      /* get initial value: a bool */
+    /* why return function(obj, iteratee, memo, context)?
+
+      - instead of running reducer(...) directly, we use this func to prepare its inputs;
+      - this function internally prepares initial and callback
+      - as users, we just simply provide (obj, iteratee, memo, context)
+      */
+     return function(obj, iteratee, memo, context) {
+      
+      /* why hide initial internally?
+        
+        0. if memo is provided, then initial must be true
+        1. adding initial as an arg is repetitive
+      */ 
       var initial = arguments.length >= 3;
 
-      // var callback = (context === undefined) ? iteratee : iteratee.bind(context);
-      /* for simplicity */
-
-      /* prepare the callback */
+      
+      /* why process iteratee?
+        
+        0. if `this` occurred in iteratee, context is required to be binded to iteratee
+        1. we can choose to use call, instead of apply or bind for better performance
+      */
       var callback = (context === undefined) ? iteratee : function(accumulator, value, index, collection) {
         return iteratee.call(context, accumulator, value, index, collection);
       };
-      /* to use .call for performance */
-      
 
+      
+      // var callback = (context === undefined) ? iteratee : iteratee.bind(context);
+      /* for simplicity */
+      
+      /* after the preparation, reducer get to run */
       return reducer(obj, callback, memo, initial);
     };
   };
   
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
+
+  /** what's behind _.reduce = createReduce(1)?
+
+    0. createReduce(1)
+        1. created reducer function to do real reduction work
+        2. passed 1 to set `reducer` to work from left to right
+        3. returned a wrapper function of reducer
+    1. this wrapper function 
+        1. ask users for 4 arguments (obj, iteratee, memo, context)
+        2. further prepares initial or memo, and iteratee for running reducer internally
+   */
   _.reduce = _.foldl = _.inject = createReduce(1);
 
   // The right-associative version of reduce, also known as `foldr`.
