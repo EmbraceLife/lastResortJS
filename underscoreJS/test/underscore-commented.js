@@ -57,6 +57,7 @@
       _.deepGet 
       _.restArguments
       _.isArrayLike
+      _.createPredicateIndexFinder
 
     official underscore methods
       _.property
@@ -64,6 +65,8 @@
       _.keys
       _.map
       _.reduce (createReduce, _.reduceRight)
+      _.find, _.findIndex, _.findLastIndex, createPredicateIndexFinder
+      
 
     todo: tests for internal functions made public are needed
      
@@ -688,9 +691,60 @@
   _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
+
+  
+  /** _.find(obj, predicate, context) => the first element that matches predicate
+   * @param obj arrayLike or object
+   * @param predicate a callback or an element of obj
+   * @param context an object, thisArg 
+   * @return an element of obj
+   */
+  /* tests: _.find(list, predicate, [context]) 
+    var array = [1, 2, 3, 4];
+
+    _.find(array, function(num){ return num % 2 == 0; }); => 2
+
+    _.find(array, function(n) { return n > 2; }); => 3
+
+    _.find(array, function() { return false; }); => void 0
+
+    _.find(array, function(x) { return x === 55; }) => void 0
+
+    var list = [{a: 1, b: 2}, {a: 2, b: 2}, {a: 1, b: 3}, {a: 1, b: 4}, {a: 2, b: 4}];
+    _.find(list, {a: 1}) => {a: 1, b: 2}
+
+    _.find(list, {b: 4}); => {a: 1, b: 4}
+
+    _.find(list, {c: 1}) => undefined
+
+    _.find([], {c: 1}) => undefined (undefined when searching empty list)
+
+    _.find([1, 2, 3], function(num){ return num * 2 === 4; }); => 2 (found the first "2" and broke the loop)
+
+    var obj = {
+      a: {x: 1, z: 3},
+      b: {x: 2, z: 2},
+      c: {x: 3, z: 4},
+      d: {x: 4, z: 1}
+    };
+
+    _.find(obj, {x: 2, z: 1}) => void 0
+
+    _.find(obj, function(x) { return x.x === 4; }) => {x: 4, z: 1});
+  */
   _.find = _.detect = function(obj, predicate, context) {
+    /* why need keyFinder? 
+      1. to find the element, we need to find the key first 
+      2. to find the key that matches the predicate, we need a keyFinder
+      3. for arrayLike, we use _.findIndex
+      4. for object, we use _.findKey
+    */
     var keyFinder = isArrayLike(obj) ? _.findIndex : _.findKey;
+
+    /* find the key using the predicate with keyFinder */
     var key = keyFinder(obj, predicate, context);
+
+    /* get value from key if key is not undefined or -1 */
     if (key !== void 0 && key !== -1) return obj[key];
   };
 
@@ -1112,13 +1166,69 @@
   };
 
   // Generator function to create the findIndex and findLastIndex functions.
-  var createPredicateIndexFinder = function(dir) {
+  /** createPredicateIndexFinder(1)(array, predicate, context) => _.findIndex(...)
+   * @param dir 1: get first matched index, -1: get last matched index
+   * @param array 
+   * @param predicate a callback or an object
+   * @param context an object, thisArg
+   * @return index or -1
+   */
+  /* tests
+    _.findIndex([{a: 1}], function(a, key, o) {
+	    console.log(a);
+      console.log(key);
+      console.log(o);
+      console.log(this);
+    }, _);
+  */
+  var createPredicateIndexFinder = _.createPredicateIndexFinder = function(dir) {
+    /* what is createPredicateIndexFinder?
+      1. it is a wrapper function for actual indexFinder function 
+      2. the wrapper function handles direction: first or last
+    */
+
+    /** indexFinder(array, predicate, context) => index or -1
+     * @param array 
+     * @param predicate a callback or an object
+     * @param context an object, thisArg
+     * @return index or -1
+     */
     return function(array, predicate, context) {
-      predicate = cb(predicate, context);
-      var length = getLength(array);
+
+      /* why process predicate?
+        1. we want predicate can be either a callback or an object
+        2. for callback, we need consider context and performance
+        3. for object, we need to use _.matcher to compare this object with array elements
+      */
+      // predicate = cb(predicate, context); // official
+      if (typeof predicate === 'function') {
+        if (context) {
+          // callback = predicate.bind(context);  /* simple version */
+          callback = function(el, idx, arr){
+            return predicate.call(context, el, idx, arr);
+          } /* use predicate instead of callback will cause recursion without base */
+        } else {
+          callback = predicate;
+        }
+      } else if (typeof predicate === 'object') {
+        callback = _.matcher(predicate);
+      }
+
+      /* length is a must
+        1. var length = shallowProperty('length')(array); (is actually confusing)
+        2. var length = array.length; (is more straightforward)
+      */
+      // var length = getLength(array); // official
+      var length = array.length;
+
+      /* prepare index based on direction
+      */
       var index = dir > 0 ? 0 : length - 1;
+
+      /* loop each element to see which one matches user provided element  */
       for (; index >= 0 && index < length; index += dir) {
-        if (predicate(array[index], index, array)) return index;
+        // if (predicate(array[index], index, array)) return index; // official
+        if (callback(array[index], index, array)) return index;
       }
       return -1;
     };

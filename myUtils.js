@@ -116,6 +116,9 @@
 (function createTestingFramework(){
   var SimpleTest = {
 
+    /** run(tests) => undefined
+     * @param {*} tests an object with many method properties within
+     */
     run: function(tests) {
         var failures = 0;
         var successes = 0;
