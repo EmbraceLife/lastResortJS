@@ -193,8 +193,28 @@
     // element in a collection, returning the desired result — either `identity`,
     // an arbitrary callback, a property matcher, or a property accessor.
     */ 
-  /* [Unnecessary refactoring] return _.identity, _.property, _.optimizeCb, _.matcher, or _.iteratee*/
-  var cb = function(value, context, argCount) {
+  
+  /** _.callbackTransformer(value, context, argCount) => a different callback func
+   * 
+   * @param {*} value the value's typeof determines which callback to return
+   * @param {*} context the object this inside the callback will refer to
+   * @param {*} argCount number of args the callback has
+   * @returns a callback or a callback execution
+   */
+  /* why a callbackTransformer necessary?
+    1. Javascript is dynamic typing, it allows the obj it deals to be any type or dynamic type
+    2. different types of obj require different callbacks to work with
+    3. callbackTransformer dynamically switch to different callbacks for different types of obj
+  */
+  /* How does callbackTransformer switch according to different types of obj?
+    1. instead of checking on the types of obj we are working with, it checks with the type of predicate or iteratee (maybe focusing on value/predicate/iteratee is more dynamci/specific than the type of obj)
+    2. when iteratee is not provided, callbackTransformer switch to _.identity (like doing nothing)
+    3. when iteratee is a function type, callbackTransformer switch to _.optimizeCb(value, context, argCount) (basically bind context to iteratee/function itself)
+    4. when iteratee is an object but not an array, callbackTransformer switch to _.matcher(value) ( to see whether value inside element of obj)
+    5. in other cases (number, string, array), callbackTransformer switch to _.property(value) (to get property under key 'value' or keys value)
+    6. when current _.iteratee is not equal to builtinIteratee, it means current _.iteratee is a user tailored function which is a different callback from the above ones.
+  */
+  var cb = _.callbackTransformer = function(value, context, argCount) {
     if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
     if (value == null) return _.identity;
     if (_.isFunction(value)) return optimizeCb(value, context, argCount);
@@ -1168,82 +1188,62 @@
   // Generator function to create the findIndex and findLastIndex functions.
   /** createPredicateIndexFinder(1)(array, predicate, context) => _.findIndex(...)
    * @param dir 1: get first matched index, -1: get last matched index
-   * @param array 
+   * @param array array of numbers or even objects
    * @param predicate a callback or an object
    * @param context an object, thisArg
    * @return index or -1
+   * @use1 _.findIndex(arrayOfValues, callbackTestElement) => indexOfFirstElementPassed
+   * @use2 _.findIndex(arrayOfObjects, callbackTestElement) => indexOfFirstElementPassed
+   * @use3 _.findIndex(arrayOfObjects, object) => indexOfFirstElementMatchTheObject
+   * @use4 _.findIndex(arrayOfObjects, aString) => indexOfFirstElementHasValueWithTheKey
+   * @use5 _.findIndex(arrayOfObjects, arrayOfStrings) => indexOfFirstElementHasValueWithTheKeys
+   * @use6 _.findIndex(arrayOfAnyAbove) => arrayOfAnyAbove
    */
-  /* tests
-    _.findIndex([{a: 1}], function(a, key, o) {
-	    console.log(a);
-      console.log(key);
-      console.log(o);
-      console.log(this);
-    }, _);
-  */
+  
   var createPredicateIndexFinder = _.createPredicateIndexFinder = function(dir) {
     /* what is createPredicateIndexFinder?
       1. it is a wrapper function for actual indexFinder function 
       2. the wrapper function handles direction: first or last
     */
 
-    /** indexFinder(array, predicate, context) => index or -1
-     * @param array 
-     * @param predicate a callback or an object
-     * @param context an object, thisArg
-     * @return index or -1
-     */
     return function(array, predicate, context) {
 
       /* why process predicate?
-        1. we want predicate can be either a callback or an object
-        2. for callback, we need consider context and performance
-        3. for object, we need to use _.matcher to compare this object with array elements
+        1. cb or callbackTransformer created 5 use cases above with different predicate values
+        2. use1 + use2 = when predicate is a func, then use optimizeCb
+        3. use3 = when predicate is object, use _.matcher
+        4. use4 + use5 = when predicate is a single string or array of strings, use _.property
+        5. use6 = when predicate is not given, use _.identity
       */
-      // predicate = cb(predicate, context); // official
-      if (typeof predicate === 'function') {
-        if (context) {
-          // callback = predicate.bind(context);  /* simple version */
-          callback = function(el, idx, arr){
-            return predicate.call(context, el, idx, arr);
-          } /* use predicate instead of callback will cause recursion without base */
-        
-        } else {
-          callback = predicate;
-        }
+      predicate = cb(predicate, context); /* now I consider cb is better to use */
+      
 
-        /* predicate is a non-array object */
-      } else if (typeof predicate === 'object' && !Array.isArray(predicate)){
-        callback = _.matcher(predicate);
-        
-      } else { /* predicate can be a string or number or an array*/
-        callback = _.property(predicate);
-      }
-
-      /* length is a must
-        1. var length = shallowProperty('length')(array); (is actually confusing)
+      /* why getting length?
+        length is a must for looping
+        1. var length = shallowProperty('length')(array); (is actually functional)
         2. var length = array.length; (is more straightforward, but can't cover undefined and null cases)
       */
       // var length = getLength(array); // official
       var length = shallowProperty('length')(array);
 
-      /* prepare index based on direction
+      /* why getting index?
+        1. createPredicateIndexFinder consider search direction
+        2. searching direction polorizes starting index 
       */
       var index = dir > 0 ? 0 : length - 1;
 
-      /* loop each element to see which one matches user provided element  */
+      /* loop + callback
+        1. loop each element and invoke the callback
+        2. if callbackTest let the element pass, we take the index as result
+      */
       for (; index >= 0 && index < length; index += dir) {
 
-        /* additional feature: to handle sparse array */
-        if (array.hasOwnProperty(index)) {
-
-          // if (predicate(array[index], index, array)) return index; // official
-          /* when value is NaN, undefined, null, false, 0, the index is ignored
-          */
-          if (callback(array[index], index, array)) return index;
-        }
-
+        /* when value is NaN, undefined, null, false, 0, the index is ignored
+        */
+        if (predicate(array[index], index, array)) return index;
+        
       }
+      /* if no element pass callbackTest, return -1 as nothing found */
       return -1;
     };
   };
