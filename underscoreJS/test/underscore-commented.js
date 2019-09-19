@@ -1197,7 +1197,9 @@
    * @use3 _.findIndex(arrayOfObjects, object) => indexOfFirstElementMatchTheObject
    * @use4 _.findIndex(arrayOfObjects, aString) => indexOfFirstElementHasValueWithTheKey
    * @use5 _.findIndex(arrayOfObjects, arrayOfStrings) => indexOfFirstElementHasValueWithTheKeys
-   * @use6 _.findIndex(arrayOfAnyAbove) => arrayOfAnyAbove
+   * @use6 _.findIndex(arrayOfValues) => indexOfFirstElementNot0UndefinedNullNaNFalse
+   * @use7 _.findIndex(arrayOfObjects) => always 0
+   * @use8 _.findIndex(non-array, _.noop) => always -1
    */
   
   var createPredicateIndexFinder = _.createPredicateIndexFinder = function(dir) {

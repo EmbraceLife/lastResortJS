@@ -22,7 +22,7 @@
 
       tests({
 
-        '_.findIndex([1,,3], function(el){return el === undefined;}); => 1': function(){
+        'use1: _.findIndex([1,,3], function(el){return el === undefined;}); => 1': function(){
           /* _.findIndex does not skip missing values */
           var res = _.findIndex([1,,3], function(el){
             return el === undefined;
@@ -30,7 +30,7 @@
           eq(res, 1);
         },
 
-        '_.findIndex([1,"2",3], function(el){return el === "2";}); => 1': function(){
+        'use1: _.findIndex([1,"2",3], function(el){return el === "2";}); => 1': function(){
 
           var res = _.findIndex([1,"2",3], function(el){
             return el === "2";
@@ -38,47 +38,62 @@
           eq(res, 1);
         },
 
-        '_.findIndex([1,2,3], 1); => -1': function(){
-          /* _.findIndex only allows array of values to work with callback */
-          var res = _.findIndex([1,,3], 1);
-          eq(res, -1);
-        },
-
-        '_.findIndex([1,2,3], 0); => -1': function(){
-          // var res = _.findIndex([1,,3], 3);
-          var res = _.findIndex([1,,3], 0);
-          eq(res, -1);
-        },
-        
-        '_.findIndex(objects, function(obj) {return obj.a === 0;}) => 0)': function(){
+        'use2: _.findIndex(objects, function(obj) {return obj.a === 0;}) => 0)': function(){
           var res = _.findIndex(objects, function(obj) {return obj.a === 0;});
           eq(res, 0);
         },        
 
-        '_.findIndex(objects, function(obj) {return obj.b * obj.a === 4;}); => 2': function(){
+        'use2: _.findIndex(objects, function(obj) {return obj.b * obj.a === 4;}); => 2': function(){
           var res = _.findIndex(objects, function(obj) {return obj.b * obj.a === 4;});
           eq(res, 2);
         },
 
-        'var res = _.findIndex(objects, "a"); => 1': function(){
+        'use2: _.findIndex(objects, function(obj) {return obj.b * obj.a === 5;}); => -1': function(){
+          var res = _.findIndex(objects, function(obj) {return obj.b * obj.a === 5;});
+          eq(res, -1);
+        },
+        
+        'use2: _.findIndex(objects, function(a) {return a.foo === null;}); => -1': function(){
+          var res = _.findIndex(objects, function(a) {return a.foo === null;});
+          eq(res, -1);
+        },
+        
+        'use3: var res = _.findIndex(objects, {"a": 0}); => 0': function(){
+          var res = _.findIndex(objects, {"a": 0});
+          eq(res, 0);
+        },
+
+        'use4: var res = _.findIndex(objects, "a"); => 1': function(){
           var res = _.findIndex(objects, 'a');
           eq(res, 1);
         },
 
-        '_.findIndex(objects, function(obj) {return obj.b * obj.a === 5;}); => -1': function(){
-          var res = _.findIndex(objects, function(obj) {return obj.b * obj.a === 5;});
-          eq(res, -1);
+        'use5: var res = _.findIndex(nestedObj, ["a","b","c"]); => 2': function(){
+          var nestedObj = [{"a":1}, {"a":{"b":3}}, {"a":{"b":{"c":2}}}];
+          var res = _.findIndex(nestedObj, ["a","b","c"]);
+          eq(res, 2);
+        },
+        
+        'use6: _.findIndex(array); => 0': function(){
+          var res = _.findIndex(array);
+          arrayEq(res, 0);
         },
 
-        '_.findIndex(null, _.noop); => -1': function(){
+        'use7: _.findIndex(objects); => 0': function(){
+          var res = _.findIndex(array);
+          arrayEq(res, 0);
+        },
+
+        'use8: _.findIndex(null, _.noop); => -1': function(){
           var res = _.findIndex(null, _.noop);
           eq(res, -1);
         },
 
-        '_.findIndex(objects, function(a) {return a.foo === null;}); => -1': function(){
-          var res = _.findIndex(objects, function(a) {return a.foo === null;});
+        'use8: _.findIndex({"a":1}, _.noop); => -1': function(){
+          var res = _.findIndex({"a":1}, _.noop);
           eq(res, -1);
         },
+        
 
         'it should be able to access all arguments in _.findIndex': function(){
           console.groupCollapsed('checks');
@@ -91,7 +106,7 @@
           console.groupEnd();
         },
 
-        'It Works with sparse arrays': function(){
+        'use2: It Works with sparse arrays': function(){
 
           var sparse = [];
           sparse[20] = {a: 2, b: 2};
@@ -101,7 +116,7 @@
           eq(res, 20);
         },
 
-        "doesn\'t match array-likes keys": function(){
+        "use1: doesn\'t work with non-array part": function(){
 
           var array = [1, 2, 3, 4];
           array.match = 55;
@@ -109,12 +124,24 @@
           eq(res, -1); 
         },
 
-        "does match array index-keys": function(){
+        "use1: does match array index-keys": function(){
 
           var array = [1, 2, 3, 4];
           array['5'] = 55;
           var res = _.findIndex(array, function(x) { return x === 55; });
           eq(res, 5); 
+        },
+
+        'noUse: _.findIndex([1,2,3], 1); => -1': function(){
+          /* _.findIndex only allows array of values to work with callback */
+          var res = _.findIndex([1,,3], 1);
+          eq(res, -1);
+        },
+
+        'noUse: _.findIndex([1,2,3], 0); => -1': function(){
+          // var res = _.findIndex([1,,3], 3);
+          var res = _.findIndex([1,,3], 0);
+          eq(res, -1);
         },
       })
       console.groupEnd();
