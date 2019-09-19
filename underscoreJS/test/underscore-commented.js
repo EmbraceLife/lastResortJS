@@ -1207,19 +1207,25 @@
           callback = function(el, idx, arr){
             return predicate.call(context, el, idx, arr);
           } /* use predicate instead of callback will cause recursion without base */
+        
         } else {
           callback = predicate;
         }
-      } else if (typeof predicate === 'object') {
+
+        /* predicate is a non-array object */
+      } else if (typeof predicate === 'object' && !Array.isArray(predicate)){
         callback = _.matcher(predicate);
+        
+      } else { /* predicate can be a string or number or an array*/
+        callback = _.property(predicate);
       }
 
       /* length is a must
         1. var length = shallowProperty('length')(array); (is actually confusing)
-        2. var length = array.length; (is more straightforward)
+        2. var length = array.length; (is more straightforward, but can't cover undefined and null cases)
       */
       // var length = getLength(array); // official
-      var length = array.length;
+      var length = shallowProperty('length')(array);
 
       /* prepare index based on direction
       */
@@ -1227,8 +1233,16 @@
 
       /* loop each element to see which one matches user provided element  */
       for (; index >= 0 && index < length; index += dir) {
-        // if (predicate(array[index], index, array)) return index; // official
-        if (callback(array[index], index, array)) return index;
+
+        /* additional feature: to handle sparse array */
+        if (array.hasOwnProperty(index)) {
+
+          // if (predicate(array[index], index, array)) return index; // official
+          /* when value is NaN, undefined, null, false, 0, the index is ignored
+          */
+          if (callback(array[index], index, array)) return index;
+        }
+
       }
       return -1;
     };
