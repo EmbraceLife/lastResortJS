@@ -231,18 +231,6 @@
       });
 
       console.groupEnd();
-      
-      
-
-      
-      
-      
-
-
-    //   var array = [1, 2, 3, 4];
-    //   array.match = 55;
-    //   assert.strictEqual(_.findLastIndex(array, function(x) { return x === 55; }), -1, 'doesn\'t match array-likes keys');
-    // });
 
     </script>
     <script> // _.find
@@ -347,6 +335,104 @@
         // });
       })
       console.groupEnd();
+
+    </script>
+    <script> // _.groupBy
+          
+      console.groupCollapsed('_.groupBy');
+      tests({
+        
+        'use1: _.groupBy([1, 2, 3, 4, 5, 6], function(num){ return num % 2; }) => {"0": [2, 4, 6], "1": [1, 3, 5]}': function(){
+
+          var parity = _.groupBy([1, 2, 3, 4, 5, 6], function(num){ return num % 2; });
+          eq(_.keys(parity).includes('0'), true);
+          eq(_.keys(parity).includes('1'), true);
+          arrayEq(parity['0'], [2,4,6]);
+          arrayEq(parity['1'], [1,3,5]);
+        },
+
+        'use2: _.groupBy(list, "length");': function(){
+
+          var list = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+          var grouped = _.groupBy(list, 'length');
+          arrayEq(grouped['3'], ['one', 'two', 'six', 'ten']);
+          arrayEq(grouped['4'], ['four', 'five', 'nine']);
+          arrayEq(grouped['5'], ['three', 'seven', 'eight']);
+        },
+
+        'use1: _.groupBy([{}], function(){ eq(this, context); }, context);': function(){
+
+          var context = {};
+          _.groupBy([{}], function(){ eq(this, context); }, context);
+        },
+
+        'use1: _.groupBy([4.2, 6.1, 6.4], function(num) {return Math.floor(num) > 4? "hasOwnProperty" : "constructor";});': function(){
+          
+          grouped = _.groupBy([4.2, 6.1, 6.4], function(num) {
+            return Math.floor(num) > 4 ? 'hasOwnProperty' : 'constructor';
+          });
+          eq(grouped.constructor.length, 1);
+          eq(grouped.hasOwnProperty.length, 2);
+        },
+
+        'use1: _.groupBy(array, function(value, index, obj){ objEq(obj[0], array[0]); });': function(){
+          var array = [{}];
+          _.groupBy(array, function(value, index, obj){ objEq(obj[0], array[0]); });
+        },
+
+        'use3: _.groupBy([1, 2, 1, 2, 3])': function(){
+          array = [1, 2, 1, 2, 3];
+          grouped = _.groupBy(array);
+          eq(grouped['1'].length, 2);
+          eq(grouped['3'].length, 1);
+        },
+
+        'use4: _.isEqual(_.groupBy(matrix, 0), {1: [[1, 2], [1, 3]], 2: [[2, 3]]})': function(){
+          var matrix = [
+            [1, 2],
+            [1, 3],
+            [2, 3]
+          ];
+          _.isEqual(_.groupBy(matrix, 0), {1: [[1, 2], [1, 3]], 2: [[2, 3]]});
+          _.isEqual(_.groupBy(matrix, 1), {2: [[1, 2]], 3: [[1, 3], [2, 3]]});
+        },
+
+        'use5: can group by deep properties': function(){
+
+          var liz = {name: 'Liz', stats: {power: 10}};
+          var chelsea = {name: 'Chelsea', stats: {power: 10}};
+          var jordan = {name: 'Jordan', stats: {power: 6}};
+          var collection = [liz, chelsea, jordan];
+          var expected = {
+            10: [liz, chelsea],
+            6: [jordan]
+          };
+          _.isEqual(_.groupBy(collection, ['stats', 'power']), expected);
+        },
+
+        'use6: will coerce arrays to string keys': function(){
+
+          var foos = [{foo: [1, 2]}, {foo: [1, 2]}]
+          _.isEqual(_.groupBy(foos, 'foo'), {"1,2": foos});
+
+        },
+      });
+      console.groupEnd();
+
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+
 
     </script>
   </body>

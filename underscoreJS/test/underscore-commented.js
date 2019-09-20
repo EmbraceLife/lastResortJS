@@ -956,6 +956,19 @@
   };
 
   // An internal function used for aggregate "group by" operations.
+  /** group(behavior, partition) => [[...],[...]] or {...}
+   * 1. create the returned container [[ ],[ ]], or { }, `result`
+   * 2. callbackTransformer based on value of `iteratee`
+   * 3. invoke callback on each element and get result `key`
+   * 4. run `behavior` which sets rules for how `result` use `key` to store `value`
+   * 5. return `result`
+   * @param behavior a func
+   * @param partition act as a bool
+   * @param obj arrayLike or object
+   * @param iteratee value which triggers callbackTransformer in `cb`
+   * @param context thisArg
+   * @param key result of element invocation on callback
+   */
   var group = function(behavior, partition) {
     return function(obj, iteratee, context) {
       var result = partition ? [[], []] : {};
@@ -970,6 +983,16 @@
 
   // Groups the object's values by a criterion. Pass either a string attribute
   // to group by, or a function that returns the criterion.
+  /** `behavior` for `_.groupBy`
+   * 1. if `result` does not have `key`, result[ key ] = [ value ];
+   * 2. if it does, result[ key ].push(value)
+   * @use1 _.groupBy(array, callback) => group elements by callback(...) result
+   * @use2 _.groupBy(array, 'length') => group elements by _.property('length')(...) result
+   * @use3 _.groupBy(array) => group elements by _.identity(el) result
+   * @use4 _.groupBy(arrayOfArrays, number) => group element(a sub-array) by _.property(number)(el-subarray)
+   * @use5 _.groupBy(arrayOfObjects, arrayOfKeys) => group element(an object) by _.property(arrayOfKeys)(el-object)
+   * @use6 _.groupBy(arrayOfObjects, key) => group element(an object) by _.property(key)(el-object)
+   */
   _.groupBy = group(function(result, value, key) {
     if (has(result, key)) result[key].push(value); else result[key] = [value];
   });
