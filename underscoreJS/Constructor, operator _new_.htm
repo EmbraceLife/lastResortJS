@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<!-- saved from url=(0039)https://javascript.info/constructor-new -->
+<html lang="en" class="working-hover"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>window.currentUser = {"id":"5d20854944bbee1b67126826","hasPassword":false,"displayName":"\u6df1\u5ea6\u788e\u7247","profileName":"user38323","email":"pystrategyexplorer@gmail.com","verifiedEmail":true,"photo":"https:\/\/i.imgur.com\/tbuKfSE.jpg","deleted":false,"created":"2019-07-06T11:26:01.514Z","lastActivity":"2019-09-21T10:25:58.184Z","profileTabsEnabled":[],"teachesCourses":[],"roles":[],"settings":{}};</script><script>window.rateUsdToNative = 1;</script><title itemprop="name">Constructor, operator "new"</title><link href="./Constructor, operator _new__files/styles.597404d70817425416c8.css" rel="stylesheet"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0"><meta name="apple-mobile-web-app-capable" content="yes"><script>if (window.devicePixelRatio > 1) document.cookie = 'pixelRatio=' + window.devicePixelRatio + ';path=/;expires=Tue, 19 Jan 2038 03:14:07 GMT';</script><link href="./Constructor, operator _new__files/css" rel="stylesheet"><link rel="apple-touch-icon-precomposed" href="https://javascript.info/img/favicon/apple-touch-icon-precomposed.png"><link rel="canonical" href="https://javascript.info/constructor-new"><meta name="msapplication-TileColor" content="#222A2C"><meta name="msapplication-TileImage" content="/img/favicon/tileicon.png"><link rel="icon" href="https://javascript.info/img/favicon/favicon.png"><meta itemprop="image" content="https://javascript.info/img/site_preview_en_512x512.png"><meta property="og:title" content="Constructor, operator &quot;new&quot;"><meta property="og:image" content="https://javascript.info/img/site_preview_en_1200x630.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="fb:admins" content="100001562528165"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Constructor, operator &quot;new&quot;"><meta name="twitter:site" content="@iliakan"><meta name="twitter:creator" content="@iliakan"><meta name="twitter:image" content="https://javascript.info/img/site_preview_en_512x512.png"><link rel="prev" href="https://javascript.info/object-toprimitive"><link rel="next" href="https://javascript.info/data-types"><script>window.GA_ID = "UA-2056213-15";</script><script>window.YANDEX_METRIKA_ID = 32184394;</script><script>window.GoogleAnalyticsObject="ga",window.ga=function(){window.ga.q.push(arguments)},window.ga.q=[],window.ga.l=Date.now(),ga("create",GA_ID,"auto"),window.GTM_ID&&ga("require",GTM_ID),window.currentUser?ga("set","&uid",currentUser.id):ga("set","anonymizeIp",!0),window.addEventListener("error",function(e){var r=(e.filename||e.errorUrl)+": "+(e.lineno||e.errorLine),n=e.stack||e.error&&e.error.stack;ga("send","exception",{exDescription:e.message+" "+r+" "+n,exFatal:!0})});</script><script src="./Constructor, operator _new__files/analytics.js" async=""></script><script>ga('send', 'pageview');</script><script>window.metrika={reachGoal:function(){}},window.yandex_metrika_callbacks=[function(){try{window.metrika=new Ya.Metrika({id:YANDEX_METRIKA_ID,webvisor:!0,clickmap:!0,params:{user:window.currentUser&&window.currentUser.id}}),metrika.trackLinks({delay:150}),window.addEventListener("error",function(r){window.metrika.reachGoal("JSERROR",{src:(r.filename||r.errorUrl)+": "+(r.lineno||r.errorLine),stack:r.stack||r.error&&r.error.stack,message:r.message})})}catch(r){}}];</script><script src="./Constructor, operator _new__files/watch.js" async=""></script><script>window.RECAPTCHA_ID = "6Lf9NyETAAAAACZlg-a9Us2SxvYbeVC1ROWaWv4O";</script><script src="./Constructor, operator _new__files/init.597404d70817425416c8.js"></script><script src="./Constructor, operator _new__files/head.597404d70817425416c8.js" defer=""></script><meta property="og:title" content="Constructor, operator &quot;new&quot;"><meta property="og:type" content="article"><script src="./Constructor, operator _new__files/tutorial.597404d70817425416c8.js" defer="" data-manual="1"></script><script src="./Constructor, operator _new__files/footer.597404d70817425416c8.js" defer=""></script></head><body class=""><script>window.fontTest();</script><span class="font-test" style=""></span><div class="page-wrapper page-wrapper_sidebar_on"><!--[if lt IE 10]><div style="color:red;text-align:center">Sorry, IE&lt;10 is not supported, please use a newer browser.</div><![endif]--><div class="sitetoolbar sitetoolbar_tutorial"><script>window.langs = [{"code":"ar","name":"Arabic"},{"code":"az","name":"Azerbaijani"},{"code":"bn","name":"Bengali"},{"code":"ca","name":"Catalan"},{"code":"el","name":"Greek"},{"code":"en","name":"English"},{"code":"es","name":"Spanish"},{"code":"fa","name":"Persian (Farsi)"},{"code":"fr","name":"French"},{"code":"hi","name":"Hindi"},{"code":"id","name":"Indonesian"},{"code":"it","name":"Italian"},{"code":"ja","name":"Japanese"},{"code":"ka","name":"Georgian"},{"code":"km","name":"Central Khmer"},{"code":"ko","name":"Korean"},{"code":"me","name":"Montenegrin"},{"code":"no","name":"Norvegian"},{"code":"pl","name":"Polish"},{"code":"pt","name":"Portuguese"},{"code":"ro","name":"Romanian"},{"code":"ru","name":"Russian"},{"code":"si","name":"Sinhala"},{"code":"test","name":"Test"},{"code":"th","name":"Thai"},{"code":"tr","name":"Turkish"},{"code":"uk","name":"Ukrainian"},{"code":"uz","name":"Uzbek"},{"code":"vi","name":"Vietnamese"},{"code":"zh-hant","name":"Chinese Traditional"},{"code":"zh","name":"Chinese"}];</script><script>window.lang = "en";</script><script>{let t=navigator.languages||[];t=t.map(t=>t.toLowerCase());let a,i,o=[];for(let a of window.langs)for(let i of t)if(i===a.code||i.startsWith(a.code+"-")){o.push(a);break}if("en"===lang){let t=o.find(t=>"en"!=t.code);t&&"ru"!=t.code&&(a=`\n        According to your browser language headers, you know ${t.name}. Please help to <a href="https://github.com/javascript-tutorial/${t.code}.javascript.info#readme">translate the tutorial</a> into your language!\n        Thank you!\n      `,i="notify-translate-tutorial")}else if("ru"===lang)i="notify-ru-tutorial",a='\n      Новая редакция учебника была недавно переведена с английского.<br>Если что-то не так - пожалуйста, поправьте в <a href="https://github.com/javascript-tutorial/ru.javascript.info">PR на GitHub</a> (ссылка на редактирование слева в сайдбаре статьи).\n      Спасибо!\n    ';else if("tr"==lang)a='The Turkish version is only half-translated yet! Please help us with its translation at <a href="https://github.com/javascript-tutorial/tr.javascript.info">GitHub</a>.',i="notify-tr-tutorial";else{o.find(t=>"en"==t.code)&&(a=`\n        It seems, you know English. Please help to <a href="https://github.com/javascript-tutorial/${lang}.javascript.info#readme">translate the tutorial</a>.\n        Thank you!\n      `,i="notify-translate-tutorial-local")}if(a){let t=`<div class="notification notification_top notification_info sitetoolbar__notification" style="display:none" id="${i}">\n      <div class="notification__content">${a}</div>\n      <button class="notification__close" title="Close"></button>\n    </div>`;document.write(t),showTopNotification()}}</script><div class="notification notification_top notification_info sitetoolbar__notification" style="" id="notify-translate-tutorial">
+      <div class="notification__content">
+        According to your browser language headers, you know Japanese. Please help to <a href="https://github.com/javascript-tutorial/ja.javascript.info#readme">translate the tutorial</a> into your language!
+        Thank you!
+      </div>
+      <button class="notification__close" title="Close"></button>
+    </div><div class="sitetoolbar__content"><div class="sitetoolbar__lang-switcher"><button class="sitetoolbar__dropdown-button" data-dropdown-toggler="">EN</button><div class="sitetoolbar__dropdown-wrap"><div class="sitetoolbar__dropdown-body"><div class="sitetoolbar__lang-switcher-body"><div class="supported-langs supported-langs_toolbar"><div class="supported-langs__container"><ul class="supported-langs__list" style="height:164px"><li class="supported-langs__item supported-langs__item_current"><a class="supported-langs__link" href="https://javascript.info/constructor-new"><span class="supported-langs__brief">EN</span><span class="supported-langs__title">English</span></a></li><li class="supported-langs__item"><a class="supported-langs__link" href="https://ja.javascript.info/constructor-new"><span class="supported-langs__brief">JA</span><span class="supported-langs__title">日本語</span></a></li><li class="supported-langs__item"><a class="supported-langs__link" href="https://learn.javascript.ru/constructor-new"><span class="supported-langs__brief">RU</span><span class="supported-langs__title">Русский</span></a></li><li class="supported-langs__item"><a class="supported-langs__link" href="https://tr.javascript.info/constructor-new"><span class="supported-langs__brief">TR</span><span class="supported-langs__title">Türkçe</span></a></li><li class="supported-langs__item"><a class="supported-langs__link" href="https://zh.javascript.info/constructor-new"><span class="supported-langs__brief">ZH</span><span class="supported-langs__title">简体中文</span></a></li></ul></div><div class="supported-langs__text"><p>We want to make this open-source project available for people all around the world.</p> <p><a href="https://javascript.info/translate">Help to translate</a> the content of this tutorial to your language!</p>
+</div></div></div></div></div></div><div class="sitetoolbar__logo-wrap"><a class="sitetoolbar__link sitetoolbar__link_logo" href="https://javascript.info/"><object type="image/svg+xml" class="sitetoolbar__logo sitetoolbar__logo_normal" data="./Constructor, operator _new__files/sitetoolbar__logo_en.svg" style="left: 0px; top: 0px; position: absolute;"></object><img class="sitetoolbar__logo sitetoolbar__logo_normal" src="./Constructor, operator _new__files/sitetoolbar__logo_en.svg" width="200" alt="" role="presentation"><object type="image/svg+xml" class="sitetoolbar__logo sitetoolbar__logo_small" data="./Constructor, operator _new__files/sitetoolbar__logo_small_en.svg" style="left: 0px; top: 0px; position: absolute;"></object><img class="sitetoolbar__logo sitetoolbar__logo_small" src="./Constructor, operator _new__files/sitetoolbar__logo_small_en.svg" width="70" alt="" role="presentation" style="visibility: hidden;"><script>Array.prototype.forEach.call(document.querySelectorAll("img.sitetoolbar__logo"),function(e){let t=document.createElement("object");t.type="image/svg+xml",t.className=e.className,t.style.cssText="left:0;top:0;position:absolute",t.onload=function(){t.onload=null,e.style.visibility="hidden"},t.data=e.src,e.parentNode.insertBefore(t,e)});</script></a></div><div class="sitetoolbar__nav-toggle-wrap"><button class="sitetoolbar__nav-toggle" type="button"></button></div><nav class="sitetoolbar__sections"><ul class="sitetoolbar__sections-list"></ul></nav><div class="sitetoolbar__book-wrap"><a class="buy-book-button" href="https://javascript.info/ebook"><span class="buy-book-button__extra-text">Buy</span>EPUB/PDF</a></div><div class="sitetoolbar__user-wrap"><button class="sitetoolbar__user" title="深度碎片" data-dropdown-toggler=""><img class="sitetoolbar__userpic" src="./Constructor, operator _new__files/tbuKfSEt.jpg" alt="深度碎片" width="36" height="36" title=""><span class="sitetoolbar__user-text">深度碎片</span></button><div class="sitetoolbar__dropdown-wrap"><div class="sitetoolbar__dropdown-body"><ul class="sitetoolbar__dropdown-items"><li class="sitetoolbar__dropdown-item"><a class="sitetoolbar__secondary-link sitetoolbar__dropdown-link" href="https://javascript.info/profile/user38323">Public profile</a></li><li class="sitetoolbar__dropdown-item"><a class="sitetoolbar__secondary-link sitetoolbar__dropdown-link" href="https://javascript.info/profile/user38323/account">Account</a></li><li class="sitetoolbar__dropdown-item"><a class="sitetoolbar__secondary-link sitetoolbar__dropdown-link" href="https://javascript.info/constructor-new#" data-action-user-logout="data-action-user-logout">Logout</a></li></ul></div></div></div><div class="sitetoolbar__search-wrap"><div class="sitetoolbar__search-content"><form class="sitetoolbar__search" method="GET" action="https://javascript.info/search"><button class="sitetoolbar__search-toggle" type="button"></button><div class="sitetoolbar__search-input"><div class="text-input"><input class="text-input__control" name="query" placeholder="Search on Javascript.info" required="required" type="text"></div><button class="sitetoolbar__find" type="submit">Search</button></div></form></div></div></div><div class="tablet-menu"><div class="tablet-menu__line"><div class="tablet-menu__content"><form class="tablet-menu-search" action="https://javascript.info/search/"><input class="tablet-menu-search__input" type="search" name="query" placeholder="Search in the tutorial" required="required"><button class="tablet-menu-search__button" type="submit" name="type" value="articles">Search</button></form></div></div><div class="tablet-menu__line"><div class="tablet-menu__content"><a class="map" href="https://javascript.info/tutorial/map" data-action="tutorial-map"><span class="map__text">Tutorial map</span></a></div></div><div class="tablet-menu__line"><div class="tablet-menu__content"><div class="share-icons"><span class="share-icons__title">Share</span><a class="share share_tw" href="https://twitter.com/share?url=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a><a class="share share_fb" href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p%5Burl%5D=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a></div></div></div><div class="tablet-menu__line"><div class="tablet-menu__content"><select class="tablet-menu__nav input-select input-select input-select_small" onchange="if(this.value) window.location.href=this.value"><option value="https://javascript.info/constructor-new" selected="">English</option><option value="https://ja.javascript.info/constructor-new">日本語</option><option value="https://learn.javascript.ru/constructor-new">Русский</option><option value="https://tr.javascript.info/constructor-new">Türkçe</option><option value="https://zh.javascript.info/constructor-new">简体中文</option></select></div></div></div><div style="width: 1024px; margin: 0px; position: static; height: 4px;"></div></div><div class="page page_sidebar_on page_inner_padding page_sidebar-animation-on"><script>if(localStorage.noSidebar){document.querySelector(".page").classList.remove("page_sidebar_on");var pageWrapper=document.querySelector(".page-wrapper");pageWrapper&&pageWrapper.classList.remove("page-wrapper_sidebar_on")}setTimeout(function(){document.querySelector(".page").classList.add("page_sidebar-animation-on")},0);</script><div class="page__inner"><main class="main main_width-limit"><header class="main__header"><div class="main__header-inner"><div class="main__header-group"><ol class="breadcrumbs"><li class="breadcrumbs__item breadcrumbs__item_home" itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb" itemref="breadcrumb-1"><a class="breadcrumbs__link" href="https://javascript.info/" itemprop="url"><span class="breadcrumbs__hidden-text" itemprop="title">Tutorial</span></a></li><li class="breadcrumbs__item" id="breadcrumb-1" itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb" itemref="breadcrumb-2" itemprop="child"><a class="breadcrumbs__link" href="https://javascript.info/js" itemprop="url"><span itemprop="title">The JavaScript language</span></a></li><li class="breadcrumbs__item" id="breadcrumb-2" itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb" itemprop="child"><a class="breadcrumbs__link" href="https://javascript.info/object-basics" itemprop="url"><span itemprop="title">Objects: the basics</span></a></li></ol><div class="updated-at" data-tooltip="Last updated at 17th September 2019"><div class="updated-at__content">17th September 2019</div></div></div><h1 class="main__header-title">Constructor, operator "new"</h1></div></header><div class="content"><article class="formatted" itemscope="" itemtype="http://schema.org/TechArticle"><meta itemprop="name" content="Constructor, operator &quot;new&quot;"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta itemprop="email" content="iliakan@gmail.com"><meta itemprop="name" content="Ilya Kantor"></div><div itemprop="articleBody"><p>The regular <code>{...}</code> syntax allows to create one object. But often we need to create many similar objects, like multiple users or menu items and so on.</p>
+<p>That can be done using constructor functions and the <code>"new"</code> operator.</p>
+<h2><a class="main__anchor" name="constructor-function" href="https://javascript.info/constructor-new#constructor-function">Constructor function</a></h2><p>Constructor functions technically are regular functions. There are two conventions though:</p>
+<ol>
+<li>They are named with capital letter first.</li>
+<li>They should be executed only with <code>"new"</code> operator.</li>
+</ol>
+<p>For instance:</p>
+<div data-trusted="1" class="code-example" data-highlight="[{&quot;start&quot;:5,&quot;end&quot;:5}]" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class="block-highlight" data-start="5">
+
+
+
+
+<code class="mask">
+</code></code><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token parameter">name</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> name<code class="token punctuation">;</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>isAdmin <code class="token operator">=</code> <code class="token boolean">false</code><code class="token punctuation">;</code>
+<code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> user <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">(</code><code class="token string">"Jack"</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code>user<code class="token punctuation">.</code>name<code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// Jack</code>
+<code class="token function">alert</code><code class="token punctuation">(</code>user<code class="token punctuation">.</code>isAdmin<code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// false</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>When a function is executed with <code>new</code>, it does the following steps:</p>
+<ol>
+<li>A new empty object is created and assigned to <code>this</code>.</li>
+<li>The function body executes. Usually it modifies <code>this</code>, adds new properties to it.</li>
+<li>The value of <code>this</code> is returned.</li>
+</ol>
+<p>In other words, <code>new User(...)</code> does something like:</p>
+<div data-trusted="1" class="code-example" data-highlight="[{&quot;start&quot;:7,&quot;end&quot;:7},{&quot;start&quot;:1,&quot;end&quot;:1}]" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class="block-highlight" data-start="7">
+
+
+
+
+
+
+<code class="mask">
+</code></code><code class="block-highlight" data-start="1">
+<code class="mask">
+</code></code><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token parameter">name</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token comment">// this = {};  (implicitly)</code>
+
+  <code class="token comment">// add properties to this</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> name<code class="token punctuation">;</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>isAdmin <code class="token operator">=</code> <code class="token boolean">false</code><code class="token punctuation">;</code>
+
+  <code class="token comment">// return this;  (implicitly)</code>
+<code class="token punctuation">}</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>So <code>let user = new User("Jack")</code> gives the same result as:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> user <code class="token operator">=</code> <code class="token punctuation">{</code>
+  name<code class="token punctuation">:</code> <code class="token string">"Jack"</code><code class="token punctuation">,</code>
+  isAdmin<code class="token punctuation">:</code> <code class="token boolean">false</code>
+<code class="token punctuation">}</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>Now if we want to create other users, we can call <code>new User("Ann")</code>, <code>new User("Alice")</code> and so on. Much shorter than using literals every time, and also easy to read.</p>
+<p>That’s the main purpose of constructors – to implement reusable object creation code.</p>
+<p>Let’s note once again – technically, any function can be used as a constructor. That is: any function can be run with <code>new</code>, and it will execute the algorithm above. The “capital letter first” is a common agreement, to make it clear that a function is to be run with <code>new</code>.</p>
+<div class="important important_smart">
+            <div class="important__header"><span class="important__type">new function() { … }</span></div>
+            <div class="important__content"><p>If we have many lines of code all about creation of a single complex object, we can wrap them in constructor function, like this:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> user <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> <code class="token string">"John"</code><code class="token punctuation">;</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>isAdmin <code class="token operator">=</code> <code class="token boolean">false</code><code class="token punctuation">;</code>
+
+  <code class="token comment">// ...other code for user creation</code>
+  <code class="token comment">// maybe complex logic and statements</code>
+  <code class="token comment">// local variables etc</code>
+<code class="token punctuation">}</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>The constructor can’t be called again, because it is not saved anywhere, just created and called. So this trick aims to encapsulate the code that constructs the single object, without future reuse.</p>
+</div></div>
+<h2><a class="main__anchor" name="constructor-mode-test-new-target" href="https://javascript.info/constructor-new#constructor-mode-test-new-target">Constructor mode test: new.target</a></h2><div class="important important_smart">
+            <div class="important__header"><span class="important__type">Advanced stuff</span></div>
+            <div class="important__content"><p>The syntax from this section is rarely used, skip it unless you want to know everything.</p>
+</div></div>
+<p>Inside a function, we can check whether it was called with <code>new</code> or without it, using a special <code>new.target</code> property.</p>
+<p>It is empty for regular calls and equals the function if called with <code>new</code>:</p>
+<div data-trusted="1" class="code-example" data-highlight="[{&quot;start&quot;:8,&quot;end&quot;:8},{&quot;start&quot;:5,&quot;end&quot;:5}]" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class="block-highlight" data-start="8">
+
+
+
+
+
+
+
+<code class="mask">
+</code></code><code class="block-highlight" data-start="5">
+
+
+
+
+<code class="mask">
+</code></code><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token function">alert</code><code class="token punctuation">(</code><code class="token keyword">new</code><code class="token punctuation">.</code>target<code class="token punctuation">)</code><code class="token punctuation">;</code>
+<code class="token punctuation">}</code>
+
+<code class="token comment">// without "new":</code>
+<code class="token function">User</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// undefined</code>
+
+<code class="token comment">// with "new":</code>
+<code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// function User { ... }</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>That can be used inside the function to know whether it was called with <code>new</code>, “in constructor mode”, or without it, “in regular mode”.</p>
+<p>We can also make both <code>new</code> and regular calls to do the same, like this:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token parameter">name</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token keyword">if</code> <code class="token punctuation">(</code><code class="token operator">!</code><code class="token keyword">new</code><code class="token punctuation">.</code>target<code class="token punctuation">)</code> <code class="token punctuation">{</code> <code class="token comment">// if you run me without new</code>
+    <code class="token keyword">return</code> <code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">(</code>name<code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// ...I will add new for you</code>
+  <code class="token punctuation">}</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> name<code class="token punctuation">;</code>
+<code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> john <code class="token operator">=</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token string">"John"</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// redirects call to new User</code>
+<code class="token function">alert</code><code class="token punctuation">(</code>john<code class="token punctuation">.</code>name<code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// John</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>This approach is sometimes used in libraries to make the syntax more flexible. So that people may call the function with or without <code>new</code>, and it still works.</p>
+<p>Probably not a good thing to use everywhere though, because omitting <code>new</code> makes it a bit less obvious what’s going on. With <code>new</code> we all know that the new object is being created.</p>
+<h2><a class="main__anchor" name="return-from-constructors" href="https://javascript.info/constructor-new#return-from-constructors">Return from constructors</a></h2><p>Usually, constructors do not have a <code>return</code> statement. Their task is to write all necessary stuff into <code>this</code>, and it automatically becomes the result.</p>
+<p>But if there is a <code>return</code> statement, then the rule is simple:</p>
+<ul>
+<li>If <code>return</code> is called with an object, then the object is returned instead of <code>this</code>.</li>
+<li>If <code>return</code> is called with a primitive, it’s ignored.</li>
+</ul>
+<p>In other words, <code>return</code> with an object returns that object, in all other cases <code>this</code> is returned.</p>
+<p>For instance, here <code>return</code> overrides <code>this</code> by returning an object:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">BigUser</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> <code class="token string">"John"</code><code class="token punctuation">;</code>
+
+  <code class="token keyword">return</code> <code class="token punctuation">{</code> name<code class="token punctuation">:</code> <code class="token string">"Godzilla"</code> <code class="token punctuation">}</code><code class="token punctuation">;</code>  <code class="token comment">// &lt;-- returns this object</code>
+<code class="token punctuation">}</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token keyword">new</code> <code class="token class-name">BigUser</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">.</code>name <code class="token punctuation">)</code><code class="token punctuation">;</code>  <code class="token comment">// Godzilla, got that object</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>And here’s an example with an empty <code>return</code> (or we could place a primitive after it, doesn’t matter):</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">SmallUser</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> <code class="token string">"John"</code><code class="token punctuation">;</code>
+
+  <code class="token keyword">return</code><code class="token punctuation">;</code> <code class="token comment">// &lt;-- returns this</code>
+<code class="token punctuation">}</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token keyword">new</code> <code class="token class-name">SmallUser</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">.</code>name <code class="token punctuation">)</code><code class="token punctuation">;</code>  <code class="token comment">// John</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>Usually constructors don’t have a <code>return</code> statement. Here we mention the special behavior with returning objects mainly for the sake of completeness.</p>
+<div class="important important_smart">
+            <div class="important__header"><span class="important__type">Omitting parentheses</span></div>
+            <div class="important__content"><p>By the way, we can omit parentheses after <code>new</code>, if it has no arguments:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> user <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">;</code> <code class="token comment">// &lt;-- no parentheses</code>
+<code class="token comment">// same as</code>
+<code class="token keyword">let</code> user <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>Omitting parentheses here is not considered a “good style”, but the syntax is permitted by specification.</p>
+</div></div>
+<h2><a class="main__anchor" name="methods-in-constructor" href="https://javascript.info/constructor-new#methods-in-constructor">Methods in constructor</a></h2><p>Using constructor functions to create objects gives a great deal of flexibility. The constructor function may have parameters that define how to construct the object, and what to put in it.</p>
+<p>Of course, we can add to <code>this</code> not only properties, but methods as well.</p>
+<p>For instance, <code>new User(name)</code> below creates an object with the given <code>name</code> and the method <code>sayHi</code>:</p>
+<div data-trusted="1" class="code-example" data-highlight="[{&quot;start&quot;:8,&quot;end&quot;:10}]" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class="block-highlight" data-start="8">
+
+
+
+
+
+
+
+<code class="mask">
+
+
+</code></code><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">User</code><code class="token punctuation">(</code><code class="token parameter">name</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token operator">=</code> name<code class="token punctuation">;</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code><code class="token function-variable function">sayHi</code> <code class="token operator">=</code> <code class="token keyword">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+    <code class="token function">alert</code><code class="token punctuation">(</code> <code class="token string">"My name is: "</code> <code class="token operator">+</code> <code class="token keyword">this</code><code class="token punctuation">.</code>name <code class="token punctuation">)</code><code class="token punctuation">;</code>
+  <code class="token punctuation">}</code><code class="token punctuation">;</code>
+<code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> john <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">User</code><code class="token punctuation">(</code><code class="token string">"John"</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+
+john<code class="token punctuation">.</code><code class="token function">sayHi</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// My name is: John</code>
+
+<code class="token comment">/*
+john = {
+   name: "John",
+   sayHi: function() { ... }
+}
+*/</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>To create complex objects, there’s a more advanced syntax, <a href="https://javascript.info/classes">classes</a>, that we’ll cover later.</p>
+<h2><a class="main__anchor" name="summary" href="https://javascript.info/constructor-new#summary">Summary</a></h2><ul>
+<li>Constructor functions or, briefly, constructors, are regular functions, but there’s a common agreement to name them with capital letter first.</li>
+<li>Constructor functions should only be called using <code>new</code>. Such a call implies a creation of empty <code>this</code> at the start and returning the populated one at the end.</li>
+</ul>
+<p>We can use constructor functions to make multiple similar objects.</p>
+<p>JavaScript provides constructor functions for many built-in language objects: like <code>Date</code> for dates, <code>Set</code> for sets and others that we plan to study.</p>
+<div class="important important_smart">
+            <div class="important__header"><span class="important__type">Objects, we’ll be back!</span></div>
+            <div class="important__content"><p>In this chapter we only cover the basics about objects and constructors. They are essential for learning more about data types and functions in the next chapters.</p>
+<p>After we learn that, we return to objects and cover them in-depth in the chapters <a href="https://javascript.info/prototypes">Prototypes, inheritance</a> and <a href="https://javascript.info/classes">Classes</a>.</p>
+</div></div>
+</div></article><div class="tasks formatted"><h2 class="tasks__title" id="tasks"><a class="tasks__title-anchor main__anchor main__anchor main__anchor_noicon" href="https://javascript.info/constructor-new#tasks">Tasks</a></h2><div class="task tasks__task"><div class="task__header"><div class="task__title-wrap"><h3 class="task__title"><a class="main__anchor" href="https://javascript.info/constructor-new#two-functions--one-object" name="two-functions--one-object">Two functions – one object</a></h3><a class="task__open-link" href="https://javascript.info/task/two-functions-one-object" target="_blank"></a></div><div class="task__header-note"><span class="task__importance" title="How important is the task, from 1 to 5">importance: 2</span></div><div class="task__content"><p>Is it possible to create functions <code>A</code> and <code>B</code> such as <code>new A()==new B()</code>?</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token constant">A</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code> <code class="token operator">...</code> <code class="token punctuation">}</code>
+<code class="token keyword">function</code> <code class="token constant">B</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code> <code class="token operator">...</code> <code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> a <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">A</code><code class="token punctuation">;</code>
+<code class="token keyword">let</code> b <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">B</code><code class="token punctuation">;</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> a <code class="token operator">==</code> b <code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// true</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p>If it is, then provide an example of their code.</p>
+<button class="task__solution" type="button">solution</button><div class="task__answer"><div class="task__answer-content"><p>Yes, it’s possible.</p>
+<p>If a function returns an object then <code>new</code> returns it instead of <code>this</code>.</p>
+<p>So they can, for instance, return the same externally defined object <code>obj</code>:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> obj <code class="token operator">=</code> <code class="token punctuation">{</code><code class="token punctuation">}</code><code class="token punctuation">;</code>
+
+<code class="token keyword">function</code> <code class="token constant">A</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code> <code class="token keyword">return</code> obj<code class="token punctuation">;</code> <code class="token punctuation">}</code>
+<code class="token keyword">function</code> <code class="token constant">B</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code> <code class="token keyword">return</code> obj<code class="token punctuation">;</code> <code class="token punctuation">}</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token keyword">new</code> <code class="token class-name">A</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token operator">==</code> <code class="token keyword">new</code> <code class="token class-name">B</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// true</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div></div><button class="close-button task__answer-close" type="button" title="close"></button></div></div></div></div><div class="task tasks__task"><div class="task__header"><div class="task__title-wrap"><h3 class="task__title"><a class="main__anchor" href="https://javascript.info/constructor-new#create-new-calculator" name="create-new-calculator">Create new Calculator</a></h3><a class="task__open-link" href="https://javascript.info/task/calculator-constructor" target="_blank"></a></div><div class="task__header-note"><span class="task__importance" title="How important is the task, from 1 to 5">importance: 5</span></div><div class="task__content"><p>Create a constructor function <code>Calculator</code> that creates objects with 3 methods:</p>
+<ul>
+<li><code>read()</code> asks for two values using <code>prompt</code> and remembers them in object properties.</li>
+<li><code>sum()</code> returns the sum of these properties.</li>
+<li><code>mul()</code> returns the multiplication product of these properties.</li>
+</ul>
+<p>For instance:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> calculator <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">Calculator</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+calculator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token string">"Sum="</code> <code class="token operator">+</code> calculator<code class="token punctuation">.</code><code class="token function">sum</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">)</code><code class="token punctuation">;</code>
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token string">"Mul="</code> <code class="token operator">+</code> calculator<code class="token punctuation">.</code><code class="token function">mul</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">)</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p><a href="https://javascript.info/constructor-new#" onclick="event.preventDefault(); runDemo(this)">Run the demo</a></p><p><a href="https://plnkr.co/edit/CIVKruBs2EJcLQXY5M9u?p=preview" target="_blank" data-plunk-id="CIVKruBs2EJcLQXY5M9u">Open a sandbox with tests.</a></p><button class="task__solution" type="button">solution</button><div class="task__answer"><div class="task__answer-content"><div data-trusted="1" class="code-example" data-demo="1" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">Calculator</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code><code class="token function-variable function">read</code> <code class="token operator">=</code> <code class="token keyword">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+    <code class="token keyword">this</code><code class="token punctuation">.</code>a <code class="token operator">=</code> <code class="token operator">+</code><code class="token function">prompt</code><code class="token punctuation">(</code><code class="token string">'a?'</code><code class="token punctuation">,</code> <code class="token number">0</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+    <code class="token keyword">this</code><code class="token punctuation">.</code>b <code class="token operator">=</code> <code class="token operator">+</code><code class="token function">prompt</code><code class="token punctuation">(</code><code class="token string">'b?'</code><code class="token punctuation">,</code> <code class="token number">0</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+  <code class="token punctuation">}</code><code class="token punctuation">;</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code><code class="token function-variable function">sum</code> <code class="token operator">=</code> <code class="token keyword">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+    <code class="token keyword">return</code> <code class="token keyword">this</code><code class="token punctuation">.</code>a <code class="token operator">+</code> <code class="token keyword">this</code><code class="token punctuation">.</code>b<code class="token punctuation">;</code>
+  <code class="token punctuation">}</code><code class="token punctuation">;</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code><code class="token function-variable function">mul</code> <code class="token operator">=</code> <code class="token keyword">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+    <code class="token keyword">return</code> <code class="token keyword">this</code><code class="token punctuation">.</code>a <code class="token operator">*</code> <code class="token keyword">this</code><code class="token punctuation">.</code>b<code class="token punctuation">;</code>
+  <code class="token punctuation">}</code><code class="token punctuation">;</code>
+<code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> calculator <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">Calculator</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+calculator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token string">"Sum="</code> <code class="token operator">+</code> calculator<code class="token punctuation">.</code><code class="token function">sum</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">)</code><code class="token punctuation">;</code>
+<code class="token function">alert</code><code class="token punctuation">(</code> <code class="token string">"Mul="</code> <code class="token operator">+</code> calculator<code class="token punctuation">.</code><code class="token function">mul</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">)</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p><a href="https://plnkr.co/edit/Q1WK80MOzzkWymizDsp5?p=preview" target="_blank" data-plunk-id="Q1WK80MOzzkWymizDsp5">Open the solution with tests in a sandbox.</a></p></div><button class="close-button task__answer-close" type="button" title="close"></button></div></div></div></div><div class="task tasks__task"><div class="task__header"><div class="task__title-wrap"><h3 class="task__title"><a class="main__anchor" href="https://javascript.info/constructor-new#create-new-accumulator" name="create-new-accumulator">Create new Accumulator</a></h3><a class="task__open-link" href="https://javascript.info/task/accumulator" target="_blank"></a></div><div class="task__header-note"><span class="task__importance" title="How important is the task, from 1 to 5">importance: 5</span></div><div class="task__content"><p>Create a constructor function <code>Accumulator(startingValue)</code>.</p>
+<p>Object that it creates should:</p>
+<ul>
+<li>Store the “current value” in the property <code>value</code>. The starting value is set to the argument of the constructor <code>startingValue</code>.</li>
+<li>The <code>read()</code> method should use <code>prompt</code> to read a new number and add it to <code>value</code>.</li>
+</ul>
+<p>In other words, the <code>value</code> property is the sum of all user-entered values with the initial value  <code>startingValue</code>.</p>
+<p>Here’s the demo of the code:</p>
+<div data-trusted="1" class="code-example" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">let</code> accumulator <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">Accumulator</code><code class="token punctuation">(</code><code class="token number">1</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// initial value 1</code>
+
+accumulator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// adds the user-entered value</code>
+accumulator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// adds the user-entered value</code>
+
+<code class="token function">alert</code><code class="token punctuation">(</code>accumulator<code class="token punctuation">.</code>value<code class="token punctuation">)</code><code class="token punctuation">;</code> <code class="token comment">// shows the sum of these values</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p><a href="https://javascript.info/constructor-new#" onclick="event.preventDefault(); runDemo(this)">Run the demo</a></p><p><a href="https://plnkr.co/edit/bHPJqpOLOs2Z7qhY5qrl?p=preview" target="_blank" data-plunk-id="bHPJqpOLOs2Z7qhY5qrl">Open a sandbox with tests.</a></p><button class="task__solution" type="button">solution</button><div class="task__answer"><div class="task__answer-content"><div data-trusted="1" class="code-example" data-demo="1" data-prism-highlighted="1">
+      <div class="codebox code-example__codebox">
+        
+        <div class="toolbar codebox__toolbar">
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="run" data-action="run" class="toolbar__button toolbar__button_run"></a>
+          </div>
+          <div class="toolbar__tool">
+            <a href="https://javascript.info/constructor-new#" title="open in sandbox" target="_blank" data-action="edit" class="toolbar__button toolbar__button_edit"></a>
+          </div>
+        </div>
+        <div class="codebox__code" data-code="1">
+          <pre class="line-numbers  language-javascript"><code class=" language-javascript"><code class="token keyword">function</code> <code class="token function">Accumulator</code><code class="token punctuation">(</code><code class="token parameter">startingValue</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+  <code class="token keyword">this</code><code class="token punctuation">.</code>value <code class="token operator">=</code> startingValue<code class="token punctuation">;</code>
+
+  <code class="token keyword">this</code><code class="token punctuation">.</code><code class="token function-variable function">read</code> <code class="token operator">=</code> <code class="token keyword">function</code><code class="token punctuation">(</code><code class="token punctuation">)</code> <code class="token punctuation">{</code>
+    <code class="token keyword">this</code><code class="token punctuation">.</code>value <code class="token operator">+=</code> <code class="token operator">+</code><code class="token function">prompt</code><code class="token punctuation">(</code><code class="token string">'How much to add?'</code><code class="token punctuation">,</code> <code class="token number">0</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+  <code class="token punctuation">}</code><code class="token punctuation">;</code>
+
+<code class="token punctuation">}</code>
+
+<code class="token keyword">let</code> accumulator <code class="token operator">=</code> <code class="token keyword">new</code> <code class="token class-name">Accumulator</code><code class="token punctuation">(</code><code class="token number">1</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+accumulator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+accumulator<code class="token punctuation">.</code><code class="token function">read</code><code class="token punctuation">(</code><code class="token punctuation">)</code><code class="token punctuation">;</code>
+<code class="token function">alert</code><code class="token punctuation">(</code>accumulator<code class="token punctuation">.</code>value<code class="token punctuation">)</code><code class="token punctuation">;</code></code><span class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></pre>
+        </div>
+      </div>
+      
+      </div><p><a href="https://plnkr.co/edit/vHCTGwhE3tWkaLOEPco3?p=preview" target="_blank" data-plunk-id="vHCTGwhE3tWkaLOEPco3">Open the solution with tests in a sandbox.</a></p></div><button class="close-button task__answer-close" type="button" title="close"></button></div></div></div></div></div></div><div class="page__nav-wrap"><a class="page__nav page__nav_prev" href="https://javascript.info/object-toprimitive" data-tooltip="Object to primitive conversion"><span class="page__nav-text"><span class="page__nav-text-shortcut">Ctrl + <span class="page__nav-text-arr">←</span></span></span><span class="page__nav-text-alternate">Previous lesson</span></a><a class="page__nav page__nav_next" href="https://javascript.info/data-types" data-tooltip="Data types"><span class="page__nav-text"><span class="page__nav-text-shortcut">Ctrl + <span class="page__nav-text-arr">→</span></span></span><span class="page__nav-text-alternate">Next lesson</span></a></div><div class="article-tablet-foot tablet-only"><div class="article-tablet-foot__layout"><div class="share-icons"><span class="share-icons__title">Share</span><a class="share share_tw" href="https://twitter.com/share?url=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a><a class="share share_fb" href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p%5Burl%5D=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a></div><div class="article-tablet-foot__map"><a class="map" href="https://javascript.info/tutorial/map" data-action="tutorial-map"><span class="map__text">Tutorial map</span></a></div></div></div><div class="comments formatted" id="comments"><div class="comments__header"><h2 class="comments__header-title"><a href="https://javascript.info/constructor-new#comments" name="comments">Comments</a></h2><div class="comments__read-before"><span class="comments__read-before-link">read this before commenting…</span><div class="comments__read-before-popup"><div class="comments__read-before-popup-i"><ul><li>If you have suggestions what to improve - please <a href="https://github.com/javascript-tutorial/en.javascript.info/issues/new">submit a GitHub issue</a> or a pull request instead of commenting.</li><li>If you can't understand something in the article – please elaborate.</li><li>To insert a few words of code, use the <code>&lt;code&gt;</code> tag, for several lines – use <code>&lt;pre&gt;</code>, for more than 10 lines – use a sandbox (<a href="https://plnkr.co/edit/?p=preview">plnkr</a>, <a href="http://jsbin.com/">JSBin</a>, <a href="http://codepen.io/">codepen</a>…)</li></ul></div></div></div></div><div id="disqus_thread"></div><script>var disqus_config = function() { if (!this.page) this.page = {}; Object.assign(this.page, {"url":"https:\/\/javascript.info\/constructor-new","identifier":"\/constructor-new"}); };</script><script>var disqus_shortname = "javascriptinfo";</script><script>var disqus_enabled = true;</script></div></main></div><div class="sidebar page__sidebar sidebar_sticky-footer sidebar_compact" style="top: 0px;"><button class="sidebar__toggle" data-sidebar-toggle=""></button><a class="map" href="https://javascript.info/tutorial/map" data-action="tutorial-map" data-tooltip="Tutorial map"></a><div class="sidebar__inner"><div class="sidebar__content"><div class="sidebar__section"><h4 class="sidebar__section-title">Chapter</h4><nav class="sidebar__navigation"><ul class="sidebar__navigation-links"><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/object-basics">Objects: the basics</a></li></ul></nav></div><div class="sidebar__section"><h4 class="sidebar__section-title">Lesson navigation</h4><nav class="sidebar__navigation"><ul class="sidebar__navigation-links"><li class="sidebar__navigation-link"><a class="sidebar__link sidebar__navigation-link_active" href="https://javascript.info/constructor-new#constructor-function">Constructor function</a></li><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#constructor-mode-test-new-target">Constructor mode test: new.target</a></li><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#return-from-constructors">Return from constructors</a></li><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#methods-in-constructor">Methods in constructor</a></li><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#summary">Summary</a></li></ul></nav></div><div class="sidebar__section"><nav class="sidebar__navigation"><ul class="sidebar__navigation-links"><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#tasks">Tasks (3)</a></li><li class="sidebar__navigation-link"><a class="sidebar__link" href="https://javascript.info/constructor-new#comments">Comments</a></li></ul></nav></div><div class="sidebar__section"><div class="sidebar__section-title">Share</div><a class="share share_tw sidebar__share" href="https://twitter.com/share?url=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a><a class="share share_fb sidebar__share" href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]=https%3A%2F%2Fjavascript.info%2Fconstructor-new" rel="nofollow"></a></div><div class="sidebar__section"><a class="sidebar__link" href="https://github.com/javascript-tutorial/en.javascript.info/blob/master/1-js/04-object-basics/06-constructor-new" rel="nofollow">Edit on GitHub</a></div><div class="sidebar__section" id="sponsorBar"><div class="sidebar__section-title">Ads</div><script>window.initSponsorBar()</script><div id="codefund"><div id="cf"> <div class="cf-wrapper"> <div class="cf-header">Proudly sponsored by</div> <a data-href="campaign_url" class="cf-text" target="_blank" rel="nofollow noopener" href="https://codefund.io/impressions/35261808-f2b1-4bfd-841e-1a96d0546b7c/click?campaign_id=454&amp;creative_id=433&amp;property_id=339&amp;template=centered&amp;theme=unstyled"> <strong>#ClimateStrike</strong> <span>- The Global Climate Strike is Happening Now. Join the movement.</span> </a> <a href="https://codefund.io/invite/tNZ9pYRffRU" data-target="powered_by_url" class="cf-powered-by" target="_blank" rel="nofollow noopener"> <em>ethical</em> ad by CodeFund <img data-src="impression_url" src="./Constructor, operator _new__files/pixel.gif"> </a> </div> </div></div><script src="./Constructor, operator _new__files/funder.js"></script></div></div></div></div></div></div><div class="page-footer"><ul class="page-footer__list"><li class="page-footer__item page-footer__item_copy">©&nbsp;2007—2019&nbsp; Ilya Kantor</li><li class="page-footer__item page-footer__item_about"><a class="page-footer__link" href="https://javascript.info/about">about the project</a></li><li class="page-footer__item page-footer__item_contact"><a class="page-footer__link" href="https://javascript.info/about#contact-us">contact us</a></li><li class="page-footer__item page-footer__item_terms"><a class="page-footer__link" href="https://javascript.info/terms">terms of usage</a></li><li class="page-footer__item page-footer__item_privacy"><a class="page-footer__link" href="https://javascript.info/privacy">privacy policy</a></li></ul></div><progress class="tutorial-progress sticky" data-sticky="" value="32" max="86" data-tooltip="Lesson 32 of 86" style="position: fixed; top: 0px; left: 0px; z-index: 101; background: white; margin: 0px; width: 1024px;"></progress></body></html>

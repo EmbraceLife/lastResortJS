@@ -103,7 +103,7 @@
   // Create quick reference variables for speed access to core prototypes.
   var push = ArrayProto.push;
   var slice = ArrayProto.slice;
-  var toString = ObjProto.toString;
+  var toString = ObjProto.toString; /* must be assigned first, then use e.g., .call([])  */
   var hasOwnProperty = ObjProto.hasOwnProperty;
 
   // All **ECMAScript 5** native function implementations that we hope to use
